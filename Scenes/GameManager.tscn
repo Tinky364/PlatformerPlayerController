@@ -1,15 +1,7 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=2 format=2]
 
 [ext_resource path="res://Scripts/GameManager.cs" type="Script" id=1]
-[ext_resource path="res://Scenes/StartingScene.tscn" type="PackedScene" id=2]
-[ext_resource path="res://Scenes/GameScene.tscn" type="PackedScene" id=3]
 
 [node name="GameManager" type="Node"]
 script = ExtResource( 1 )
-_startingScenePath = ExtResource( 3 )
-
-[node name="StartingScene" parent="." instance=ExtResource( 2 )]
-
-[connection signal="pressed" from="StartingScene/MarginContainer/HBoxContainer/VBoxContainer/MenuOptions/Start" to="." method="StartGame"]
-
-[editable path="StartingScene"]
+_starterScenePath = "res://Scenes/StartingScene.tscn"

@@ -1,87 +1,44 @@
 using Godot;
-using System;
+using System.Threading.Tasks;
 
 public class GameManager : Node
 {
-    [Export] private PackedScene _startingScenePath;
-    private Viewport _root;
-    private ResourceInteractiveLoader _loader;
-    private Node _currentScene;
-    private int _waitFrames;
-    private ulong _timeMax = 100;
+    private static Node _currentScene;
+    private static Viewport _root;
+    private static SignalAwaiter _signal;
     
     public override void _Ready()
     {
+        _signal = ToSignal(GetTree(), "idle_frame");
         _root = GetTree().Root;
         _currentScene = _root.GetChild(_root.GetChildCount() - 1);
     }
 
-    public override void _Process(float delta)
+    public static async Task LoadScene(string path)
     {
-        if (_loader is null)
-        {
-            SetProcess(false);
-            return;
-        }
+        GD.Print($"Loading Scene: {path}");
+        _currentScene?.QueueFree();
+        PackedScene scene = await LoadAsync<PackedScene>(path);
+        _currentScene = scene.Instance();
+        _root.AddChild(_currentScene);
+        GD.Print("Loading Scene Done.");
+    }
 
-        if (_waitFrames > 0)
+    public static async Task<T> LoadAsync<T>(string path) where T : Resource
+    {
+        using (var loader = ResourceLoader.LoadInteractive(path))
         {
-            _waitFrames -= 1;
-            return;
-        }
+            Error err;
+            do 
+            {
+                err = loader.Poll();
+                await _signal;
+            } while (err == Error.Ok);
 
-        ulong t = OS.GetTicksMsec();
-        while (OS.GetTicksMsec() < t + _timeMax)
-        {
-            Error err = _loader.Poll();
-
-            if (err == Error.FileEof)
-            {
-                PackedScene resource = (PackedScene) _loader.GetResource();
-                _loader = null;
-                SetNewScene(resource);
-                break;
-            }
-            else if (err == Error.Ok)
-            {
-                UpdateProgress();
-            }
-            else
-            {
+            if (err != Error.FileEof)
                 GD.PrintErr("Poll error!");
-                _loader = null;
-                break;
-            }
+
+            return (T) loader.GetResource();
         }
-    }
-
-    private void UpdateProgress()
-    {
-        float progress = (float)_loader.GetStage() / _loader.GetStageCount();
-    }
-
-    private void SetNewScene(PackedScene sceneResource)
-    {
-        _currentScene = sceneResource.Instance();
-        GetNode("/root").AddChild(_currentScene);
-    }
-
-    private void GoToScene(string path)
-    {
-        _loader = ResourceLoader.LoadInteractive(path);
-        if (_loader is null)
-        {
-            GD.PrintErr("ResourceInteractiveLoader is null!");
-            return;
-        }
-        SetProcess(true);
-        _currentScene.QueueFree();
-        _waitFrames = 1;
-    }
-
-    public void StartGame()
-    {
-        GD.Print("GameScene loading!");
-        GoToScene(_startingScenePath.ResourcePath);
     }
 }

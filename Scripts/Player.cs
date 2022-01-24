@@ -4,7 +4,7 @@ using Godot.Collections;
 public class Player : KinematicBody2D
 {
     [Export]
-    private NodePath _animatedSpritePath;
+    private NodePath _animatedSpritePath = default;
     [Export(PropertyHint.Range, "0,2000,or_greater")]
     private float _gravity = 900f;
     [Export(PropertyHint.Range, "0,20")]
@@ -60,6 +60,7 @@ public class Player : KinematicBody2D
         _animatedSprite = GetNode<AnimatedSprite>(_animatedSpritePath);
 
         _jumpTimer = new Timer();
+        _jumpTimer.Name = "JumpTimer";
         AddChild(_jumpTimer);
         _jumpTimer.Connect("timeout", this, nameof(OnJumpTimeout));
     }
