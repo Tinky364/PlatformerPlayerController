@@ -3,17 +3,29 @@ using Godot.Collections;
 
 public class Player : KinematicBody2D
 {
-    [Export] private float _gravity = 900f;
-    [Export] private float _groundDetectionHeight = 0.1f;
-    [Export] private float _moveAcceleration = 400f;
-    [Export] private float _moveSpeed = 60f;
-    [Export] private float _jumpHeightMin = 8f;
-    [Export] private float _jumpHeightMax = 26f;
-    [Export] private float _jumpInitialSpeedX = 80f;
-    [Export] private float _climbDuration = 0.25f;
-    [Export] private float _movementLengthAfterClimb = 8f;
-    [Export] private float _edgeDetectionHeight = 12f;
-
+    [Export]
+    private NodePath _animatedSpritePath;
+    [Export(PropertyHint.Range, "0,2000,or_greater")]
+    private float _gravity = 900f;
+    [Export(PropertyHint.Range, "0,20")]
+    private float _groundDetectionHeight = 0.1f;
+    [Export(PropertyHint.Range, "0,2000,or_greater")]
+    private float _moveAcceleration = 400f;
+    [Export(PropertyHint.Range, "0,200,or_greater")]
+    private float _moveSpeed = 60f;
+    [Export(PropertyHint.Range, "0,50,or_greater")]
+    private float _jumpHeightMin = 8f;
+    [Export(PropertyHint.Range, "0,200,or_greater")]
+    private float _jumpHeightMax = 26f;
+    [Export(PropertyHint.Range, "0,200,or_greater")]
+    private float _jumpInitialSpeedX = 80f;
+    [Export(PropertyHint.Range, "0,4,or_greater")]
+    private float _climbDuration = 0.25f;
+    [Export(PropertyHint.Range, "0,50")]
+    private float _movementLengthAfterClimb = 8f;
+    [Export(PropertyHint.Range, "0,200,or_greater")]
+    private float _edgeDetectionHeight = 12f;
+    
     private AnimatedSprite _animatedSprite;
     private Timer _jumpTimer;
     private Physics2DDirectSpaceState _spaceState;
@@ -45,7 +57,7 @@ public class Player : KinematicBody2D
     {
         _spaceState = GetWorld2d().DirectSpaceState;
 
-        _animatedSprite = GetNode<AnimatedSprite>("AnimatedSprite");
+        _animatedSprite = GetNode<AnimatedSprite>(_animatedSpritePath);
 
         _jumpTimer = new Timer();
         AddChild(_jumpTimer);
