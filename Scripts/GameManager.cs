@@ -3,15 +3,17 @@ using System.Threading.Tasks;
 
 public class GameManager : Node
 {
-    private static Node _currentScene;
+    private static SceneTree _tree;
     private static Viewport _root;
-    private static SignalAwaiter _signal;
+    private static Node _currentScene;
+    private static SignalAwaiter _endOfFrameSignal;
     
     public override void _Ready()
     {
-        _signal = ToSignal(GetTree(), "idle_frame");
-        _root = GetTree().Root;
+        _tree = GetTree();
+        _root = _tree.Root;
         _currentScene = _root.GetChild(_root.GetChildCount() - 1);
+        _endOfFrameSignal = ToSignal(_tree, "idle_frame");
     }
 
     public static async Task LoadScene(string path)
@@ -32,7 +34,7 @@ public class GameManager : Node
             do 
             {
                 err = loader.Poll();
-                await _signal;
+                await _endOfFrameSignal;
             } while (err == Error.Ok);
 
             if (err != Error.FileEof)
@@ -40,5 +42,10 @@ public class GameManager : Node
 
             return (T) loader.GetResource();
         }
+    }
+
+    public static void QuitGame()
+    {
+        _tree.Quit();
     }
 }

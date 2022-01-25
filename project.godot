@@ -70,6 +70,11 @@ move_down={
  ]
 }
 
+[layer_names]
+
+2d_render/layer_1="Player"
+2d_render/layer_2="Tile"
+
 [physics]
 
 common/physics_fps=75
