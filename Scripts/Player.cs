@@ -1,17 +1,19 @@
 using Godot;
-using System;
 
-public class Player : PlayerController
+namespace PlatformerPlayerController.Scripts
 {
-    [Signal]
-    private delegate void CoinCountChanged(int coinCount);
-    
-    private int _coinCount = 0;
-    
-    public void AddCoin(int addCoinCount)
+    public class Player : PlayerController
     {
-        GD.Print($"{addCoinCount} coin is added.");
-        _coinCount += addCoinCount;
-        EmitSignal(nameof(CoinCountChanged), _coinCount);
+        [Signal]
+        private delegate void CoinCountChanged(int coinCount);
+    
+        private int _coinCount = 0;
+    
+        public void AddCoin(int addCoinCount)
+        {
+            GD.Print($"{addCoinCount} coin is added.");
+            _coinCount += addCoinCount;
+            EmitSignal(nameof(CoinCountChanged), _coinCount);
+        }
     }
 }

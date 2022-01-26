@@ -1,29 +1,33 @@
-using Godot;
 using System;
+using Godot;
 
-public class ButtonController : Button
+namespace PlatformerPlayerController.Scripts
 {
-    [Export]
-    private ButtonTypes _buttonType;
-    [Export(PropertyHint.File, "*.tscn")]
-    private string _loadScenePath;
+    public class ButtonController : Button, IButtonType
+    {
+        [Export]
+        public ButtonTypes ButtonType { get; set; }
+        [Export(PropertyHint.File, "*.tscn")]
+        public string LoadScenePath { get; set; }
 
-    public override void _Ready()
-    {
-        Connect("pressed", this, "OnPressed");
-    }
+        public override void _Ready()
+        {
+            Connect("pressed", this, nameof(OnPressed));
+        }
 
-    private void OnPressed()
-    {
-        if (_buttonType == ButtonTypes.ChangeSceneButton)
-            GameManager.LoadScene(_loadScenePath);
-        else if (_buttonType == ButtonTypes.QuitGameButton)
-            GameManager.QuitGame();
-    }
-    
-    private enum ButtonTypes
-    {
-        ChangeSceneButton,
-        QuitGameButton
+        public void OnPressed()
+        {
+            switch (ButtonType)
+            {
+                case ButtonTypes.ChangeSceneButton:
+                    GameManager.LoadScene(LoadScenePath);
+                    break;
+                case ButtonTypes.QuitGameButton:
+                    GameManager.QuitGame();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
 }

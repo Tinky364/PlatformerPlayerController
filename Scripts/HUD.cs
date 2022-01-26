@@ -1,20 +1,22 @@
 using Godot;
-using System;
 
-public class HUD : CanvasLayer
+namespace PlatformerPlayerController.Scripts
 {
-    [Export]
-    private NodePath _coinCountLabelPath;
-    
-    private Label _coinCountLabel;
-    
-    public override void _Ready()
+    public class HUD : CanvasLayer
     {
-        _coinCountLabel = GetNode<Label>(_coinCountLabelPath);
-    }
+        [Export]
+        private NodePath _coinCountLabelPath;
+    
+        private Label _coinCountLabel;
+    
+        public override void _Ready()
+        {
+            _coinCountLabel = GetNode<Label>(_coinCountLabelPath);
+        }
 
-    private void OnPlayerCoinCountChanged(int count)
-    {
-        _coinCountLabel.Text = count.ToString();
+        private void OnPlayerCoinCountChanged(int count)
+        {
+            _coinCountLabel.Text = count.ToString();
+        }
     }
 }
