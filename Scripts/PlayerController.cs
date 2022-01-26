@@ -21,10 +21,8 @@ namespace PlatformerPlayerController.Scripts
         private float _jumpInitialSpeedX = 80f;
         [Export(PropertyHint.Range, "0,4,or_greater")]
         private float _climbDuration = 0.25f;
-        [Export(PropertyHint.Range, "0,50")]
-        private float _movementLengthAfterClimb = 8f;
-        [Export(PropertyHint.Range, "0,200,or_greater")]
-        private float _edgeDetectionHeight = 12f;
+        [Export(PropertyHint.Range, "0,200,or_greater")] 
+        private Vector2 _shapeSize = new Vector2(8, 11);
     
         private AnimatedSprite _animatedSprite;
         private Timer _jumpTimer;
@@ -38,12 +36,11 @@ namespace PlatformerPlayerController.Scripts
         private float JumpInitialSpeedY => Mathf.Sqrt(2f * _gravity * _jumpHeightMin); // V=sqrt{2*g*h}
         private float JumpAccelerationY => _gravity - Mathf.Pow(JumpInitialSpeedY, 2) / (2 * _jumpHeightMax); // a=g-(v^2/2*h)
         private float JumpSecond => JumpInitialSpeedY / (_gravity - JumpAccelerationY); // t=V/(g-a)
-        private float ClimbSpeedY => _edgeDetectionHeight / _climbDuration;
-        private float ClimbSpeedX => Mathf.Sqrt(2f * _moveAcceleration * _movementLengthAfterClimb);
+        private float ClimbSpeedY => (_shapeSize.y + 1f) / _climbDuration;
+        private float ClimbSpeedX => Mathf.Sqrt(2f * _moveAcceleration * _shapeSize.x);
         private int _direction;
     
         private bool _isOnGround;
-        private bool _isEdgeDetected;
         private bool _isHangingOnEdge;
         private bool _isClimbing;
         private bool _isJumping;
@@ -61,7 +58,7 @@ namespace PlatformerPlayerController.Scripts
             _spaceState = GetWorld2d().DirectSpaceState;
 
             _animatedSprite = GetNode<AnimatedSprite>("AnimatedSprite");
-
+            
             _jumpTimer = new Timer();
             _jumpTimer.Name = "JumpTimer";
             AddChild(_jumpTimer);
@@ -211,18 +208,14 @@ namespace PlatformerPlayerController.Scripts
                 Position + new Vector2(-4, 0), 
                 Position + new Vector2(-4, _groundDetectionHeight), 
                 new Array {this},
-                RayCollisionMask,
-                true,
-                false
+                RayCollisionMask
             );
             
             _groundRaycastRight = _spaceState.IntersectRay(
                 Position + new Vector2(4, 0),
                 Position + new Vector2(4, _groundDetectionHeight),
                 new Array {this},
-                RayCollisionMask,
-                true,
-                false
+                RayCollisionMask
             );
 
             if (_groundRaycastLeft.Count > 0 && (Vector2)_groundRaycastLeft["normal"] == Vector2.Up
@@ -240,51 +233,48 @@ namespace PlatformerPlayerController.Scripts
         {
             if (_isOnGround) return;
             if (_isJumping) return;
-        
+
+            // Checks whether there are inner collisions.
+            _edgeRaycast = _spaceState.IntersectRay(
+                Position + new Vector2(_direction * (_shapeSize.x / 2f - 2f), -_shapeSize.y),
+                Position + new Vector2(_direction * (_shapeSize.x / 2f - 2f), -_shapeSize.y + 2f),
+                new Array {this},
+                RayCollisionMask
+            );
+            // If there is an inner collision, does not check for a wall.
+            if (_edgeRaycast.Count > 0) return;
+            
             // Checks whether there is a wall in front of the player.
             _edgeRaycast = _spaceState.IntersectRay(
-                Position + new Vector2(0, -_edgeDetectionHeight),
-                Position + new Vector2(_direction * 6, -_edgeDetectionHeight),
+                Position + new Vector2(_direction * (_shapeSize.x / 2f - 1f), -_shapeSize.y - 1f),
+                Position + new Vector2(_direction * (_shapeSize.x / 2f + 2f), -_shapeSize.y - 1f),
                 new Array {this},
-                RayCollisionMask,
-                true,
-                true
+                RayCollisionMask
             );
             // If there is a wall in front of the player, does not check for an edge.
-            if (_edgeRaycast.Count > 0)
-            {
-                _isEdgeDetected = false;
-                return;
-            }
+            if (_edgeRaycast.Count > 0) return;
         
             // Checks whether there is an edge.
             _edgeRaycast = _spaceState.IntersectRay(
-                Position + new Vector2(_direction * 6, -_edgeDetectionHeight),
-                Position + new Vector2(_direction * 6, -_edgeDetectionHeight + 2f),
+                Position + new Vector2(_direction * (_shapeSize.x / 2f + 2f), -_shapeSize.y - 1f),
+                Position + new Vector2(_direction * (_shapeSize.x / 2f + 2f), -_shapeSize.y + 1f),
                 new Array {this},
-                RayCollisionMask,
-                true,
-                true
+                RayCollisionMask
             );
-            _isEdgeDetected = _edgeRaycast.Count > 0;
-        
-            // If there is an edge, the player climbs.
-            if (_isEdgeDetected) 
-                _isHangingOnEdge = true;
-
-            if (_isHangingOnEdge)
-            {
-                // Checks the edge from the player`s feet while the player climbs.
-                _edgeRaycast = _spaceState.IntersectRay(
-                    Position + new Vector2(0, 1f),
-                    Position + new Vector2(_direction * 6, 1f),
-                    new Array {this},
-                    RayCollisionMask,
-                    true,
-                    true
-                );
-                _isHangingOnEdge = _edgeRaycast.Count > 0;
-            }
+            // If there is an edge, the player starts hanging on the edge.
+            if (_edgeRaycast.Count > 0) _isHangingOnEdge = true;
+            
+            // If the player is not hanging on the edge yet, does not check the wall. 
+            if (!_isHangingOnEdge) return;
+            
+            // Checks the wall from the player`s feet while the player hangs on the edge.
+            _edgeRaycast = _spaceState.IntersectRay(
+                Position + new Vector2(_direction * (_shapeSize.x / 2f - 1f), 0f),
+                Position + new Vector2(_direction * (_shapeSize.x / 2f + 2f), 0f),
+                new Array {this},
+                RayCollisionMask
+            );
+            _isHangingOnEdge = _edgeRaycast.Count > 0;
         }
 
     }
