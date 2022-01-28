@@ -26,7 +26,7 @@ animations = [ {
 extents = Vector2( 4, 5.5 )
 
 [sub_resource type="RectangleShape2D" id=3]
-extents = Vector2( 4, 1 )
+extents = Vector2( 4, 0.5 )
 
 [node name="Player" type="KinematicBody2D"]
 collision_mask = 6
@@ -48,7 +48,8 @@ shape = SubResource( 1 )
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
-position = Vector2( 0, -1 )
+position = Vector2( 0, -0.5 )
 shape = SubResource( 3 )
 
-[connection signal="body_exited" from="Area2D" to="." method="OnPlatformerCheckBodyExited"]
+[connection signal="body_entered" from="Area2D" to="." method="OnPlatformBodyEntered"]
+[connection signal="body_exited" from="Area2D" to="." method="OnPlatformBodyExited"]
