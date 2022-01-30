@@ -1,3 +1,5 @@
+using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Godot;
 
@@ -5,50 +7,90 @@ namespace PlatformerPlayerController.Scripts
 {
     public class GameManager : Node
     {
-        private static SceneTree _tree;
-        private static Viewport _root;
-        private static Node _currentScene;
-        private static SignalAwaiter _endOfFrameSignal;
+        private static GameManager _singleton;
+        public static GameManager Singleton => _singleton;
+
+        private GameState _currentGameState;
+        public GameState CurrentGameState
+        {
+            get => _currentGameState;
+            set
+            {
+                switch (value)
+                {
+                    case GameState.Play:
+                        Tree.Paused = false;
+                        break;
+                    case GameState.Pause:
+                        Tree.Paused = true;
+                        break;
+                }
+                _currentGameState = value;
+            }
+        } 
+
+        public SceneTree Tree => GetTree();
+        private Viewport Root => Tree.Root;
+        private Node _currentScene;
+        
+        public SignalAwaiter EndOfFrameSignal { get; private set; }
     
         public override void _Ready()
         {
-            _tree = GetTree();
-            _root = _tree.Root;
-            _currentScene = _root.GetChild(_root.GetChildCount() - 1);
-            _endOfFrameSignal = ToSignal(_tree, "idle_frame");
+            if (_singleton == null)
+                _singleton = this;
+            else
+                GD.PrintErr("Singleton Error");
+
+            _currentScene = Root.GetChild(Root.GetChildCount() - 1);
+            EndOfFrameSignal = ToSignal(Tree, "idle_frame");
+            
+            PauseMode = PauseModeEnum.Process;
+            _currentScene.PauseMode = PauseModeEnum.Stop;
         }
 
-        public static async Task LoadScene(string path)
+        public async void LoadScene(string path)
         {
-            GD.Print($"Loading Scene: {path}");
-            _currentScene?.QueueFree();
+            CurrentGameState = GameState.Pause;
+            
             PackedScene scene = await LoadAsync<PackedScene>(path);
+            _currentScene?.QueueFree();
             _currentScene = scene.Instance();
-            _root.AddChild(_currentScene);
-            GD.Print("Loading Scene Done.");
+            Root.AddChild(_currentScene);
+            
+            CurrentGameState = GameState.Play;
+        }
+        
+        public void QuitGame()
+        {
+            Tree.Quit();
         }
 
-        public static async Task<T> LoadAsync<T>(string path) where T : Resource
+        public async Task<T> LoadAsync<T>(string path) where T : Resource
         {
             using (var loader = ResourceLoader.LoadInteractive(path))
             {
+                GD.Print($"Resource Load started -> {path}");
                 Error err;
                 do 
                 {
                     err = loader.Poll();
-                    await _endOfFrameSignal;
+                    await EndOfFrameSignal;
                 } while (err == Error.Ok);
 
                 if (err != Error.FileEof)
                     GD.PrintErr("Poll error!");
 
+                await ToSignal(Tree.CreateTimer(5f), "timeout");
+                GD.Print($"Resource Load ended -> {path}");
                 return (T) loader.GetResource();
             }
         }
-
-        public static void QuitGame()
-        {
-            _tree.Quit();
-        }
+    }
+    
+    public enum GameState
+    {
+        Play,
+        Pause
     }
 }

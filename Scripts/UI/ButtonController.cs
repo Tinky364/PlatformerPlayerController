@@ -1,9 +1,10 @@
 using System;
+using System.Threading.Tasks;
 using Godot;
 
-namespace PlatformerPlayerController.Scripts
+namespace PlatformerPlayerController.Scripts.UI
 {
-    public class TextureButtonController : TextureButton, IButtonType
+    public class ButtonController : Button, IButtonType
     {
         [Export]
         public ButtonTypes ButtonType { get; set; }
@@ -19,11 +20,11 @@ namespace PlatformerPlayerController.Scripts
         {
             switch (ButtonType)
             {
-                case ButtonTypes.ChangeSceneButton:
-                    GameManager.LoadScene(LoadScenePath);
+                case ButtonTypes.ChangeSceneButton: 
+                    GameManager.Singleton.LoadScene(LoadScenePath);
                     break;
                 case ButtonTypes.QuitGameButton:
-                    GameManager.QuitGame();
+                    GameManager.Singleton.QuitGame();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

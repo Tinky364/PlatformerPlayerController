@@ -3,29 +3,53 @@ using Godot.Collections;
 
 namespace PlatformerPlayerController.Scripts.StateMachine
 {
-    public class StateMachine : KinematicBody2D
+    public class StateMachine<T> : Reference
     {
-        private State _currentState;
+        protected readonly Dictionary<T, State<T>> States;
         
-        public override void _Ready()
+        private State<T> _currentState;
+        public State<T> CurrentState => _currentState;
+
+        public bool IsStateLocked { get; set; }
+
+        public StateMachine()
         {
+            States = new Dictionary<T, State<T>>();
+            IsStateLocked = false;
         }
 
-        public override void _Process(float delta)
+        public void AddState(State<T> state)
         {
-            _currentState.Process(delta);
+            if (States.ContainsKey(state.Id)) return;
+            States.Add(state.Id, state);
         }
-
-        public override void _PhysicsProcess(float delta)
+        
+        public State<T> GetState(T stateId) => States.ContainsKey(stateId) ? States[stateId] : null;
+        
+        public void SetCurrentState(T stateId)
         {
-            _currentState.PhysicsProcess(delta);
+            State<T> state = States[stateId];
+            SetCurrentState(state);
         }
-
-        public void ChangeState(State newState)
+        
+        public void SetCurrentState(State<T> newState)
         {
-            _currentState.Exit();
+            if (IsStateLocked) return;
+            if (_currentState == newState) return;
+            if (!States.ContainsKey(newState.Id)) return;
+            _currentState?.Exit();
             _currentState = newState;
-            _currentState.Enter();
+            _currentState?.Enter();
+        }
+        
+        public void _Process(float delta)
+        {
+            _currentState?.Process(delta);
+        }
+
+        public void _PhysicsProcess(float delta)
+        {
+            _currentState?.PhysicsProcess(delta);
         }
     }
 }

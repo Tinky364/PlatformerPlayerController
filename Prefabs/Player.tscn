@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://Sprites/Player/tile_0045.png" type="Texture" id=1]
 [ext_resource path="res://Scripts/Player.cs" type="Script" id=2]
 [ext_resource path="res://Sprites/Player/tile_0046.png" type="Texture" id=3]
+[ext_resource path="res://Scripts/Navigation/NavBody.cs" type="Script" id=4]
 
 [sub_resource type="SpriteFrames" id=2]
 animations = [ {
@@ -28,28 +29,51 @@ extents = Vector2( 4, 5.5 )
 [sub_resource type="RectangleShape2D" id=3]
 extents = Vector2( 4, 0.5 )
 
+[sub_resource type="RectangleShape2D" id=4]
+extents = Vector2( 4, 1 )
+
 [node name="Player" type="KinematicBody2D"]
 collision_mask = 6
 script = ExtResource( 2 )
 __meta__ = {
-"_edit_group_": true
+"_edit_group_": true,
+"_edit_lock_": true
 }
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 position = Vector2( 0, -8 )
 frames = SubResource( 2 )
 animation = "idle"
+__meta__ = {
+"_edit_lock_": true
+}
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="Shape" type="CollisionShape2D" parent="."]
 position = Vector2( 0, -5.5 )
 shape = SubResource( 1 )
+__meta__ = {
+"_edit_lock_": true
+}
 
-[node name="Area2D" type="Area2D" parent="."]
+[node name="PlatformCheckArea" type="Area2D" parent="Shape"]
+position = Vector2( 0, 5.5 )
 collision_mask = 4
+__meta__ = {
+"_edit_lock_": true
+}
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+[node name="PlatformCheckShape" type="CollisionShape2D" parent="Shape/PlatformCheckArea"]
 position = Vector2( 0, -0.5 )
 shape = SubResource( 3 )
 
-[connection signal="body_entered" from="Area2D" to="." method="OnPlatformBodyEntered"]
-[connection signal="body_exited" from="Area2D" to="." method="OnPlatformBodyExited"]
+[node name="NavBody" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 6
+script = ExtResource( 4 )
+
+[node name="Shape" type="CollisionShape2D" parent="NavBody"]
+position = Vector2( 0, -1 )
+shape = SubResource( 4 )
+
+[connection signal="body_entered" from="Shape/PlatformCheckArea" to="." method="OnPlatformBodyEntered"]
+[connection signal="body_exited" from="Shape/PlatformCheckArea" to="." method="OnPlatformBodyExited"]

@@ -1,4 +1,3 @@
-using System.Drawing.Imaging;
 using Godot;
 using Godot.Collections;
 
@@ -19,30 +18,33 @@ namespace PlatformerPlayerController.Scripts
         [Export(PropertyHint.Range, "1,200,or_greater")]
         private float _jumpHeightMax = 26f;
         [Export(PropertyHint.Range, "0,400,or_greater")]
-        private float _jumpWidth = 32f;
+        private float _jumpWidthMax = 32f;
         [Export(PropertyHint.Range, "0.2f,4,or_greater")]
         private float _climbDuration = 0.25f;
-        [Export(PropertyHint.Range, "0,200,or_greater")] 
-        private Vector2 _shapeSize = new Vector2(8, 11);
     
         private AnimatedSprite _animatedSprite;
         private Timer _jumpTimer;
-        private Physics2DDirectSpaceState _spaceState;
+        private CollisionShape2D _collisionShape;
 
         private Vector2 _inputAxis;
+        public Vector2 InputAxis => _inputAxis;
         public Vector2 Velocity { get; private set; }
-        public int Direction { get; private set; }
+        public Vector2 ShapeExtents { get; private set; }
+        public Vector2 ShapeSizes => ShapeExtents * 2f;
         private Vector2 _groundHitPos = new Vector2();
         private Vector2 _wallHitPos = new Vector2();
+
+        public int Direction { get; private set; }
 
         private float _desiredMove;
         private float _desiredJumpSpeedX;
         private float JumpInitialSpeedY => Mathf.Sqrt(2f * _gravity * _jumpHeightMin); // V=sqrt{2*g*h}
         private float JumpAccelerationY => _gravity - Mathf.Pow(JumpInitialSpeedY, 2) / (2 * _jumpHeightMax); // a=g-(v^2/2*h)
         private float JumpSecond => JumpInitialSpeedY / (_gravity - JumpAccelerationY); // t=V/(g-a)
-        private float JumpSpeedX => _jumpWidth / JumpSecond;
-        private float ClimbSpeedY => (_shapeSize.y + 1f) / _climbDuration;
-        private float ClimbSpeedX => Mathf.Sqrt(2f * _moveAcceleration * _shapeSize.x);
+        private float FallSecond => Mathf.Sqrt((2f * _jumpHeightMax) / _gravity); // t=sqrt{(2*h)/g}
+        private float JumpSpeedX => _jumpWidthMax / (JumpSecond + FallSecond); // v=w/t
+        private float ClimbSpeedY => (ShapeSizes.y + 1f) / _climbDuration; // v=w/t
+        private float ClimbSpeedX => Mathf.Sqrt(2f * _moveAcceleration * ShapeSizes.x); // v=sqrt{2*a*h}
     
         private bool _isDroppingFromPlatformInput;
         private bool _isOnGround;
@@ -57,16 +59,15 @@ namespace PlatformerPlayerController.Scripts
         private Dictionary _groundRaycast;
         private Dictionary _edgeRaycast;
 
-        public PlayerController()
-        {
-            Direction = 1;
-        }
+        public PlayerController() { Direction = 1; }
 
         public override void _Ready()
         {
-            _spaceState = GetWorld2d().DirectSpaceState;
-
             _animatedSprite = GetNode<AnimatedSprite>("AnimatedSprite");
+            
+            _collisionShape = GetNode<CollisionShape2D>("Shape");
+            if (_collisionShape.Shape is RectangleShape2D shape)
+                ShapeExtents = shape.Extents;
             
             _jumpTimer = new Timer();
             AddChild(_jumpTimer);
@@ -148,7 +149,7 @@ namespace PlatformerPlayerController.Scripts
         private Vector2 CalculateSnap()
         {
             // Snap while the player hangs on the edge.
-            float dif = _wallHitPos.x - (Position.x + Direction * (_shapeSize.x / 2f));
+            float dif = _wallHitPos.x - (Position.x + Direction * (ShapeExtents.x));
             if (_isHangingOnEdge && Mathf.Abs(dif) > 0.001f)
                 return Mathf.Sign(dif) * Vector2.Right * _moveSpeed;
             
@@ -228,32 +229,32 @@ namespace PlatformerPlayerController.Scripts
             if (!_groundRayCastEnabled) return;
 
             // Raycast from the left bottom corner of the player.
-            _groundRaycast = _spaceState.IntersectRay(
-                Position + new Vector2(-_shapeSize.x / 2f, -1f), 
-                Position + new Vector2(-_shapeSize.x / 2f, _groundDetectionHeight), 
+            _groundRaycast = GetWorld2d().DirectSpaceState.IntersectRay(
+                Position + new Vector2(-ShapeExtents.x, -1f), 
+                Position + new Vector2(-ShapeExtents.x, _groundDetectionHeight), 
                 new Array {this},
                 CollisionMask
             );
             if (_groundRaycast.Count > 0 && 
                 IsGroundAngleEnough(CalculateGroundAngle((Vector2) _groundRaycast["normal"]), 5f))
             {
-                _groundHitPos = (Vector2) _groundRaycast["position"] + new Vector2(_shapeSize.x / 2f, 0);
+                _groundHitPos = (Vector2) _groundRaycast["position"] + new Vector2(ShapeExtents.x, 0);
                 _isOnGround = true;
                 CheckPlatform(_groundRaycast["collider"] as CollisionObject2D);
                 return;
             }
             // If the first raycast does not hit the ground.
             // Raycast from the right bottom corner of the player.
-            _groundRaycast = _spaceState.IntersectRay(
-                Position + new Vector2(_shapeSize.x / 2f, -1f),
-                Position + new Vector2(_shapeSize.x / 2f, _groundDetectionHeight),
+            _groundRaycast = GetWorld2d().DirectSpaceState.IntersectRay(
+                Position + new Vector2(ShapeExtents.x, -1f),
+                Position + new Vector2(ShapeExtents.x, _groundDetectionHeight),
                 new Array {this},
                 CollisionMask
             );
             if (_groundRaycast.Count > 0 && 
                 IsGroundAngleEnough(CalculateGroundAngle((Vector2) _groundRaycast["normal"]), 5f))
             {
-                _groundHitPos = (Vector2) _groundRaycast["position"] + new Vector2(-_shapeSize.x / 2f, 0);
+                _groundHitPos = (Vector2) _groundRaycast["position"] + new Vector2(-ShapeExtents.x, 0);
                 _isOnGround = true;
                 CheckPlatform(_groundRaycast["collider"] as CollisionObject2D);
                 return;
@@ -277,11 +278,12 @@ namespace PlatformerPlayerController.Scripts
         private void CheckEdge()
         {
             if (_isOnGround) return;
+            if (_isJumpingInput) return;
 
             // Checks whether there are inner collisions.
-            _edgeRaycast = _spaceState.IntersectRay(
-                Position + new Vector2(Direction * (_shapeSize.x / 2f), -_shapeSize.y),
-                Position + new Vector2(Direction * (_shapeSize.x / 2f), -_shapeSize.y + 2f),
+            _edgeRaycast = GetWorld2d().DirectSpaceState.IntersectRay(
+                Position + new Vector2(Direction * ShapeExtents.x, -ShapeSizes.y),
+                Position + new Vector2(Direction * ShapeExtents.x, -ShapeSizes.y + 2f),
                 new Array {this},
                 CollisionMask
             );
@@ -289,9 +291,9 @@ namespace PlatformerPlayerController.Scripts
             if (_edgeRaycast.Count > 0) return;
             
             // Checks whether there is a wall in front of the player.
-            _edgeRaycast = _spaceState.IntersectRay(
-                Position + new Vector2(Direction * (_shapeSize.x / 2f - 1f), -_shapeSize.y - 1f),
-                Position + new Vector2(Direction * (_shapeSize.x / 2f + 2f), -_shapeSize.y - 1f),
+            _edgeRaycast = GetWorld2d().DirectSpaceState.IntersectRay(
+                Position + new Vector2(Direction * (ShapeExtents.x - 1f), -ShapeSizes.y - 1f),
+                Position + new Vector2(Direction * (ShapeExtents.x + 2f), -ShapeSizes.y - 1f),
                 new Array {this},
                 CollisionMask
             );
@@ -299,9 +301,9 @@ namespace PlatformerPlayerController.Scripts
             if (_edgeRaycast.Count > 0) return;
         
             // Checks whether there is an edge.
-            _edgeRaycast = _spaceState.IntersectRay(
-                Position + new Vector2(Direction * (_shapeSize.x / 2f + 2f), -_shapeSize.y - 1f),
-                Position + new Vector2(Direction * (_shapeSize.x / 2f + 2f), -_shapeSize.y + 1f),
+            _edgeRaycast = GetWorld2d().DirectSpaceState.IntersectRay(
+                Position + new Vector2(Direction * (ShapeExtents.x + 2f), -ShapeSizes.y - 1f),
+                Position + new Vector2(Direction * (ShapeExtents.x + 2f), -ShapeSizes.y + 1f),
                 new Array {this},
                 CollisionMask
             );
@@ -316,9 +318,9 @@ namespace PlatformerPlayerController.Scripts
             if (!_isHangingOnEdge) return;
             
             // Checks the wall from the player`s feet while the player hangs on the edge.
-            _edgeRaycast = _spaceState.IntersectRay(
-                Position + new Vector2(Direction * (_shapeSize.x / 2f - 1f), 0f),
-                Position + new Vector2(Direction * (_shapeSize.x / 2f + 2f), 0f),
+            _edgeRaycast = GetWorld2d().DirectSpaceState.IntersectRay(
+                Position + new Vector2(Direction * (ShapeExtents.x - 1f), 0f),
+                Position + new Vector2(Direction * (ShapeExtents.x + 2f), 0f),
                 new Array {this},
                 CollisionMask
             );

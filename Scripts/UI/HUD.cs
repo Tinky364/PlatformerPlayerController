@@ -1,11 +1,11 @@
 using Godot;
 
-namespace PlatformerPlayerController.Scripts
+namespace PlatformerPlayerController.Scripts.UI
 {
     public class HUD : CanvasLayer
     {
         [Export]
-        private NodePath _coinCountLabelPath;
+        private NodePath _coinCountLabelPath = default;
     
         private Label _coinCountLabel;
     

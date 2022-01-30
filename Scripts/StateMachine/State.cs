@@ -1,19 +1,16 @@
+using System;
 using Godot;
 
 namespace PlatformerPlayerController.Scripts.StateMachine
 {
-    public abstract class State : Resource
+    public abstract class State<T> : Reference
     {
-        public StateMachine Machine { get; set; }
+        public T Id { get; }
 
-        public State()
-        {
-            
-        }
-        public State(StateMachine machine)
-        {
-            Machine = machine;
-        }
+        protected State() {}
+
+        public State(T id) => Id = id;
+
         public abstract void Enter();
         public abstract void Exit();
         public abstract void Process(float delta);
