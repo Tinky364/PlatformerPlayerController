@@ -5,13 +5,11 @@ namespace PlatformerPlayerController.Scripts.StateMachine
 {
     public class StateMachine<T> : Reference
     {
-        protected readonly Dictionary<T, State<T>> States;
+        public State<T> CurrentState { get; private set; }
         
-        private State<T> _currentState;
-        public State<T> CurrentState => _currentState;
-
+        protected readonly Dictionary<T, State<T>> States;
         public bool IsStateLocked { get; set; }
-
+        
         public StateMachine()
         {
             States = new Dictionary<T, State<T>>();
@@ -34,22 +32,22 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         
         public void SetCurrentState(State<T> newState)
         {
+            if (CurrentState == newState) return;
             if (IsStateLocked) return;
-            if (_currentState == newState) return;
             if (!States.ContainsKey(newState.Id)) return;
-            _currentState?.Exit();
-            _currentState = newState;
-            _currentState?.Enter();
+            CurrentState?.Exit();
+            CurrentState = newState;
+            CurrentState?.Enter();
         }
         
         public void _Process(float delta)
         {
-            _currentState?.Process(delta);
+            CurrentState?.Process(delta);
         }
 
         public void _PhysicsProcess(float delta)
         {
-            _currentState?.PhysicsProcess(delta);
+            CurrentState?.PhysicsProcess(delta);
         }
     }
 }

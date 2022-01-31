@@ -4,7 +4,7 @@
 [ext_resource path="res://Scripts/Coin.cs" type="Script" id=5]
 
 [sub_resource type="CircleShape2D" id=2]
-radius = 7.0
+radius = 8.0
 
 [sub_resource type="Animation" id=6]
 length = 0.001
@@ -85,20 +85,23 @@ __meta__ = {
 "_edit_group_": true
 }
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="Shape" type="CollisionShape2D" parent="."]
 position = Vector2( 0, -8 )
 shape = SubResource( 2 )
+__meta__ = {
+"_edit_lock_": true
+}
 
 [node name="Sprite" type="Sprite" parent="."]
 position = Vector2( 0, -8 )
 texture = ExtResource( 1 )
 hframes = 4
+__meta__ = {
+"_edit_lock_": true
+}
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 autoplay = "flip"
 anims/RESET = SubResource( 6 )
 anims/collect = SubResource( 5 )
 anims/flip = SubResource( 7 )
-
-[connection signal="body_entered" from="." to="." method="OnCoinBodyEntered"]
-[connection signal="animation_finished" from="AnimationPlayer" to="." method="OnAnimationFinished"]

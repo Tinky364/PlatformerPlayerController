@@ -4,18 +4,25 @@ namespace PlatformerPlayerController.Scripts.StateMachine
 {
     public class ChaseState : State<Enemy.EnemyStates>
     {
-        private readonly Enemy _enemy;
+        private Enemy _enemy;
 
-        protected ChaseState() {}
+        [Export(PropertyHint.Range, "0,100,or_greater")]
+        public float StopDistance = 26f;
 
-        public ChaseState(Enemy enemy) : base(Enemy.EnemyStates.Chase)
-        {
-            _enemy = enemy;
-        }
+        public Vector2 TargetPos;
         
+        public void Initialize(Enemy enemy)
+        {
+            Initialize(Enemy.EnemyStates.Chase);
+            _enemy = enemy;
+            _enemy.Fsm.AddState(this);
+        }
+
         public override void Enter()
         {
-            GD.Print("ChaseState");
+            GD.Print($"{_enemy.Name}: ChaseState");
+            _enemy.Velocity.x = 0f;
+            _enemy.AnimatedSprite.Play("run");
         }
 
         public override void Exit()
@@ -28,28 +35,8 @@ namespace PlatformerPlayerController.Scripts.StateMachine
 
         public override void PhysicsProcess(float delta)
         {
-            ActionLogic(delta);
-        }
-
-        private void ActionLogic(float delta)
-        {
-            if (_enemy.IsOnGround && _enemy.NavArea.IsTargetReachable)
-            {
-                Vector2 dirToTarget = _enemy.NavArea.TargetNavBody.NavPosition - _enemy.NavBody.NavPosition;
-                if (Mathf.Abs(dirToTarget.x) > _enemy.StopDistance)
-                {
-                    _enemy.Velocity.x = dirToTarget.Normalized().x * _enemy.MoveSpeed;
-                }
-                else
-                {
-                    _enemy.Velocity.x = 0f;
-                    _enemy.Machine.SetCurrentState(Enemy.EnemyStates.Attack);
-                }
-            }
-            else
-            {
-                _enemy.Velocity.x = 0f;
-            }
+            Vector2 dirToTargetPos = _enemy.NavBody.NavPosition.DirectionTo(TargetPos);
+            _enemy.Velocity.x = dirToTargetPos.x * _enemy.MoveSpeed;
         }
     }
 }

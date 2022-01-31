@@ -1,15 +1,33 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=15 format=2]
 
 [ext_resource path="res://Sprites/Enemy/Enemy2.png" type="Texture" id=1]
 [ext_resource path="res://Sprites/Enemy/Enemy1.png" type="Texture" id=2]
 [ext_resource path="res://Scripts/StateMachine/Enemy.cs" type="Script" id=3]
 [ext_resource path="res://Scripts/Navigation/NavArea.cs" type="Script" id=4]
 [ext_resource path="res://Scripts/Navigation/NavBody.cs" type="Script" id=5]
+[ext_resource path="res://Scripts/StateMachine/ChaseState.cs" type="Script" id=6]
+[ext_resource path="res://Scripts/StateMachine/AttackState.cs" type="Script" id=7]
+
+[sub_resource type="Resource" id=1]
+resource_local_to_scene = true
+script = ExtResource( 6 )
+StopDistance = 26.0
+
+[sub_resource type="Resource" id=18]
+resource_local_to_scene = true
+script = ExtResource( 7 )
+_backMoveDistance = 10.0
+_backMoveSecond = 0.75
+_jumpSecond = 0.5
+_landingMoveDistance = 3.0
+_landingMoveSecond = 0.2
+_afterAttackSecond = 1.0
 
 [sub_resource type="RectangleShape2D" id=14]
-extents = Vector2( 72, 8 )
+resource_local_to_scene = true
+extents = Vector2( 24, 8 )
 
-[sub_resource type="SpriteFrames" id=1]
+[sub_resource type="SpriteFrames" id=17]
 animations = [ {
 "frames": [ ExtResource( 2 ) ],
 "loop": true,
@@ -25,11 +43,16 @@ animations = [ {
 [sub_resource type="RectangleShape2D" id=15]
 extents = Vector2( 5, 3.5 )
 
+[sub_resource type="RectangleShape2D" id=19]
+extents = Vector2( 5, 3.5 )
+
 [sub_resource type="RectangleShape2D" id=16]
 extents = Vector2( 5, 1 )
 
 [node name="Enemy" type="Node"]
 script = ExtResource( 3 )
+_chaseState = SubResource( 1 )
+_attackState = SubResource( 18 )
 
 [node name="NavArea" type="Area2D" parent="."]
 collision_layer = 512
@@ -54,7 +77,7 @@ __meta__ = {
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="Body"]
 position = Vector2( 0, -8 )
-frames = SubResource( 1 )
+frames = SubResource( 17 )
 animation = "idle"
 __meta__ = {
 "_edit_lock_": true
@@ -67,14 +90,32 @@ __meta__ = {
 "_edit_lock_": true
 }
 
+[node name="TriggerArea" type="Area2D" parent="Body/Shape"]
+position = Vector2( 0, 3.5 )
+collision_layer = 16
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true
+}
+
+[node name="Shape" type="CollisionShape2D" parent="Body/Shape/TriggerArea"]
+position = Vector2( 0, -3.5 )
+shape = SubResource( 19 )
+__meta__ = {
+"_edit_lock_": true
+}
+
 [node name="NavBody" type="Area2D" parent="Body"]
 collision_layer = 0
 collision_mask = 6
 script = ExtResource( 5 )
+__meta__ = {
+"_edit_group_": true
+}
 
 [node name="Shape" type="CollisionShape2D" parent="Body/NavBody"]
 position = Vector2( 0, -1 )
 shape = SubResource( 16 )
-
-[connection signal="TargetEntered" from="NavArea" to="." method="OnTargetEntered"]
-[connection signal="TargetExited" from="NavArea" to="." method="OnTargetExited"]
+__meta__ = {
+"_edit_lock_": true
+}

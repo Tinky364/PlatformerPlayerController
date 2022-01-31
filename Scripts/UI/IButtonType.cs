@@ -8,9 +8,5 @@
         void OnPressed();
     }
 
-    public enum ButtonTypes
-    {
-        ChangeSceneButton,
-        QuitGameButton
-    }
+    public enum ButtonTypes { ChangeSceneButton, QuitGameButton }
 }

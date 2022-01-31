@@ -1,5 +1,3 @@
-using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Godot;
 
@@ -10,6 +8,11 @@ namespace PlatformerPlayerController.Scripts
         private static GameManager _singleton;
         public static GameManager Singleton => _singleton;
 
+        public SceneTree Tree => GetTree();
+        private Viewport Root => Tree.Root;
+        private Node _currentScene;
+        
+        public enum GameState { Play, Pause }
         private GameState _currentGameState;
         public GameState CurrentGameState
         {
@@ -28,11 +31,6 @@ namespace PlatformerPlayerController.Scripts
                 _currentGameState = value;
             }
         } 
-
-        public SceneTree Tree => GetTree();
-        private Viewport Root => Tree.Root;
-        private Node _currentScene;
-        
         public SignalAwaiter EndOfFrameSignal { get; private set; }
     
         public override void _Ready()
@@ -81,16 +79,11 @@ namespace PlatformerPlayerController.Scripts
                 if (err != Error.FileEof)
                     GD.PrintErr("Poll error!");
 
-                await ToSignal(Tree.CreateTimer(5f), "timeout");
                 GD.Print($"Resource Load ended -> {path}");
                 return (T) loader.GetResource();
             }
         }
     }
     
-    public enum GameState
-    {
-        Play,
-        Pause
-    }
+    
 }

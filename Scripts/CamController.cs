@@ -1,14 +1,13 @@
-using System.Threading.Tasks;
 using Godot;
 
 namespace PlatformerPlayerController.Scripts
 {
     public class CamController : Camera2D
     {
+        private Player _player;
+
         [Export(PropertyHint.Range, "0")]
         private float _offsetAcceleration = 2f;
-        
-        private Player _player;
         
         public override void _Ready()
         {

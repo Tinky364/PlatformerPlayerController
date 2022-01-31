@@ -6,18 +6,20 @@ namespace PlatformerPlayerController.Scripts.Navigation
     public class NavBody : Area2D
     {
         private KinematicBody2D _body;
-        private CollisionShape2D _collisionShape;
-        private RectangleShape2D _shape;
+        private CollisionShape2D _shape;
         private Physics2DDirectSpaceState _spaceState;
 
         public Vector2 NavPosition { get; private set; } = new Vector2();
+        public Vector2 ShapeExtents { get; private set; }
         
         public override void _Ready()
         {
             _body = GetNode<KinematicBody2D>("..");
-            _collisionShape = GetNode<CollisionShape2D>("Shape");
-            _shape = (RectangleShape2D) _collisionShape.Shape;
+            _shape = GetNode<CollisionShape2D>("Shape");
             _spaceState = GetWorld2d().DirectSpaceState;
+            
+            if (_shape.Shape is RectangleShape2D shape) ShapeExtents = shape.Extents;
+
             FindGroundPositionForBody();
         }
 
