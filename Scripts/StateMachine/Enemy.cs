@@ -7,11 +7,11 @@ namespace PlatformerPlayerController.Scripts.StateMachine
     public class Enemy : Node
     {
         public StateMachine<EnemyStates> Fsm { get; } = new StateMachine<EnemyStates>();
-        public KinematicBody2D Body;
-        public NavArea NavArea;
-        public NavBody NavBody;
+        private KinematicBody2D _body;
+        public NavArea2D NavArea;
+        public NavChar2D NavChar;
         public AnimatedSprite AnimatedSprite;
-        public Area2D Area;
+        private Area2D _triggerArea;
         private CollisionShape2D _shape;
 
         [Export]
@@ -26,6 +26,8 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         private ChaseState _chaseState;
         [Export(PropertyHint.File, ".res")]
         private AttackState _attackState;
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private int _damageValue = 1;
         
         public enum EnemyStates { Idle, Chase, Attack }
         private Dictionary _groundRay;
@@ -34,31 +36,35 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         public Vector2 GroundHitPos { get; private set; }
         public int Direction { get; set; }
         public bool IsOnGround { get; private set; }
+        public bool CanAttack { get; set; }
 
         public override void _Ready()
         {
             SetProcess(HasEnabled);
             SetPhysicsProcess(HasEnabled);
             
-            Body = GetNode<KinematicBody2D>("Body");
+            _body = GetNode<KinematicBody2D>("Body");
             _shape = GetNode<CollisionShape2D>("Body/Shape");
             AnimatedSprite = GetNode<AnimatedSprite>("Body/AnimatedSprite");
-            NavArea = GetNode<NavArea>("NavArea");
-            NavBody = GetNode<NavBody>("Body/NavBody");
-            Area = GetNode<Area2D>("Body/Shape/TriggerArea");
+            NavArea = GetNode<NavArea2D>("NavArea");
+            NavChar = GetNode<NavChar2D>("Body/NavChar");
+            _triggerArea = GetNode<Area2D>("Body/TriggerArea");
             if (_shape.Shape is RectangleShape2D shape) ShapeExtents = shape.Extents;
 
             new IdleState().Initialize(this);
             _attackState.Initialize(this);
             _chaseState.Initialize(this);
             
-            Area.Connect("body_entered", this, nameof(OnBodyEntered));
-            
+            _triggerArea.Connect("body_entered", this, nameof(OnBodyEntered));
+
             Fsm.SetCurrentState(EnemyStates.Idle);
         }
 
+        
         public override void _Process(float delta)
         {
+            if (!NavArea.IsOnCam) return;
+            
             StateController();
             Fsm._Process(delta);
             
@@ -81,12 +87,12 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         {
             Vector2 dirToTarget = NavArea.DirectionToTarget();
             if (dirToTarget == Vector2.Zero) dirToTarget = Vector2.Right;
-            Vector2 targetPos = NavArea.TargetNavBody.NavPosition + dirToTarget * -stopDistance;
+            Vector2 targetPos = NavArea.TargetNavChar.NavPosition + dirToTarget * -stopDistance;
             
             if (!NavArea.IsPositionInArea(targetPos)) return false;
             
             _chaseState.TargetPos = targetPos;
-            float distance = NavBody.NavPosition.DistanceTo(targetPos);
+            float distance = NavChar.NavPosition.DistanceTo(targetPos);
             if (distance < 2f && distance > -2f) Fsm.SetCurrentState(EnemyStates.Attack);
             else Fsm.SetCurrentState(EnemyStates.Chase);
             return true;
@@ -94,6 +100,8 @@ namespace PlatformerPlayerController.Scripts.StateMachine
 
         public override void _PhysicsProcess(float delta)
         {
+            if (!NavArea.IsOnCam) return;
+            
             CheckGround();
             Fsm._PhysicsProcess(delta);
 
@@ -103,17 +111,17 @@ namespace PlatformerPlayerController.Scripts.StateMachine
                 Velocity.y += Gravity * delta; // Adds gravity force increasingly.
             }
             
-            Velocity = Body.MoveAndSlide(Velocity, Vector2.Up);
+            Velocity = NavChar.MoveAndSlide(Velocity, delta, Vector2.Up);
         }
 
         private void CheckGround()
         {
             // Raycast from the left bottom corner of the player.
-            _groundRay = Body.GetWorld2d().DirectSpaceState.IntersectRay(
-                Body.Position + new Vector2(-ShapeExtents.x, -2f), 
-                Body.Position + new Vector2(-ShapeExtents.x, _groundDetectionHeight), 
+            _groundRay = _body.GetWorld2d().DirectSpaceState.IntersectRay(
+                _body.Position + new Vector2(-ShapeExtents.x, -2f), 
+                _body.Position + new Vector2(-ShapeExtents.x, _groundDetectionHeight), 
                 new Array {this},
-                Body.CollisionMask
+                _body.CollisionMask
             );
             if (_groundRay.Count > 0)
             {
@@ -123,11 +131,11 @@ namespace PlatformerPlayerController.Scripts.StateMachine
             }
             // If the first raycast does not hit the ground.
             // Raycast from the right bottom corner of the player.
-            _groundRay = Body.GetWorld2d().DirectSpaceState.IntersectRay(
-                Body.Position + new Vector2(ShapeExtents.x, -2f),
-                Body.Position + new Vector2(ShapeExtents.x, _groundDetectionHeight),
+            _groundRay = _body.GetWorld2d().DirectSpaceState.IntersectRay(
+                _body.Position + new Vector2(ShapeExtents.x, -2f),
+                _body.Position + new Vector2(ShapeExtents.x, _groundDetectionHeight),
                 new Array {this},
-                Body.CollisionMask
+                _body.CollisionMask
             );
             if (_groundRay.Count > 0)
             {
@@ -159,10 +167,8 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         
         private void OnBodyEntered(Node body)
         {
-            if (body is Player player)
-            {
-                player.OnTookDamage();
-            }
+            if (CanAttack)
+                Events.Singleton.EmitSignal("Damaged", body, _damageValue, this);
         }
     }
 }

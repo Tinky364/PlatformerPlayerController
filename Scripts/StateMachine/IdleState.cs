@@ -16,7 +16,7 @@ namespace PlatformerPlayerController.Scripts.StateMachine
             _enemy = enemy;
             _enemy.Fsm.AddState(this);
             
-            _pos1 = _enemy.Body.GlobalPosition;
+            _pos1 = _enemy.NavChar.GlobalPosition;
             _pos2 = _pos1 + new Vector2(30f, 0f);
             if (!_enemy.NavArea.IsPositionInArea(_pos2))
             {
@@ -46,7 +46,7 @@ namespace PlatformerPlayerController.Scripts.StateMachine
 
         public override void PhysicsProcess(float delta)
         {
-            Vector2 dirToTarget = _targetPos - _enemy.NavBody.NavPosition;
+            Vector2 dirToTarget = _targetPos - _enemy.NavChar.NavPosition;
             if (Mathf.Abs(dirToTarget.x) > 1f)
             {
                 _enemy.AnimatedSprite.Play("run");

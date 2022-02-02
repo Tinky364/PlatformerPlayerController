@@ -22,7 +22,7 @@ namespace PlatformerPlayerController.Scripts
         [Export(PropertyHint.Range, "1,200,or_greater")]
         private float _jumpHeightMax = 26f;
         [Export(PropertyHint.Range, "0,400,or_greater")]
-        private float _jumpWidthMax = 32f;
+        private float _jumpWidthMax = 40f;
         [Export(PropertyHint.Range, "0.2f,4,or_greater")]
         private float _climbDuration = 0.25f;
 
@@ -284,7 +284,7 @@ namespace PlatformerPlayerController.Scripts
             // Checks whether there is a wall in front of the player.
             _edgeRay = GetWorld2d().DirectSpaceState.IntersectRay(
                 Position + new Vector2(Direction * (ShapeExtents.x - 1f), -ShapeSizes.y - 1f),
-                Position + new Vector2(Direction * (ShapeExtents.x + 2f), -ShapeSizes.y - 1f),
+                Position + new Vector2(Direction * (ShapeExtents.x + 3f), -ShapeSizes.y - 1f),
                 new Array {this},
                 CollisionMask
             );
@@ -293,8 +293,8 @@ namespace PlatformerPlayerController.Scripts
         
             // Checks whether there is an edge.
             _edgeRay = GetWorld2d().DirectSpaceState.IntersectRay(
-                Position + new Vector2(Direction * (ShapeExtents.x + 2f), -ShapeSizes.y - 1f),
-                Position + new Vector2(Direction * (ShapeExtents.x + 2f), -ShapeSizes.y + 1f),
+                Position + new Vector2(Direction * (ShapeExtents.x + 3f), -ShapeSizes.y - 1f),
+                Position + new Vector2(Direction * (ShapeExtents.x + 3f), -ShapeSizes.y + 2f),
                 new Array {this},
                 CollisionMask
             );
@@ -311,7 +311,7 @@ namespace PlatformerPlayerController.Scripts
             // Checks the wall from the player`s feet while the player hangs on the edge.
             _edgeRay = GetWorld2d().DirectSpaceState.IntersectRay(
                 Position + new Vector2(Direction * (ShapeExtents.x - 1f), 0f),
-                Position + new Vector2(Direction * (ShapeExtents.x + 2f), 0f),
+                Position + new Vector2(Direction * (ShapeExtents.x + 3f), 0f),
                 new Array {this},
                 CollisionMask
             );

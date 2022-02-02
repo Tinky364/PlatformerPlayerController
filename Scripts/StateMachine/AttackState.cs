@@ -5,31 +5,27 @@ namespace PlatformerPlayerController.Scripts.StateMachine
     public class AttackState : State<Enemy.EnemyStates>
     {
         private Enemy _enemy;
-        private Tween _tween;
 
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private float _waitBeforeAttackSec = 1f;
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private float _backMoveSec = 0.75f;
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private float _jumpSec = 0.5f;
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private float _landingMoveSec = 0.2f;
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private float _waitAfterAttackSec = 1f;
         [Export(PropertyHint.Range, "0,100,or_greater")]
         private float _backMoveDistance = 10f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _backMoveSecond = 0.75f;
-        [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _jumpSecond = 0.5f;
-        [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _landingMoveDistance = 3f;
-        [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _landingMoveSecond = 0.2f;
-        [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _afterAttackSecond = 1f;
 
         public void Initialize(Enemy enemy)
         {
             Initialize(Enemy.EnemyStates.Attack);
             _enemy = enemy;
             _enemy.Fsm.AddState(this);
-            
-            _tween = new Tween();
-            _enemy.AddChild(_tween);
-            _tween.Name = "AttackTween";
-            _tween.PlaybackProcessMode = Tween.TweenProcessMode.Physics;
         }
 
         public override void Enter()
@@ -42,53 +38,45 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         
         private async void Attack()
         {
-            float targetPosX = _enemy.NavArea.TargetNavBody.NavPosition.x;
             Vector2 dirToTarget = _enemy.NavArea.DirectionToTarget();
             _enemy.Velocity.x = 0;
-            if (dirToTarget.x >= 0)
-                _enemy.Direction = 1;
-            else
-                _enemy.Direction = -1;
+            if (dirToTarget.x >= 0) _enemy.Direction = 1;
+            else _enemy.Direction = -1;
+            float targetPosX = _enemy.NavArea.TargetNavChar.NavPosition.x;
+
+            await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeAttackSec), "timeout");
             
-            _tween.InterpolateProperty(
-                _enemy.Body,
-                "position:x",
-                null,
-                _enemy.NavBody.NavPosition.x + -dirToTarget.x * _backMoveDistance,
-                _backMoveSecond,
+            _enemy.NavChar.InterpolateMove(
+                _enemy.NavChar.NavPosition.x + -dirToTarget.x * _backMoveDistance,
+                _backMoveSec,
                 Tween.TransitionType.Quad
             );
-            _tween.Start();
             
-            await ToSignal(_tween, "tween_completed");
-            
+            await ToSignal(_enemy.NavChar.Tween, "tween_completed");
+
             _enemy.AnimatedSprite.Play("run");
-            _enemy.Velocity.y = -_enemy.Gravity * _jumpSecond / 2f;
-            _tween.InterpolateProperty(
-                _enemy.Body,
-                "position:x",
-                null,
+            _enemy.CanAttack = true;
+            _enemy.Velocity.y = -_enemy.Gravity * _jumpSec / 2f;
+            _enemy.NavChar.InterpolateMove(
                 targetPosX,
-                _jumpSecond
+                _jumpSec
             );
-            _tween.Start();
             
-            await ToSignal(_tween, "tween_completed");
+            await ToSignal(_enemy.NavChar.Tween, "tween_completed");
             
-            _tween.InterpolateProperty(
-                _enemy.Body,
-                "position:x",
-                null,
+            _enemy.CanAttack = false;
+            _enemy.NavChar.InterpolateMove(
                 targetPosX + dirToTarget.x * _landingMoveDistance,
-                _landingMoveSecond,
+                _landingMoveSec,
                 Tween.TransitionType.Quad,
                 Tween.EaseType.Out
             );
-            _tween.Start();
             
-            await ToSignal(_tween, "tween_completed");
+            await ToSignal(_enemy.NavChar.Tween, "tween_completed");
+            
             _enemy.AnimatedSprite.Play("idle");
-            await ToSignal(GameManager.Singleton.Tree.CreateTimer(_afterAttackSecond), "timeout");
+            
+            await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitAfterAttackSec), "timeout");
             
             _enemy.Fsm.IsStateLocked = false;
             _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);

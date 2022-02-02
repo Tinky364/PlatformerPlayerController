@@ -35,10 +35,8 @@ namespace PlatformerPlayerController.Scripts
     
         public override void _Ready()
         {
-            if (_singleton == null)
-                _singleton = this;
-            else
-                GD.PrintErr("Singleton Error");
+            if (_singleton == null) _singleton = this;
+            else GD.Print($"Multiple instances of singleton class named {Name}!");
 
             _currentScene = Root.GetChild(Root.GetChildCount() - 1);
             EndOfFrameSignal = ToSignal(Tree, "idle_frame");

@@ -35,7 +35,7 @@ namespace PlatformerPlayerController.Scripts.StateMachine
 
         public override void PhysicsProcess(float delta)
         {
-            Vector2 dirToTargetPos = _enemy.NavBody.NavPosition.DirectionTo(TargetPos);
+            Vector2 dirToTargetPos = _enemy.NavChar.NavPosition.DirectionTo(TargetPos);
             _enemy.Velocity.x = dirToTargetPos.x * _enemy.MoveSpeed;
         }
     }

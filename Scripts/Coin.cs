@@ -7,6 +7,9 @@ namespace PlatformerPlayerController.Scripts
         private AnimationPlayer _animationPlayer;
         private CollisionShape2D _shape;
         
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private int _value = 1;
+        
         public override void _Ready()
         {
             _animationPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
@@ -20,21 +23,15 @@ namespace PlatformerPlayerController.Scripts
 
         private void OnBodyEntered(Node body)
         {
-            if (body is Player player)
-            {
-                player.AddCoin(1);
-                _animationPlayer.Stop();
-                _animationPlayer.Play("collect");
-                _shape.SetDeferred("disabled", true);
-            }
+            Events.Singleton.EmitSignal("CoinCollected", body, _value, this);
+            _animationPlayer.Stop();
+            _animationPlayer.Play("collect");
+            _shape.SetDeferred("disabled", true);
         }
 
         private void OnAnimationFinished(string animName)
         {
-            if (animName.Equals("collect"))
-            {
-                QueueFree();
-            }
+            if (animName.Equals("collect")) QueueFree();
         }
     }
 }

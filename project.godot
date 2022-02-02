@@ -15,7 +15,8 @@ run/main_scene="res://Scenes/GameScene.tscn"
 
 [autoload]
 
-GameManager="*res://Scenes/GameManager.tscn"
+Events="*res://Scripts/Events.cs"
+GameManager="*res://Scripts/GameManager.cs"
 
 [display]
 
@@ -76,6 +77,7 @@ move_down={
 2d_physics/layer_1="Player"
 2d_physics/layer_2="Ground"
 2d_physics/layer_3="Platform"
+2d_physics/layer_4="Collectible"
 2d_physics/layer_5="Enemy"
 
 [rendering]

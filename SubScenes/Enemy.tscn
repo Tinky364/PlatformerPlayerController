@@ -3,8 +3,8 @@
 [ext_resource path="res://Sprites/Enemy/Enemy2.png" type="Texture" id=1]
 [ext_resource path="res://Sprites/Enemy/Enemy1.png" type="Texture" id=2]
 [ext_resource path="res://Scripts/StateMachine/Enemy.cs" type="Script" id=3]
-[ext_resource path="res://Scripts/Navigation/NavArea.cs" type="Script" id=4]
-[ext_resource path="res://Scripts/Navigation/NavBody.cs" type="Script" id=5]
+[ext_resource path="res://Scripts/Navigation/NavChar2D.cs" type="Script" id=4]
+[ext_resource path="res://Scripts/Navigation/NavArea2D.cs" type="Script" id=5]
 [ext_resource path="res://Scripts/StateMachine/ChaseState.cs" type="Script" id=6]
 [ext_resource path="res://Scripts/StateMachine/AttackState.cs" type="Script" id=7]
 
@@ -16,12 +16,13 @@ StopDistance = 26.0
 [sub_resource type="Resource" id=18]
 resource_local_to_scene = true
 script = ExtResource( 7 )
+_waitBeforeAttackSec = 1.0
+_backMoveSec = 0.75
+_jumpSec = 0.5
+_landingMoveSec = 0.2
+_waitAfterAttackSec = 1.0
 _backMoveDistance = 10.0
-_backMoveSecond = 0.75
-_jumpSecond = 0.5
 _landingMoveDistance = 3.0
-_landingMoveSecond = 0.2
-_afterAttackSecond = 1.0
 
 [sub_resource type="RectangleShape2D" id=14]
 resource_local_to_scene = true
@@ -55,18 +56,22 @@ _chaseState = SubResource( 1 )
 _attackState = SubResource( 18 )
 
 [node name="NavArea" type="Area2D" parent="."]
-collision_layer = 512
+collision_layer = 0
 collision_mask = 256
-script = ExtResource( 4 )
+script = ExtResource( 5 )
 __meta__ = {
 "_edit_group_": true
 }
+_navCharPath = NodePath("../Body/NavChar")
+_targetNavCharPath = NodePath("")
 
 [node name="Shape" type="CollisionShape2D" parent="NavArea"]
 shape = SubResource( 14 )
 __meta__ = {
 "_edit_lock_": true
 }
+
+[node name="VisibilityNotifier2D" type="VisibilityNotifier2D" parent="NavArea"]
 
 [node name="Body" type="KinematicBody2D" parent="."]
 collision_layer = 16
@@ -90,30 +95,29 @@ __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="TriggerArea" type="Area2D" parent="Body/Shape"]
-position = Vector2( 0, 3.5 )
+[node name="TriggerArea" type="Area2D" parent="Body"]
 collision_layer = 16
 __meta__ = {
-"_edit_group_": true,
 "_edit_lock_": true
 }
 
-[node name="Shape" type="CollisionShape2D" parent="Body/Shape/TriggerArea"]
+[node name="Shape" type="CollisionShape2D" parent="Body/TriggerArea"]
 position = Vector2( 0, -3.5 )
 shape = SubResource( 19 )
 __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="NavBody" type="Area2D" parent="Body"]
-collision_layer = 0
+[node name="NavChar" type="Area2D" parent="Body"]
+collision_layer = 256
 collision_mask = 6
-script = ExtResource( 5 )
+script = ExtResource( 4 )
 __meta__ = {
-"_edit_group_": true
+"_edit_lock_": true
 }
+_navAreaPath = NodePath("../../NavArea")
 
-[node name="Shape" type="CollisionShape2D" parent="Body/NavBody"]
+[node name="Shape" type="CollisionShape2D" parent="Body/NavChar"]
 position = Vector2( 0, -1 )
 shape = SubResource( 16 )
 __meta__ = {
