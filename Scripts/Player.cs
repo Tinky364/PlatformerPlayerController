@@ -5,7 +5,7 @@ namespace PlatformerPlayerController.Scripts
     public class Player : PlayerController
     {
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private int _maxHealth = 3;
+        private int _maxHealth = 6;
         
         private int _health;
         public int Health
@@ -26,21 +26,25 @@ namespace PlatformerPlayerController.Scripts
         public override void _Ready()
         {
             base._Ready();
-
+            
+            Health = _maxHealth;
+            
             Events.Singleton.Connect("Damaged", this, nameof(OnDamaged));
             Events.Singleton.Connect("CoinCollected", this, nameof(AddCoin));
         }
 
         public void OnDamaged(Node target, int damageValue, Node attacker)
         {
-            GD.Print($"{target.Name} was damaged by {attacker.Name}.");
+            GD.Print($"{target.Name} was damaged value {damageValue} by {attacker.Name}.");
             Health -= damageValue;
+            Events.Singleton.EmitSignal("HealthChanged", Health, _maxHealth);
         }
 
         public void AddCoin(Node target, int coinValue, Coin coin)
         {
             GD.Print($"{coinValue} coin was added.");
             CoinCount += coinValue;
+            Events.Singleton.EmitSignal("CoinCountChanged", CoinCount);
         }
     }
 }

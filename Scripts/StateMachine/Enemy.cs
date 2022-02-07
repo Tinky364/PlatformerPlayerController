@@ -15,6 +15,8 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         private CollisionShape2D _shape;
 
         [Export]
+        public bool DebugEnabled { get; private set; }
+        [Export]
         public bool HasEnabled { get; private set; } = true;
         [Export(PropertyHint.Range, "10,2000,or_greater")]
         public float Gravity = 500f;
@@ -22,6 +24,8 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         private float _groundDetectionHeight = 0.1f;
         [Export(PropertyHint.Range, "0,200,or_greater")]
         public float MoveSpeed = 15f;
+        [Export(PropertyHint.File, ".res")]
+        private IdleState _idleState;
         [Export(PropertyHint.File, ".res")]
         private ChaseState _chaseState;
         [Export(PropertyHint.File, ".res")]
@@ -51,7 +55,7 @@ namespace PlatformerPlayerController.Scripts.StateMachine
             _triggerArea = GetNode<Area2D>("Body/TriggerArea");
             if (_shape.Shape is RectangleShape2D shape) ShapeExtents = shape.Extents;
 
-            new IdleState().Initialize(this);
+            _idleState.Initialize(this);
             _attackState.Initialize(this);
             _chaseState.Initialize(this);
             
@@ -60,7 +64,6 @@ namespace PlatformerPlayerController.Scripts.StateMachine
             Fsm.SetCurrentState(EnemyStates.Idle);
         }
 
-        
         public override void _Process(float delta)
         {
             if (!NavArea.IsOnCam) return;
@@ -78,24 +81,30 @@ namespace PlatformerPlayerController.Scripts.StateMachine
                 Fsm.SetCurrentState(EnemyStates.Idle);
                 return;
             }
-            if (StateAccordingToPosition(_chaseState.StopDistance)) return;
-            if (StateAccordingToPosition(-_chaseState.StopDistance)) return;
-            Fsm.SetCurrentState(EnemyStates.Idle);
-        }
 
-        private bool StateAccordingToPosition(float stopDistance)
-        {
             Vector2 dirToTarget = NavArea.DirectionToTarget();
             if (dirToTarget == Vector2.Zero) dirToTarget = Vector2.Right;
-            Vector2 targetPos = NavArea.TargetNavChar.NavPosition + dirToTarget * -stopDistance;
+            float distToTarget = NavArea.DistanceToTarget();
             
-            if (!NavArea.IsPositionInArea(targetPos)) return false;
-            
-            _chaseState.TargetPos = targetPos;
-            float distance = NavChar.NavPosition.DistanceTo(targetPos);
-            if (distance < 2f && distance > -2f) Fsm.SetCurrentState(EnemyStates.Attack);
-            else Fsm.SetCurrentState(EnemyStates.Chase);
-            return true;
+            if (distToTarget < _chaseState.StopDist + 1f)
+            {
+                Fsm.SetCurrentState(EnemyStates.Attack);
+                return;
+            }
+
+            if (distToTarget > _chaseState.StopDist)
+            {
+                Vector2 movePos = NavArea.TargetNavChar.NavPosition + -dirToTarget * _chaseState.StopDist;
+
+                if (!NavArea.IsPositionInArea(movePos))
+                {
+                    Fsm.SetCurrentState(EnemyStates.Attack);
+                    return;
+                }
+
+                _chaseState.TargetPos = movePos;
+                Fsm.SetCurrentState(EnemyStates.Chase);
+            }
         }
 
         public override void _PhysicsProcess(float delta)

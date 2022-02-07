@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/AtlasTexture.png-c0fbab1478d3addf53912a410ec4b6bb.stex"
+path="res://.import/HearthBackground.png-30b8e50cc8a3fdca2fddafa3a15c868d.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/AtlasTexture.png"
-dest_files=[ "res://.import/AtlasTexture.png-c0fbab1478d3addf53912a410ec4b6bb.stex" ]
+source_file="res://Sprites/Hearth/HearthBackground.png"
+dest_files=[ "res://.import/HearthBackground.png-30b8e50cc8a3fdca2fddafa3a15c868d.stex" ]
 
 [params]
 

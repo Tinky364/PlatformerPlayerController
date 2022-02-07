@@ -39,11 +39,14 @@ __meta__ = {
 "_edit_group_": true,
 "_edit_lock_": true
 }
+_isOnGroundDetectionLength = 0.1
+_canJumpSec = 0.15
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
-position = Vector2( 0, -8 )
+position = Vector2( -8, -16 )
 frames = SubResource( 2 )
 animation = "idle"
+centered = false
 __meta__ = {
 "_edit_lock_": true
 }

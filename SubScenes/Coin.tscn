@@ -31,7 +31,7 @@ tracks/0/keys = {
 "times": PoolRealArray( 0, 1 ),
 "transitions": PoolRealArray( 1, 1 ),
 "update": 0,
-"values": [ Vector2( 0, -8 ), Vector2( 0, -40 ) ]
+"values": [ Vector2( -8, -16 ), Vector2( 0, -40 ) ]
 }
 tracks/1/type = "value"
 tracks/1/path = NodePath("Sprite:scale")
@@ -86,8 +86,9 @@ __meta__ = {
 }
 
 [node name="Sprite" type="Sprite" parent="."]
-position = Vector2( 0, -8 )
+position = Vector2( -8, -16 )
 texture = ExtResource( 1 )
+centered = false
 hframes = 4
 __meta__ = {
 "_edit_lock_": true

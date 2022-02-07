@@ -31,15 +31,16 @@ namespace PlatformerPlayerController.Scripts
                 _currentGameState = value;
             }
         } 
-        public SignalAwaiter EndOfFrameSignal { get; private set; }
-    
-        public override void _Ready()
+
+        public override void _EnterTree()
         {
             if (_singleton == null) _singleton = this;
             else GD.Print($"Multiple instances of singleton class named {Name}!");
+        }
 
+        public override void _Ready()
+        {
             _currentScene = Root.GetChild(Root.GetChildCount() - 1);
-            EndOfFrameSignal = ToSignal(Tree, "idle_frame");
             
             PauseMode = PauseModeEnum.Process;
             _currentScene.PauseMode = PauseModeEnum.Stop;
@@ -71,7 +72,7 @@ namespace PlatformerPlayerController.Scripts
                 do 
                 {
                     err = loader.Poll();
-                    await EndOfFrameSignal;
+                    await ToSignal(Tree, "idle_frame");
                 } while (err == Error.Ok);
 
                 if (err != Error.FileEof)

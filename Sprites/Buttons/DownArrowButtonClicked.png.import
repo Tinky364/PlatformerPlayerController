@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/EscapeButton_Clicked.png-00d1a27258e061cb7a580556a83a14e4.stex"
+path="res://.import/DownArrowButtonClicked.png-04b8a2b20ee7b251f619040ea9210fb3.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Buttons/EscapeButton_Clicked.png"
-dest_files=[ "res://.import/EscapeButton_Clicked.png-00d1a27258e061cb7a580556a83a14e4.stex" ]
+source_file="res://Sprites/Buttons/DownArrowButtonClicked.png"
+dest_files=[ "res://.import/DownArrowButtonClicked.png-04b8a2b20ee7b251f619040ea9210fb3.stex" ]
 
 [params]
 
@@ -24,12 +24,12 @@ flags/filter=false
 flags/mipmaps=false
 flags/anisotropic=false
 flags/srgb=2
-process/fix_alpha_border=false
+process/fix_alpha_border=true
 process/premult_alpha=false
 process/HDR_as_SRGB=false
 process/invert_color=false
 process/normal_map_invert_y=false
 stream=false
-size_limit=25
+size_limit=0
 detect_3d=false
 svg/scale=1.0

@@ -1,13 +1,13 @@
-[gd_scene load_steps=32 format=2]
+[gd_scene load_steps=38 format=2]
 
 [ext_resource path="res://SubScenes/Player.tscn" type="PackedScene" id=1]
 [ext_resource path="res://Resources/TileSet.tres" type="TileSet" id=2]
-[ext_resource path="res://Sprites/Buttons/EscapeButton.png" type="Texture" id=3]
+[ext_resource path="res://Sprites/Buttons/DownArrowButton.png" type="Texture" id=3]
 [ext_resource path="res://SubScenes/Coin.tscn" type="PackedScene" id=4]
-[ext_resource path="res://Scripts/UI/HUD.cs" type="Script" id=5]
+[ext_resource path="res://Scripts/UI/Hud.cs" type="Script" id=5]
 [ext_resource path="res://Sprites/Coin/Coin.png" type="Texture" id=6]
 [ext_resource path="res://Resources/Font16.tres" type="DynamicFont" id=7]
-[ext_resource path="res://Sprites/Buttons/EscapeButton_Clicked.png" type="Texture" id=8]
+[ext_resource path="res://Sprites/Buttons/DownArrowButtonClicked.png" type="Texture" id=8]
 [ext_resource path="res://Scripts/UI/TextureButtonController.cs" type="Script" id=9]
 [ext_resource path="res://Resources/UpTileSet.tres" type="TileSet" id=10]
 [ext_resource path="res://Resources/BackgroundTileSet.tres" type="TileSet" id=11]
@@ -15,79 +15,100 @@
 [ext_resource path="res://Scripts/StateMachine/ChaseState.cs" type="Script" id=13]
 [ext_resource path="res://SubScenes/Enemy.tscn" type="PackedScene" id=14]
 [ext_resource path="res://Scripts/StateMachine/AttackState.cs" type="Script" id=15]
+[ext_resource path="res://Sprites/Hearth/HearthForeground.png" type="Texture" id=16]
+[ext_resource path="res://Sprites/Hearth/HearthBackground.png" type="Texture" id=17]
+[ext_resource path="res://Scripts/StateMachine/IdleState.cs" type="Script" id=18]
 
 [sub_resource type="PhysicsMaterial" id=9]
 
 [sub_resource type="RectangleShape2D" id=2]
-extents = Vector2( 24, 8 )
+extents = Vector2( 24, 4 )
 
 [sub_resource type="SegmentShape2D" id=6]
-b = Vector2( 16, 0 )
+b = Vector2( 16, -5.34058e-05 )
 
 [sub_resource type="RectangleShape2D" id=3]
-extents = Vector2( 16, 8 )
+extents = Vector2( 16, 4 )
 
 [sub_resource type="RectangleShape2D" id=4]
-extents = Vector2( 24, 8 )
+extents = Vector2( 24, 4 )
 
 [sub_resource type="SegmentShape2D" id=5]
-b = Vector2( -16, 0 )
+b = Vector2( -16, -5.72205e-05 )
+
+[sub_resource type="Resource" id=26]
+resource_local_to_scene = true
+script = ExtResource( 18 )
+_secondPosDist = 40.0
 
 [sub_resource type="Resource" id=18]
 resource_local_to_scene = true
 script = ExtResource( 13 )
-StopDistance = 32.0
+StopDist = 26.0
 
 [sub_resource type="Resource" id=19]
 resource_local_to_scene = true
 script = ExtResource( 15 )
 _waitBeforeAttackSec = 1.0
-_backMoveSec = 0.75
-_jumpSec = 0.5
+_backMoveSec = 0.4
+_jumpSec = 0.6
 _landingMoveSec = 0.2
 _waitAfterAttackSec = 1.0
-_backMoveDistance = 10.0
-_landingMoveDistance = 3.0
+_backMoveDistMin = 5.0
+_backMoveDistMax = 30.0
+_landingMoveDist = 3.0
 
 [sub_resource type="RectangleShape2D" id=21]
 resource_local_to_scene = true
 extents = Vector2( 72, 8 )
 
+[sub_resource type="Resource" id=27]
+resource_local_to_scene = true
+script = ExtResource( 18 )
+_secondPosDist = 30.0
+
 [sub_resource type="Resource" id=15]
 resource_local_to_scene = true
 script = ExtResource( 13 )
-StopDistance = 25.0
+StopDist = 26.0
 
 [sub_resource type="Resource" id=20]
 resource_local_to_scene = true
 script = ExtResource( 15 )
 _waitBeforeAttackSec = 1.0
-_backMoveSec = 0.75
-_jumpSec = 0.5
+_backMoveSec = 0.4
+_jumpSec = 0.6
 _landingMoveSec = 0.2
 _waitAfterAttackSec = 1.0
-_backMoveDistance = 6.0
-_landingMoveDistance = 3.0
+_backMoveDistMin = 5.0
+_backMoveDistMax = 30.0
+_landingMoveDist = 3.0
 
 [sub_resource type="RectangleShape2D" id=22]
 resource_local_to_scene = true
 extents = Vector2( 24, 8 )
 
+[sub_resource type="Resource" id=28]
+resource_local_to_scene = true
+script = ExtResource( 18 )
+_secondPosDist = 35.0
+
 [sub_resource type="Resource" id=23]
 resource_local_to_scene = true
 script = ExtResource( 13 )
-StopDistance = 26.0
+StopDist = 26.0
 
 [sub_resource type="Resource" id=24]
 resource_local_to_scene = true
 script = ExtResource( 15 )
 _waitBeforeAttackSec = 1.0
-_backMoveSec = 0.75
-_jumpSec = 0.5
+_backMoveSec = 0.4
+_jumpSec = 0.6
 _landingMoveSec = 0.2
 _waitAfterAttackSec = 1.0
-_backMoveDistance = 10.0
-_landingMoveDistance = 3.0
+_backMoveDistMin = 5.0
+_backMoveDistMax = 30.0
+_landingMoveDist = 3.0
 
 [sub_resource type="RectangleShape2D" id=25]
 resource_local_to_scene = true
@@ -121,7 +142,7 @@ collision_mask = 0
 physics_material_override = SubResource( 9 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformTileMap/StaticBody2D"]
-position = Vector2( 56, 104 )
+position = Vector2( 56, 100 )
 shape = SubResource( 2 )
 one_way_collision = true
 
@@ -132,12 +153,12 @@ shape = SubResource( 6 )
 one_way_collision = true
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="PlatformTileMap/StaticBody2D"]
-position = Vector2( 80, 72 )
+position = Vector2( 80, 68 )
 shape = SubResource( 3 )
 one_way_collision = true
 
 [node name="CollisionShape2D3" type="CollisionShape2D" parent="PlatformTileMap/StaticBody2D"]
-position = Vector2( 120, 56 )
+position = Vector2( 120, 52 )
 shape = SubResource( 4 )
 one_way_collision = true
 
@@ -188,6 +209,8 @@ position = Vector2( -88, 192 )
 position = Vector2( 136, 48 )
 
 [node name="Enemy1" parent="." instance=ExtResource( 14 )]
+DebugEnabled = true
+_idleState = SubResource( 26 )
 _chaseState = SubResource( 18 )
 _attackState = SubResource( 19 )
 
@@ -203,6 +226,7 @@ shape = SubResource( 21 )
 position = Vector2( 133, 144 )
 
 [node name="Enemy2" parent="." instance=ExtResource( 14 )]
+_idleState = SubResource( 27 )
 _chaseState = SubResource( 15 )
 _attackState = SubResource( 20 )
 
@@ -218,6 +242,7 @@ shape = SubResource( 22 )
 position = Vector2( 314, 96 )
 
 [node name="Enemy3" parent="." instance=ExtResource( 14 )]
+_idleState = SubResource( 28 )
 _chaseState = SubResource( 23 )
 _attackState = SubResource( 24 )
 
@@ -238,6 +263,7 @@ position = Vector2( 234, 128 )
 _navAreaPath = NodePath("")
 
 [node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2( 234, 130 )
 current = true
 process_mode = 0
 limit_left = -156
@@ -259,13 +285,15 @@ script = ExtResource( 12 )
 
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource( 5 )
-_coinCountLabelPath = NodePath("MarginContainer/HBoxContainer/HBoxContainer2/CoinCount")
+_coinCountLabelPath = NodePath("MarginContainer/HBoxContainer/HBoxContainer/CoinCountLabel")
+_healthProgressPath = NodePath("MarginContainer/HBoxContainer/HealthProgress")
 
 [node name="MarginContainer" type="MarginContainer" parent="HUD"]
 anchor_right = 1.0
 margin_left = 7.0
 margin_top = 7.0
 margin_right = -7.0
+margin_bottom = 16.0
 __meta__ = {
 "_edit_group_": true,
 "_edit_use_anchors_": false
@@ -273,40 +301,28 @@ __meta__ = {
 
 [node name="HBoxContainer" type="HBoxContainer" parent="HUD/MarginContainer"]
 margin_right = 306.0
-margin_bottom = 25.0
-__meta__ = {
-"_edit_use_anchors_": false
-}
+margin_bottom = 16.0
 
-[node name="BackButton" type="TextureButton" parent="HUD/MarginContainer/HBoxContainer"]
-self_modulate = Color( 0.972549, 0.454902, 0.454902, 1 )
-margin_right = 25.0
-margin_bottom = 25.0
-size_flags_horizontal = 0
-size_flags_vertical = 0
-texture_normal = ExtResource( 3 )
-texture_pressed = ExtResource( 8 )
-script = ExtResource( 9 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-LoadScenePath = "res://Scenes/StartingScene.tscn"
+[node name="HealthProgress" type="TextureProgress" parent="HUD/MarginContainer/HBoxContainer"]
+margin_right = 46.0
+margin_bottom = 16.0
+max_value = 60.0
+step = 0.01
+value = 60.0
+texture_under = ExtResource( 17 )
+texture_progress = ExtResource( 16 )
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="HUD/MarginContainer/HBoxContainer"]
-margin_left = 29.0
+[node name="HBoxContainer" type="HBoxContainer" parent="HUD/MarginContainer/HBoxContainer"]
+margin_left = 50.0
 margin_right = 306.0
-margin_bottom = 25.0
+margin_bottom = 16.0
 size_flags_horizontal = 3
 alignment = 2
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
-[node name="CoinCount" type="Label" parent="HUD/MarginContainer/HBoxContainer/HBoxContainer2"]
-margin_left = 250.0
-margin_right = 257.0
-margin_bottom = 25.0
-size_flags_horizontal = 0
+[node name="CoinCountLabel" type="Label" parent="HUD/MarginContainer/HBoxContainer/HBoxContainer"]
+margin_left = 229.0
+margin_right = 236.0
+margin_bottom = 16.0
 size_flags_vertical = 1
 custom_colors/font_color = Color( 1, 0.835294, 0, 1 )
 custom_fonts/font = ExtResource( 7 )
@@ -317,16 +333,49 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="CoinTexture" type="TextureRect" parent="HUD/MarginContainer/HBoxContainer/HBoxContainer2"]
-margin_left = 261.0
-margin_top = 4.0
-margin_right = 277.0
-margin_bottom = 20.0
+[node name="CoinTexture" type="TextureRect" parent="HUD/MarginContainer/HBoxContainer/HBoxContainer"]
+margin_left = 240.0
+margin_right = 256.0
+margin_bottom = 16.0
 size_flags_vertical = 4
 texture = SubResource( 13 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="MarginContainer2" type="MarginContainer" parent="HUD"]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 7.0
+margin_top = -23.0
+margin_right = -7.0
+margin_bottom = -7.0
+__meta__ = {
+"_edit_group_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HUD/MarginContainer2"]
+margin_right = 306.0
+margin_bottom = 16.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="BackButton" type="TextureButton" parent="HUD/MarginContainer2/HBoxContainer"]
+self_modulate = Color( 0.972549, 0.454902, 0.454902, 1 )
+margin_right = 16.0
+margin_bottom = 16.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+texture_normal = ExtResource( 3 )
+texture_pressed = ExtResource( 8 )
+script = ExtResource( 9 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+LoadScenePath = "res://Scenes/StartingScene.tscn"
 
 [editable path="Enemy1"]
 [editable path="Enemy2"]

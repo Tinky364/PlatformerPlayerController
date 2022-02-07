@@ -6,6 +6,9 @@ namespace PlatformerPlayerController.Scripts.StateMachine
     {
         private Enemy _enemy;
 
+        [Export]
+        private float _secondPosDist = 40f;
+
         private Vector2 _pos1 = new Vector2();
         private Vector2 _pos2 = new Vector2();
         private Vector2 _targetPos = new Vector2();
@@ -17,10 +20,10 @@ namespace PlatformerPlayerController.Scripts.StateMachine
             _enemy.Fsm.AddState(this);
             
             _pos1 = _enemy.NavChar.GlobalPosition;
-            _pos2 = _pos1 + new Vector2(30f, 0f);
+            _pos2 = _pos1 + new Vector2(_secondPosDist, 0f);
             if (!_enemy.NavArea.IsPositionInArea(_pos2))
             {
-                _pos2 = _pos1 - new Vector2(30f, 0f);
+                _pos2 = _pos1 - new Vector2(_secondPosDist, 0f);
                 if (!_enemy.NavArea.IsPositionInArea(_pos2))
                 {
                     GD.PrintErr("Not enough space for the enemy idle motion!");
@@ -32,7 +35,8 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         
         public override void Enter()
         {
-            GD.Print($"{_enemy.Name}: IdleState");
+            if (_enemy.DebugEnabled)
+                GD.Print($"{_enemy.Name}: {nameof(IdleState)}");
             _enemy.AnimatedSprite.Play("idle");
         }
 

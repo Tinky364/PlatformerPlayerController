@@ -26,6 +26,7 @@ namespace PlatformerPlayerController.Scripts.Navigation
             Tween.Name = "Tween";
             Tween.PlaybackProcessMode = Tween.TweenProcessMode.Physics;
         }
+        
         public override void _Ready()
         {
             if (Engine.EditorHint) return;
@@ -50,6 +51,10 @@ namespace PlatformerPlayerController.Scripts.Navigation
             FindGroundPositionForArea();
         }
 
+        public Vector2 DirectionTo(Vector2 to) => NavPosition.DirectionTo(to);
+
+        public float DistanceTo(Vector2 to) => NavPosition.DistanceTo(to);
+        
         public void InterpolateMove(float targetPosX, float duration, Tween.TransitionType transitionType = Tween.TransitionType.Linear, Tween.EaseType easeType = Tween.EaseType.InOut, float delay = 0f)
         {
             if (targetPosX < _navArea.ShapeRect.Position.x)

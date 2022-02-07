@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/EscapeButton.png-3fc8bee0c249d9a8865be72eabd17798.stex"
+path="res://.import/HearthForeground.png-e8b5f787c4402a4a547aa84a05e00c58.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Buttons/EscapeButton.png"
-dest_files=[ "res://.import/EscapeButton.png-3fc8bee0c249d9a8865be72eabd17798.stex" ]
+source_file="res://Sprites/Hearth/HearthForeground.png"
+dest_files=[ "res://.import/HearthForeground.png-e8b5f787c4402a4a547aa84a05e00c58.stex" ]
 
 [params]
 
@@ -24,12 +24,12 @@ flags/filter=false
 flags/mipmaps=false
 flags/anisotropic=false
 flags/srgb=2
-process/fix_alpha_border=false
+process/fix_alpha_border=true
 process/premult_alpha=false
 process/HDR_as_SRGB=false
 process/invert_color=false
 process/normal_map_invert_y=false
 stream=false
-size_limit=25
+size_limit=0
 detect_3d=false
 svg/scale=1.0

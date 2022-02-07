@@ -7,7 +7,7 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         private Enemy _enemy;
 
         [Export(PropertyHint.Range, "0,100,or_greater")]
-        public float StopDistance = 26f;
+        public float StopDist = 26f;
 
         public Vector2 TargetPos;
         
@@ -20,7 +20,7 @@ namespace PlatformerPlayerController.Scripts.StateMachine
 
         public override void Enter()
         {
-            GD.Print($"{_enemy.Name}: ChaseState");
+            if (_enemy.DebugEnabled) GD.Print($"{_enemy.Name}: {nameof(ChaseState)}");
             _enemy.Velocity.x = 0f;
             _enemy.AnimatedSprite.Play("run");
         }

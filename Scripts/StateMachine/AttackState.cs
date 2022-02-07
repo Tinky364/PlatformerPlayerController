@@ -1,4 +1,4 @@
-﻿using Godot;
+using Godot;
 
 namespace PlatformerPlayerController.Scripts.StateMachine
 {
@@ -9,17 +9,19 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeAttackSec = 1f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _backMoveSec = 0.75f;
+        private float _backMoveSec = 0.4f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _jumpSec = 0.5f;
+        private float _jumpSec = 0.6f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _landingMoveSec = 0.2f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitAfterAttackSec = 1f;
         [Export(PropertyHint.Range, "0,100,or_greater")]
-        private float _backMoveDistance = 10f;
+        private float _backMoveDistMin = 5f;
+        [Export(PropertyHint.Range, "0,100,or_greater")]
+        private float _backMoveDistMax = 30f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _landingMoveDistance = 3f;
+        private float _landingMoveDist = 3f;
 
         public void Initialize(Enemy enemy)
         {
@@ -30,25 +32,34 @@ namespace PlatformerPlayerController.Scripts.StateMachine
 
         public override void Enter()
         {
-            GD.Print($"{_enemy.Name}: AttackState");
+            if (_enemy.DebugEnabled) GD.Print($"{_enemy.Name}: {nameof(AttackState)}");
+            
             _enemy.Fsm.IsStateLocked = true;
             _enemy.AnimatedSprite.Play("idle");
-            Attack();
+            _enemy.Velocity.x = 0;
+            
+            Vector2 dirToTarget = _enemy.NavArea.DirectionToTarget();
+            _enemy.Direction = dirToTarget.x >= 0 ? 1 : -1;
+            
+            Attack(dirToTarget, _enemy.NavArea.TargetNavChar.NavPosition);
         }
         
-        private async void Attack()
+        private async void Attack(Vector2 dirToTarget, Vector2 targetPos)
         {
-            Vector2 dirToTarget = _enemy.NavArea.DirectionToTarget();
-            _enemy.Velocity.x = 0;
-            if (dirToTarget.x >= 0) _enemy.Direction = 1;
-            else _enemy.Direction = -1;
-            float targetPosX = _enemy.NavArea.TargetNavChar.NavPosition.x;
+            float backMoveDist = Mathf.Clamp(
+                _backMoveDistMax - _enemy.NavArea.DistanceToTarget(),
+                _backMoveDistMin,
+                _backMoveDistMax
+            );
+            float backMoveSec = backMoveDist * _backMoveSec / _backMoveDistMin;
+            
+            GD.Print($"dist: {backMoveDist}, sec: {backMoveSec}");
 
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeAttackSec), "timeout");
             
             _enemy.NavChar.InterpolateMove(
-                _enemy.NavChar.NavPosition.x + -dirToTarget.x * _backMoveDistance,
-                _backMoveSec,
+                _enemy.NavChar.NavPosition.x + -dirToTarget.x * backMoveDist,
+                backMoveSec,
                 Tween.TransitionType.Quad
             );
             
@@ -58,7 +69,7 @@ namespace PlatformerPlayerController.Scripts.StateMachine
             _enemy.CanAttack = true;
             _enemy.Velocity.y = -_enemy.Gravity * _jumpSec / 2f;
             _enemy.NavChar.InterpolateMove(
-                targetPosX,
+                targetPos.x,
                 _jumpSec
             );
             
@@ -66,7 +77,7 @@ namespace PlatformerPlayerController.Scripts.StateMachine
             
             _enemy.CanAttack = false;
             _enemy.NavChar.InterpolateMove(
-                targetPosX + dirToTarget.x * _landingMoveDistance,
+                targetPos.x + dirToTarget.x * _landingMoveDist,
                 _landingMoveSec,
                 Tween.TransitionType.Quad,
                 Tween.EaseType.Out
