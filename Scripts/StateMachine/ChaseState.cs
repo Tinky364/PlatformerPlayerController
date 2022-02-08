@@ -1,6 +1,6 @@
 using Godot;
 
-namespace PlatformerPlayerController.Scripts.StateMachine
+namespace StateMachine
 {
     public class ChaseState : State<Enemy.EnemyStates>
     {

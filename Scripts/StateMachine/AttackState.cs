@@ -1,6 +1,6 @@
 using Godot;
 
-namespace PlatformerPlayerController.Scripts.StateMachine
+namespace StateMachine
 {
     public class AttackState : State<Enemy.EnemyStates>
     {
@@ -47,14 +47,12 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         private async void Attack(Vector2 dirToTarget, Vector2 targetPos)
         {
             float backMoveDist = Mathf.Clamp(
-                _backMoveDistMax - _enemy.NavArea.DistanceToTarget(),
+                _backMoveDistMax - _enemy.NavChar.DistanceTo(targetPos),
                 _backMoveDistMin,
                 _backMoveDistMax
             );
             float backMoveSec = backMoveDist * _backMoveSec / _backMoveDistMin;
             
-            GD.Print($"dist: {backMoveDist}, sec: {backMoveSec}");
-
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeAttackSec), "timeout");
             
             _enemy.NavChar.InterpolateMove(
@@ -92,7 +90,7 @@ namespace PlatformerPlayerController.Scripts.StateMachine
             _enemy.Fsm.IsStateLocked = false;
             _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);
         }
-
+        
         public override void Exit()
         {
         }

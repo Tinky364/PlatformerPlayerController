@@ -1,7 +1,7 @@
 using System.Threading;
 using Godot;
 
-namespace PlatformerPlayerController.Scripts.UI
+namespace UI
 {
     public class Hud : CanvasLayer
     {
@@ -13,7 +13,7 @@ namespace PlatformerPlayerController.Scripts.UI
         [Export]
         private NodePath _healthProgressPath = default;
         [Export]
-        private float _healthProgressDuration = 1f;
+        private float _healthProgressDur = 2f;
 
         private CancellationTokenSource _cancellationTokenSource;
         
@@ -46,11 +46,13 @@ namespace PlatformerPlayerController.Scripts.UI
             float to = newHealth;
 
             float count = 0f;
-            while (count < _healthProgressDuration)
+            while (count < _healthProgressDur)
             {
                 if (cancellationToken.IsCancellationRequested) return;
 
-                _healthProgress.Value = Mathf.Lerp(from, to, count / _healthProgressDuration);
+                float t = count / _healthProgressDur;
+                t = 1 - Mathf.Pow(1 - t, 3);
+                _healthProgress.Value = Mathf.Lerp(from, to, t);
                 count += GetProcessDeltaTime();
                 await ToSignal(GetTree(), "idle_frame");
             }

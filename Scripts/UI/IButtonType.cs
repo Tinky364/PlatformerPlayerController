@@ -1,4 +1,4 @@
-﻿namespace PlatformerPlayerController.Scripts.UI
+﻿namespace UI
 {
     public interface IButtonType
     {

@@ -1,6 +1,6 @@
 using Godot;
 
-namespace PlatformerPlayerController.Scripts.StateMachine
+namespace StateMachine
 {
     public abstract class State<T> : Resource
     {

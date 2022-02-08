@@ -1,6 +1,6 @@
 [gd_scene load_steps=38 format=2]
 
-[ext_resource path="res://SubScenes/Player.tscn" type="PackedScene" id=1]
+[ext_resource path="res://Scripts/StateMachine/ChaseState.cs" type="Script" id=1]
 [ext_resource path="res://Resources/TileSet.tres" type="TileSet" id=2]
 [ext_resource path="res://Sprites/Buttons/DownArrowButton.png" type="Texture" id=3]
 [ext_resource path="res://SubScenes/Coin.tscn" type="PackedScene" id=4]
@@ -12,12 +12,12 @@
 [ext_resource path="res://Resources/UpTileSet.tres" type="TileSet" id=10]
 [ext_resource path="res://Resources/BackgroundTileSet.tres" type="TileSet" id=11]
 [ext_resource path="res://Scripts/CamController.cs" type="Script" id=12]
-[ext_resource path="res://Scripts/StateMachine/ChaseState.cs" type="Script" id=13]
-[ext_resource path="res://SubScenes/Enemy.tscn" type="PackedScene" id=14]
-[ext_resource path="res://Scripts/StateMachine/AttackState.cs" type="Script" id=15]
+[ext_resource path="res://Scripts/StateMachine/AttackState.cs" type="Script" id=13]
+[ext_resource path="res://Scripts/StateMachine/IdleState.cs" type="Script" id=14]
+[ext_resource path="res://SubScenes/Player.tscn" type="PackedScene" id=15]
 [ext_resource path="res://Sprites/Hearth/HearthForeground.png" type="Texture" id=16]
 [ext_resource path="res://Sprites/Hearth/HearthBackground.png" type="Texture" id=17]
-[ext_resource path="res://Scripts/StateMachine/IdleState.cs" type="Script" id=18]
+[ext_resource path="res://SubScenes/Enemy.tscn" type="PackedScene" id=18]
 
 [sub_resource type="PhysicsMaterial" id=9]
 
@@ -36,45 +36,45 @@ extents = Vector2( 24, 4 )
 [sub_resource type="SegmentShape2D" id=5]
 b = Vector2( -16, -5.72205e-05 )
 
-[sub_resource type="Resource" id=26]
+[sub_resource type="Resource" id=16]
 resource_local_to_scene = true
-script = ExtResource( 18 )
+script = ExtResource( 14 )
 _secondPosDist = 40.0
+
+[sub_resource type="Resource" id=17]
+resource_local_to_scene = true
+script = ExtResource( 1 )
+StopDist = 26.0
 
 [sub_resource type="Resource" id=18]
 resource_local_to_scene = true
 script = ExtResource( 13 )
-StopDist = 26.0
+_waitBeforeAttackSec = 1.0
+_backMoveSec = 0.4
+_jumpSec = 0.6
+_landingMoveSec = 0.2
+_waitAfterAttackSec = 1.0
+_backMoveDistMin = 5.0
+_backMoveDistMax = 30.0
+_landingMoveDist = 3.0
+
+[sub_resource type="RectangleShape2D" id=14]
+resource_local_to_scene = true
+extents = Vector2( 71.5, 8 )
 
 [sub_resource type="Resource" id=19]
 resource_local_to_scene = true
-script = ExtResource( 15 )
-_waitBeforeAttackSec = 1.0
-_backMoveSec = 0.4
-_jumpSec = 0.6
-_landingMoveSec = 0.2
-_waitAfterAttackSec = 1.0
-_backMoveDistMin = 5.0
-_backMoveDistMax = 30.0
-_landingMoveDist = 3.0
-
-[sub_resource type="RectangleShape2D" id=21]
-resource_local_to_scene = true
-extents = Vector2( 72, 8 )
-
-[sub_resource type="Resource" id=27]
-resource_local_to_scene = true
-script = ExtResource( 18 )
-_secondPosDist = 30.0
-
-[sub_resource type="Resource" id=15]
-resource_local_to_scene = true
-script = ExtResource( 13 )
-StopDist = 26.0
+script = ExtResource( 14 )
+_secondPosDist = 20.0
 
 [sub_resource type="Resource" id=20]
 resource_local_to_scene = true
-script = ExtResource( 15 )
+script = ExtResource( 1 )
+StopDist = 20.0
+
+[sub_resource type="Resource" id=21]
+resource_local_to_scene = true
+script = ExtResource( 13 )
 _waitBeforeAttackSec = 1.0
 _backMoveSec = 0.4
 _jumpSec = 0.6
@@ -84,23 +84,23 @@ _backMoveDistMin = 5.0
 _backMoveDistMax = 30.0
 _landingMoveDist = 3.0
 
-[sub_resource type="RectangleShape2D" id=22]
+[sub_resource type="RectangleShape2D" id=15]
 resource_local_to_scene = true
-extents = Vector2( 24, 8 )
+extents = Vector2( 23.5, 8 )
 
-[sub_resource type="Resource" id=28]
+[sub_resource type="Resource" id=22]
 resource_local_to_scene = true
-script = ExtResource( 18 )
-_secondPosDist = 35.0
+script = ExtResource( 14 )
+_secondPosDist = 30.0
 
 [sub_resource type="Resource" id=23]
 resource_local_to_scene = true
-script = ExtResource( 13 )
+script = ExtResource( 1 )
 StopDist = 26.0
 
 [sub_resource type="Resource" id=24]
 resource_local_to_scene = true
-script = ExtResource( 15 )
+script = ExtResource( 13 )
 _waitBeforeAttackSec = 1.0
 _backMoveSec = 0.4
 _jumpSec = 0.6
@@ -208,59 +208,53 @@ position = Vector2( -88, 192 )
 [node name="Coin4" parent="Coins" instance=ExtResource( 4 )]
 position = Vector2( 136, 48 )
 
-[node name="Enemy1" parent="." instance=ExtResource( 14 )]
-DebugEnabled = true
-_idleState = SubResource( 26 )
-_chaseState = SubResource( 18 )
-_attackState = SubResource( 19 )
+[node name="Enemy1" parent="." instance=ExtResource( 18 )]
+position = Vector2( 145, 144 )
+_idleState = SubResource( 16 )
+_chaseState = SubResource( 17 )
+_attackState = SubResource( 18 )
 
 [node name="NavArea" parent="Enemy1" index="0"]
-position = Vector2( 156, 144 )
+position = Vector2( -1, 0 )
 _targetNavCharPath = NodePath("../../Player/NavChar")
 
-[node name="Shape" parent="Enemy1/NavArea" index="0"]
-position = Vector2( -4, 0 )
-shape = SubResource( 21 )
+[node name="CollisionShape2D" parent="Enemy1/NavArea" index="0"]
+position = Vector2( 8.5, 0 )
+shape = SubResource( 14 )
 
-[node name="Body" parent="Enemy1" index="1"]
-position = Vector2( 133, 144 )
-
-[node name="Enemy2" parent="." instance=ExtResource( 14 )]
-_idleState = SubResource( 27 )
-_chaseState = SubResource( 15 )
-_attackState = SubResource( 20 )
+[node name="Enemy2" parent="." instance=ExtResource( 18 )]
+position = Vector2( 281, 96 )
+_idleState = SubResource( 19 )
+_chaseState = SubResource( 20 )
+_attackState = SubResource( 21 )
 
 [node name="NavArea" parent="Enemy2" index="0"]
-position = Vector2( 300, 96 )
 _targetNavCharPath = NodePath("../../Player/NavChar")
 
-[node name="Shape" parent="Enemy2/NavArea" index="0"]
-position = Vector2( -4, 0 )
-shape = SubResource( 22 )
+[node name="CollisionShape2D" parent="Enemy2/NavArea" index="0"]
+position = Vector2( 15.5, 0 )
+shape = SubResource( 15 )
 
-[node name="Body" parent="Enemy2" index="1"]
-position = Vector2( 314, 96 )
-
-[node name="Enemy3" parent="." instance=ExtResource( 14 )]
-_idleState = SubResource( 28 )
+[node name="Enemy3" parent="." instance=ExtResource( 18 )]
+position = Vector2( 121, 48 )
+_idleState = SubResource( 22 )
 _chaseState = SubResource( 23 )
 _attackState = SubResource( 24 )
 
 [node name="NavArea" parent="Enemy3" index="0"]
-position = Vector2( 120, 48 )
 _targetNavCharPath = NodePath("../../Player/NavChar")
 
-[node name="Shape" parent="Enemy3/NavArea" index="0"]
+[node name="CollisionShape2D" parent="Enemy3/NavArea" index="0"]
+position = Vector2( -1, 0 )
 shape = SubResource( 25 )
 
 [node name="Body" parent="Enemy3" index="1"]
-position = Vector2( 104, 48 )
+position = Vector2( -16, 0 )
 
-[node name="Player" parent="." instance=ExtResource( 1 )]
-position = Vector2( 234, 128 )
-
-[node name="NavChar" parent="Player" index="3"]
-_navAreaPath = NodePath("")
+[node name="Player" parent="." instance=ExtResource( 15 )]
+position = Vector2( 232, 125 )
+_canJumpDur = 0.1
+_unhurtableDur = 0.55
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2( 234, 130 )

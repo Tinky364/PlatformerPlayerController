@@ -1,37 +1,34 @@
 using Godot;
 
-namespace PlatformerPlayerController.Scripts
+public class Coin : Area2D
 {
-    public class Coin : Area2D
+    private AnimationPlayer _animationPlayer;
+    private CollisionShape2D _shape;
+    
+    [Export(PropertyHint.Range, "0,10,or_greater")]
+    private int _value = 1;
+    
+    public override void _Ready()
     {
-        private AnimationPlayer _animationPlayer;
-        private CollisionShape2D _shape;
+        _animationPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
+        _shape = GetNode<CollisionShape2D>("Shape");
         
-        [Export(PropertyHint.Range, "0,10,or_greater")]
-        private int _value = 1;
+        Connect("body_entered", this, nameof(OnBodyEntered));
+        _animationPlayer.Connect("animation_finished", this, nameof(OnAnimationFinished));
         
-        public override void _Ready()
-        {
-            _animationPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
-            _shape = GetNode<CollisionShape2D>("Shape");
-            
-            Connect("body_entered", this, nameof(OnBodyEntered));
-            _animationPlayer.Connect("animation_finished", this, nameof(OnAnimationFinished));
-            
-            _animationPlayer.Play("flip");
-        }
+        _animationPlayer.Play("flip");
+    }
 
-        private void OnBodyEntered(Node body)
-        {
-            Events.Singleton.EmitSignal("CoinCollected", body, _value, this);
-            _animationPlayer.Stop();
-            _animationPlayer.Play("collect");
-            _shape.SetDeferred("disabled", true);
-        }
+    private void OnBodyEntered(Node body)
+    {
+        Events.Singleton.EmitSignal("CoinCollected", body, _value, this);
+        _animationPlayer.Stop();
+        _animationPlayer.Play("collect");
+        _shape.SetDeferred("disabled", true);
+    }
 
-        private void OnAnimationFinished(string animName)
-        {
-            if (animName.Equals("collect")) QueueFree();
-        }
+    private void OnAnimationFinished(string animName)
+    {
+        if (animName.Equals("collect")) QueueFree();
     }
 }

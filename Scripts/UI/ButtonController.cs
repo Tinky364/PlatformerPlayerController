@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-namespace PlatformerPlayerController.Scripts.UI
+namespace UI
 {
     public class ButtonController : Button, IButtonType
     {

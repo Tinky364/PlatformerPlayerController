@@ -1,10 +1,10 @@
 using Godot;
 using Godot.Collections;
-using PlatformerPlayerController.Scripts.Navigation;
+using NavTool;
 
-namespace PlatformerPlayerController.Scripts.StateMachine
+namespace StateMachine
 {
-    public class Enemy : Node
+    public class Enemy : Node2D
     {
         public StateMachine<EnemyStates> Fsm { get; } = new StateMachine<EnemyStates>();
         private KinematicBody2D _body;
@@ -24,11 +24,11 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         private float _groundDetectionHeight = 0.1f;
         [Export(PropertyHint.Range, "0,200,or_greater")]
         public float MoveSpeed = 15f;
-        [Export(PropertyHint.File, ".res")]
+        [Export]
         private IdleState _idleState;
-        [Export(PropertyHint.File, ".res")]
+        [Export]
         private ChaseState _chaseState;
-        [Export(PropertyHint.File, ".res")]
+        [Export]
         private AttackState _attackState;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private int _damageValue = 1;
@@ -67,7 +67,6 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         public override void _Process(float delta)
         {
             if (!NavArea.IsOnCam) return;
-            
             StateController();
             Fsm._Process(delta);
             
@@ -76,6 +75,8 @@ namespace PlatformerPlayerController.Scripts.StateMachine
 
         private void StateController()
         {
+            if (Fsm.IsStateLocked) return;
+            
             if (!NavArea.IsTargetReachable)
             {
                 Fsm.SetCurrentState(EnemyStates.Idle);
@@ -94,13 +95,10 @@ namespace PlatformerPlayerController.Scripts.StateMachine
 
             if (distToTarget > _chaseState.StopDist)
             {
-                Vector2 movePos = NavArea.TargetNavChar.NavPosition + -dirToTarget * _chaseState.StopDist;
+                Vector2 movePos = NavArea.TargetNavChar.NavPosition +
+                                  -dirToTarget * _chaseState.StopDist;
 
-                if (!NavArea.IsPositionInArea(movePos))
-                {
-                    Fsm.SetCurrentState(EnemyStates.Attack);
-                    return;
-                }
+                if (!NavArea.IsPositionInArea(movePos)) return;
 
                 _chaseState.TargetPos = movePos;
                 Fsm.SetCurrentState(EnemyStates.Chase);
@@ -127,8 +125,8 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         {
             // Raycast from the left bottom corner of the player.
             _groundRay = _body.GetWorld2d().DirectSpaceState.IntersectRay(
-                _body.Position + new Vector2(-ShapeExtents.x, -2f), 
-                _body.Position + new Vector2(-ShapeExtents.x, _groundDetectionHeight), 
+                _body.GlobalPosition + new Vector2(-ShapeExtents.x, -2f), 
+                _body.GlobalPosition + new Vector2(-ShapeExtents.x, _groundDetectionHeight), 
                 new Array {this},
                 _body.CollisionMask
             );
@@ -141,8 +139,8 @@ namespace PlatformerPlayerController.Scripts.StateMachine
             // If the first raycast does not hit the ground.
             // Raycast from the right bottom corner of the player.
             _groundRay = _body.GetWorld2d().DirectSpaceState.IntersectRay(
-                _body.Position + new Vector2(ShapeExtents.x, -2f),
-                _body.Position + new Vector2(ShapeExtents.x, _groundDetectionHeight),
+                _body.GlobalPosition + new Vector2(ShapeExtents.x, -2f),
+                _body.GlobalPosition + new Vector2(ShapeExtents.x, _groundDetectionHeight),
                 new Array {this},
                 _body.CollisionMask
             );
@@ -176,8 +174,16 @@ namespace PlatformerPlayerController.Scripts.StateMachine
         
         private void OnBodyEntered(Node body)
         {
-            if (CanAttack)
-                Events.Singleton.EmitSignal("Damaged", body, _damageValue, this);
+            if (body is KinematicBody2D kinBody)
+            {
+                Events.Singleton.EmitSignal(
+                    "Damaged",
+                    body,
+                    _damageValue,
+                    this,
+                    _body.GlobalPosition.DirectionTo(kinBody.GlobalPosition)
+                );
+            }
         }
     }
 }

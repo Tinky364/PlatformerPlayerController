@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Collections;
 
-namespace PlatformerPlayerController.Scripts.StateMachine
+namespace StateMachine
 {
     public class StateMachine<T> : Reference
     {

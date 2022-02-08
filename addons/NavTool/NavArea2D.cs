@@ -1,6 +1,6 @@
 using Godot;
 
-namespace PlatformerPlayerController.Scripts.Navigation
+namespace NavTool
 {
     [Tool]
     public class NavArea2D : Area2D
@@ -31,20 +31,21 @@ namespace PlatformerPlayerController.Scripts.Navigation
             
             NavChar = GetNode<NavChar2D>(_navCharPath);
             TargetNavChar = GetNode<NavChar2D>(_targetNavCharPath);
-            _shape = GetNode<CollisionShape2D>("Shape");
+            _shape = GetNode<CollisionShape2D>("CollisionShape2D");
             VisibilityNotifier = GetNode<VisibilityNotifier2D>("VisibilityNotifier2D");
             
             if (_shape.Shape is RectangleShape2D shape) ShapeExtents = shape.Extents;
             SetPositionToShapeCenter();
             VisibilityNotifier.Rect = new Rect2(ShapeRect.Position - GlobalPosition, ShapeRect.Size);
             
-            VisibilityNotifier.Connect("screen_exited", this, nameof(OnExit));
-            VisibilityNotifier.Connect("screen_entered", this, nameof(OnEnter));
+            VisibilityNotifier.Connect("screen_exited", this, nameof(OnScreenExit));
+            VisibilityNotifier.Connect("screen_entered", this, nameof(OnScreenEnter));
             Connect("area_entered", this, nameof(OnTargetEntered));
             Connect("area_exited", this, nameof(OnTargetExited));
         }
 
-        public Vector2 DirectionToTarget() => (TargetNavChar.NavPosition - NavChar.NavPosition).Normalized();
+        public Vector2 DirectionToTarget() =>
+            (TargetNavChar.NavPosition - NavChar.NavPosition).Normalized();
 
         public float DistanceToTarget() => (TargetNavChar.NavPosition - NavChar.NavPosition).Length();
 
@@ -81,9 +82,9 @@ namespace PlatformerPlayerController.Scripts.Navigation
             }
         }
         
-        private void OnEnter() => IsOnCam = true;
+        private void OnScreenEnter() => IsOnCam = true;
 
-        private void OnExit() => IsOnCam = false;
+        private void OnScreenExit() => IsOnCam = false;
         
         public override string _GetConfigurationWarning()
         {
@@ -98,3 +99,4 @@ namespace PlatformerPlayerController.Scripts.Navigation
         }
     }
 }
+
