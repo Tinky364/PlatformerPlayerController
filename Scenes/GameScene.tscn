@@ -1,4 +1,4 @@
-[gd_scene load_steps=37 format=2]
+[gd_scene load_steps=29 format=2]
 
 [ext_resource path="res://Scripts/StateMachine/ChaseState.cs" type="Script" id=1]
 [ext_resource path="res://Resources/TileSet.tres" type="TileSet" id=2]
@@ -35,17 +35,17 @@ extents = Vector2( 24, 4 )
 [sub_resource type="SegmentShape2D" id=5]
 b = Vector2( -16, -5.72205e-05 )
 
-[sub_resource type="Resource" id=16]
+[sub_resource type="Resource" id=15]
 resource_local_to_scene = true
 script = ExtResource( 14 )
 _secondPosDist = 40.0
 
-[sub_resource type="Resource" id=17]
+[sub_resource type="Resource" id=16]
 resource_local_to_scene = true
 script = ExtResource( 1 )
 StopDist = 26.0
 
-[sub_resource type="Resource" id=18]
+[sub_resource type="Resource" id=17]
 resource_local_to_scene = true
 script = ExtResource( 13 )
 _waitBeforeAttackSec = 1.0
@@ -60,58 +60,6 @@ _landingMoveDist = 3.0
 [sub_resource type="RectangleShape2D" id=14]
 resource_local_to_scene = true
 extents = Vector2( 71.5, 8 )
-
-[sub_resource type="Resource" id=19]
-resource_local_to_scene = true
-script = ExtResource( 14 )
-_secondPosDist = 20.0
-
-[sub_resource type="Resource" id=20]
-resource_local_to_scene = true
-script = ExtResource( 1 )
-StopDist = 20.0
-
-[sub_resource type="Resource" id=21]
-resource_local_to_scene = true
-script = ExtResource( 13 )
-_waitBeforeAttackSec = 1.0
-_backMoveSec = 0.4
-_jumpSec = 0.6
-_landingMoveSec = 0.2
-_waitAfterAttackSec = 1.0
-_backMoveDistMin = 5.0
-_backMoveDistMax = 30.0
-_landingMoveDist = 3.0
-
-[sub_resource type="RectangleShape2D" id=15]
-resource_local_to_scene = true
-extents = Vector2( 23.5, 8 )
-
-[sub_resource type="Resource" id=22]
-resource_local_to_scene = true
-script = ExtResource( 14 )
-_secondPosDist = 30.0
-
-[sub_resource type="Resource" id=23]
-resource_local_to_scene = true
-script = ExtResource( 1 )
-StopDist = 26.0
-
-[sub_resource type="Resource" id=24]
-resource_local_to_scene = true
-script = ExtResource( 13 )
-_waitBeforeAttackSec = 1.0
-_backMoveSec = 0.4
-_jumpSec = 0.6
-_landingMoveSec = 0.2
-_waitAfterAttackSec = 1.0
-_backMoveDistMin = 5.0
-_backMoveDistMax = 30.0
-_landingMoveDist = 3.0
-
-[sub_resource type="RectangleShape2D" id=25]
-resource_local_to_scene = true
-extents = Vector2( 24, 8 )
 
 [sub_resource type="AtlasTexture" id=13]
 atlas = ExtResource( 6 )
@@ -212,9 +160,9 @@ position = Vector2( 136, 48 )
 
 [node name="Enemy1" parent="World" instance=ExtResource( 18 )]
 position = Vector2( 145, 144 )
-_idleState = SubResource( 16 )
-_chaseState = SubResource( 17 )
-_attackState = SubResource( 18 )
+_idleState = SubResource( 15 )
+_chaseState = SubResource( 16 )
+_attackState = SubResource( 17 )
 
 [node name="NavArea" parent="World/Enemy1" index="0"]
 position = Vector2( -1, 0 )
@@ -223,35 +171,6 @@ _targetNavCharPath = NodePath("../../Player/NavChar")
 [node name="CollisionShape2D" parent="World/Enemy1/NavArea" index="0"]
 position = Vector2( 8.5, 0 )
 shape = SubResource( 14 )
-
-[node name="Enemy2" parent="World" instance=ExtResource( 18 )]
-position = Vector2( 281, 96 )
-_idleState = SubResource( 19 )
-_chaseState = SubResource( 20 )
-_attackState = SubResource( 21 )
-
-[node name="NavArea" parent="World/Enemy2" index="0"]
-_targetNavCharPath = NodePath("../../Player/NavChar")
-
-[node name="CollisionShape2D" parent="World/Enemy2/NavArea" index="0"]
-position = Vector2( 15.5, 0 )
-shape = SubResource( 15 )
-
-[node name="Enemy3" parent="World" instance=ExtResource( 18 )]
-position = Vector2( 121, 48 )
-_idleState = SubResource( 22 )
-_chaseState = SubResource( 23 )
-_attackState = SubResource( 24 )
-
-[node name="NavArea" parent="World/Enemy3" index="0"]
-_targetNavCharPath = NodePath("../../Player/NavChar")
-
-[node name="CollisionShape2D" parent="World/Enemy3/NavArea" index="0"]
-position = Vector2( -1, 0 )
-shape = SubResource( 25 )
-
-[node name="Body" parent="World/Enemy3" index="1"]
-position = Vector2( -16, 0 )
 
 [node name="Player" parent="World" instance=ExtResource( 15 )]
 position = Vector2( 232, 125 )
@@ -428,6 +347,4 @@ script = ExtResource( 8 )
 LoadScenePath = "res://Scenes/StartingScene.tscn"
 
 [editable path="World/Enemy1"]
-[editable path="World/Enemy2"]
-[editable path="World/Enemy3"]
 [editable path="World/Player"]

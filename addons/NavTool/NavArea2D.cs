@@ -11,9 +11,13 @@ namespace NavTool
         private CollisionShape2D _shape;
         
         [Signal]
-        public delegate void TargetEntered(NavChar2D navChar2D);
+        public delegate void TargetEntered(NavChar2D navChar);
         [Signal]
-        public delegate void TargetExited(NavChar2D navChar2D);
+        public delegate void TargetExited(NavChar2D navChar);
+        [Signal]
+        public delegate void ScreenEntered();
+        [Signal]
+        public delegate void ScreenExited();
         
         [Export]
         private NodePath _navCharPath = default;
@@ -63,28 +67,36 @@ namespace NavTool
             _shape.GlobalPosition = GlobalPosition;
         }
         
-        private void OnTargetEntered(NavChar2D navChar2D)
+        private void OnTargetEntered(NavChar2D navChar)
         {
-            if (navChar2D == TargetNavChar)
+            if (navChar == TargetNavChar)
             {
                 IsTargetReachable = true;
                 EmitSignal(nameof(TargetEntered), TargetNavChar);
             }
         }
 
-        private void OnTargetExited(NavChar2D navChar2D)
+        private void OnTargetExited(NavChar2D navChar)
         {
-            if (navChar2D == TargetNavChar)
+            if (navChar == TargetNavChar)
             {
                 IsTargetReachable = false;
                 EmitSignal(nameof(TargetExited), TargetNavChar);
             }
         }
         
-        private void OnScreenEnter() => NavChar.IsInactive = false;
+        private void OnScreenEnter()
+        {
+            NavChar.IsInactive = false;
+            EmitSignal(nameof(ScreenEntered));
+        }
 
-        private void OnScreenExit() => NavChar.IsInactive = true;
-        
+        private void OnScreenExit()
+        {
+            NavChar.IsInactive = true;
+            EmitSignal(nameof(ScreenExited));
+        }
+
         public override string _GetConfigurationWarning()
         {
             if (!Engine.EditorHint) return "";

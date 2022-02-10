@@ -24,12 +24,6 @@ namespace StateMachine
         private float _groundDetectionHeight = 0.1f;
         [Export(PropertyHint.Range, "0,200,or_greater")]
         public float MoveSpeed = 15f;
-        [Export]
-        private IdleState _idleState;
-        [Export]
-        private ChaseState _chaseState;
-        [Export]
-        private AttackState _attackState;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private int _damageValue = 1;
         
@@ -54,61 +48,19 @@ namespace StateMachine
             NavChar = GetNode<NavChar2D>("Body/NavChar");
             _triggerArea = GetNode<Area2D>("Body/TriggerArea");
             if (_shape.Shape is RectangleShape2D shape) ShapeExtents = shape.Extents;
-
-            _idleState.Initialize(this);
-            _attackState.Initialize(this);
-            _chaseState.Initialize(this);
-            
             _triggerArea.Connect("body_entered", this, nameof(OnBodyEntered));
-
-            Fsm.SetCurrentState(EnemyStates.Idle);
+            NavArea.Connect("ScreenEntered", this, nameof(OnScreenEntered));
+            NavArea.Connect("ScreenExited", this, nameof(OnScreenExited));
         }
 
         public override void _Process(float delta)
         {
-            if (NavChar.IsInactive) return;
-            StateController();
             Fsm._Process(delta);
-            
             DirectionControl();
         }
-
-        private void StateController()
-        {
-            if (Fsm.IsStateLocked) return;
-            
-            if (NavArea.TargetNavChar.IsInactive || !NavArea.IsTargetReachable)
-            {
-                Fsm.SetCurrentState(EnemyStates.Idle);
-                return;
-            }
-
-            Vector2 dirToTarget = NavArea.DirectionToTarget();
-            if (dirToTarget == Vector2.Zero) dirToTarget = Vector2.Right;
-            float distToTarget = NavArea.DistanceToTarget();
-            
-            if (distToTarget < _chaseState.StopDist + 1f)
-            {
-                Fsm.SetCurrentState(EnemyStates.Attack);
-                return;
-            }
-
-            if (distToTarget > _chaseState.StopDist)
-            {
-                Vector2 movePos = NavArea.TargetNavChar.NavPosition +
-                                  -dirToTarget * _chaseState.StopDist;
-
-                if (!NavArea.IsPositionInArea(movePos)) return;
-
-                _chaseState.TargetPos = movePos;
-                Fsm.SetCurrentState(EnemyStates.Chase);
-            }
-        }
-
+        
         public override void _PhysicsProcess(float delta)
         {
-            if (NavChar.IsInactive) return;
-
             CheckGround();
             Fsm._PhysicsProcess(delta);
 
@@ -184,6 +136,20 @@ namespace StateMachine
                     _body.GlobalPosition.DirectionTo(kinBody.GlobalPosition)
                 );
             }
+        }
+
+        private void OnScreenEntered()
+        {
+            GD.Print("entered");
+            SetProcess(true);
+            SetPhysicsProcess(true);
+        }
+
+        private void OnScreenExited()
+        {
+            GD.Print("exited");
+            SetProcess(false);
+            SetPhysicsProcess(false);
         }
 
     }
