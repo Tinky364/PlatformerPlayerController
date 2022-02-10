@@ -59,20 +59,21 @@ public class PlayerController : KinematicBody2D
     private float ClimbSpeedX => Mathf.Sqrt(2f * _moveAcceleration * ShapeSizes.x); // v=sqrt{2*a*w}
     private float RecoilSpeed => Mathf.Sqrt(2f * _moveAcceleration * _recoilLength); // v=sqrt{2*a*w}
     protected float RecoilDur => Mathf.Sqrt((2f * _recoilLength) / _moveAcceleration); // t=sqrt{(2*w)/a}
-    private bool _isDroppingFromPlatformInput;
+    private bool _hasDropFromPlatformInput;
     private bool _isOnGround;
     private bool _isOnPlatform;
     private bool _isHangingOnEdge;
-    private bool _isClimbingInput;
-    private bool _isJumpingInput;
-    private bool _hasJumpingStarted;
-    private bool _hasJumpingEnded = true;
+    private bool _hasClimbInput;
+    private bool _hasJumpInput;
+    private bool _hasJumpStarted;
+    private bool _hasJumpEnded = true;
     private bool _hasGroundRayDisabled;
     private bool _hasSnapDisabled;
     private bool _canJump;
     private bool _canJumpFlag;
     private bool _hasInputsLocked;
     private bool _hasRecoiled;
+    private bool _hasDied;
     
     public override void _Ready()
     {
@@ -98,6 +99,10 @@ public class PlayerController : KinematicBody2D
         Update();
     }
 
+    protected virtual void OnDie()
+    {
+        LockInputs(true);
+    }
     public override void _PhysicsProcess(float delta)
     {
         CheckGround();
@@ -115,11 +120,13 @@ public class PlayerController : KinematicBody2D
         _desiredJumpSpeedX = 0;
     }
     
-    protected void SetRecoil(bool value, Vector2 hitNormal)
+    protected void SetRecoil(bool value, Vector2? hitNormal)
     {
-        AnimSprite.Play("idle");
         _hasRecoiled = value;
-        _recoilHitNormal = hitNormal;
+        
+        if (!_hasRecoiled) return;
+        AnimSprite.Play("idle");
+        _recoilHitNormal = hitNormal ?? _recoilHitNormal;
     }
     
     private void AxisInputs()
@@ -133,13 +140,13 @@ public class PlayerController : KinematicBody2D
     private void DropFromPlatformInput()
     {
         if (_isOnPlatform && Input.IsActionJustPressed("move_down"))
-            _isDroppingFromPlatformInput = true;
+            _hasDropFromPlatformInput = true;
     }
 
     private void ClimbInput()
     {
         if (_isHangingOnEdge && Input.IsActionJustPressed("move_up"))
-            _isClimbingInput = true;
+            _hasClimbInput = true;
         if (_isHangingOnEdge && Input.IsActionJustPressed("move_down"))
         {
             _isHangingOnEdge = false;
@@ -152,8 +159,8 @@ public class PlayerController : KinematicBody2D
         if (_canJump && Input.IsActionJustPressed("jump"))
         {
             _hasGroundRayDisabled = true;
-            _hasJumpingStarted = true;
-            _isJumpingInput = true;
+            _hasJumpStarted = true;
+            _hasJumpInput = true;
             _jumpTimer.Start(JumpDur);
         }
 
@@ -165,10 +172,10 @@ public class PlayerController : KinematicBody2D
 
     private void OnJumpEnd()
     {
-        if (_hasJumpingEnded) return;
+        if (_hasJumpEnded) return;
         
-        _isJumpingInput = false;
-        _hasJumpingEnded = true;
+        _hasJumpInput = false;
+        _hasJumpEnded = true;
         _jumpTimer.Stop();
     }
 
@@ -209,7 +216,7 @@ public class PlayerController : KinematicBody2D
         {
             velocity.x = 0f;
             // While the player wants to climb.
-            if (_isClimbingInput)
+            if (_hasClimbInput)
             {
                 velocity.y = -ClimbSpeedY;
                 _hasSnapDisabled = true;
@@ -220,9 +227,9 @@ public class PlayerController : KinematicBody2D
         }
 
         // First frame after the edge is crossed.
-        if (_isClimbingInput)
+        if (_hasClimbInput)
         {
-            _isClimbingInput = false;
+            _hasClimbInput = false;
             _hasSnapDisabled = false;
             velocity.x = Direction * ClimbSpeedX;
             return velocity;
@@ -235,10 +242,10 @@ public class PlayerController : KinematicBody2D
             OnJumpEnd();
             
             // First frame when the player starts jumping.
-            if (_canJump && _hasJumpingStarted)
+            if (_canJump && _hasJumpStarted)
             {
                 _canJump = false;
-                _hasJumpingEnded = false;
+                _hasJumpEnded = false;
                 _isOnGround = false;
                 velocity.x = _desiredJumpSpeedX;
                 velocity.y = -JumpInitialSpeedY;
@@ -246,13 +253,14 @@ public class PlayerController : KinematicBody2D
             }
             
             // First frame when the player starts dropping from a platform.
-            if (_isDroppingFromPlatformInput)
+            if (_hasDropFromPlatformInput)
             {
                 _isOnGround = false;
                 SetCollisionMaskBit(2, false); // Layer 3
                 return velocity;
             }
 
+            // First frame when the player recoiled. 
             if (_hasRecoiled)
             {
                 _hasRecoiled = false;
@@ -269,6 +277,7 @@ public class PlayerController : KinematicBody2D
         
         // While the player is in the air.
         
+        // First frame when the player recoiled. 
         if (_hasRecoiled)
         {
             _hasRecoiled = false;
@@ -280,10 +289,10 @@ public class PlayerController : KinematicBody2D
         if (_canJump)
         {
             // First frame when the player starts jumping.
-            if (_hasJumpingStarted)
+            if (_hasJumpStarted)
             {
                 _canJump = false;
-                _hasJumpingEnded = false;
+                _hasJumpEnded = false;
                 _isOnGround = false;
                 velocity.x = _desiredJumpSpeedX;
                 velocity.y = -JumpInitialSpeedY;
@@ -293,15 +302,15 @@ public class PlayerController : KinematicBody2D
         else
         {
             // Second frame when the player starts jumping.
-            if (_hasJumpingStarted)
+            if (_hasJumpStarted)
             {
-                _hasJumpingStarted = false;
+                _hasJumpStarted = false;
                 _hasGroundRayDisabled = false;
             }
         }
        
         // While the player keep pressing the jump button in the air.
-        if (_isJumpingInput)
+        if (_hasJumpInput)
         {
             if (Velocity.y > 0f)
                 OnJumpEnd();
@@ -322,7 +331,7 @@ public class PlayerController : KinematicBody2D
             return;
         }
 
-        if (!_hasJumpingEnded)
+        if (!_hasJumpEnded)
         {
             _canJump = false;
             return;
@@ -340,7 +349,7 @@ public class PlayerController : KinematicBody2D
             if (_canJumpFlag)
             {
                 _canJumpFlag = false;
-                CanJumpTimer();
+                CanJumpDuration();
             }
         }
         else
@@ -349,7 +358,7 @@ public class PlayerController : KinematicBody2D
         }
     }
 
-    private async void CanJumpTimer()
+    private async void CanJumpDuration()
     {
         await ToSignal(GetTree().CreateTimer(_canJumpDur), "timeout");
         _canJump = false;
@@ -416,7 +425,7 @@ public class PlayerController : KinematicBody2D
     private void CheckEdge()
     {
         if (_isOnGround) return;
-        if (_isJumpingInput) return;
+        if (_hasJumpInput) return;
 
         float rayPosX = ShapeExtents.x + _edgeAxisXRayLength;
         float rayPosY = -ShapeSizes.y - _edgeAxisYRayLength;
@@ -495,9 +504,9 @@ public class PlayerController : KinematicBody2D
     private void OnPlatformBodyExited(Node body)
     {
         _hasGroundRayDisabled = false;
-        if (!_isDroppingFromPlatformInput) return;
+        if (!_hasDropFromPlatformInput) return;
         
-        _isDroppingFromPlatformInput = false;
+        _hasDropFromPlatformInput = false;
         SetCollisionMaskBit(2, true); // Layer 3
     }
 

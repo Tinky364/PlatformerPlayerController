@@ -18,6 +18,7 @@ namespace NavTool
         private Dictionary _ray;
         public Vector2 NavPosition { get; private set; } = new Vector2();
         public Vector2 ShapeExtents { get; private set; }
+        public bool IsInactive { get; set; }
 
         private NavChar2D()
         {
@@ -46,7 +47,7 @@ namespace NavTool
         public override void _PhysicsProcess(float delta)
         {
             if (Engine.EditorHint) return;
-            if (_navArea != null && !_navArea.IsOnCam) return;
+            if (_navArea != null && IsInactive) return;
 
             FindGroundPositionForArea();
         }

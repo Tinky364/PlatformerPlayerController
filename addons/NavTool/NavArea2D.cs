@@ -23,7 +23,6 @@ namespace NavTool
         public Vector2 ShapeExtents { get; private set; }
         public Rect2 ShapeRect => new Rect2(GlobalPosition - ShapeExtents, ShapeExtents * 2f);
         public bool IsTargetReachable { get; private set; }
-        public bool IsOnCam { get; private set; }
 
         public override void _Ready()
         {
@@ -82,9 +81,9 @@ namespace NavTool
             }
         }
         
-        private void OnScreenEnter() => IsOnCam = true;
+        private void OnScreenEnter() => NavChar.IsInactive = false;
 
-        private void OnScreenExit() => IsOnCam = false;
+        private void OnScreenExit() => NavChar.IsInactive = true;
         
         public override string _GetConfigurationWarning()
         {

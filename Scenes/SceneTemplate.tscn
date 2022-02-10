@@ -1,0 +1,9 @@
+[gd_scene format=2]
+
+[node name="SceneTemplate" type="Node"]
+
+[node name="World" type="CanvasLayer" parent="."]
+follow_viewport_enable = true
+
+[node name="Gui" type="CanvasLayer" parent="."]
+layer = 10

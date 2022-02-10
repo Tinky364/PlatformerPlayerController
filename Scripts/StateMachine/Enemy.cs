@@ -66,7 +66,7 @@ namespace StateMachine
 
         public override void _Process(float delta)
         {
-            if (!NavArea.IsOnCam) return;
+            if (NavChar.IsInactive) return;
             StateController();
             Fsm._Process(delta);
             
@@ -77,7 +77,7 @@ namespace StateMachine
         {
             if (Fsm.IsStateLocked) return;
             
-            if (!NavArea.IsTargetReachable)
+            if (NavArea.TargetNavChar.IsInactive || !NavArea.IsTargetReachable)
             {
                 Fsm.SetCurrentState(EnemyStates.Idle);
                 return;
@@ -107,8 +107,8 @@ namespace StateMachine
 
         public override void _PhysicsProcess(float delta)
         {
-            if (!NavArea.IsOnCam) return;
-            
+            if (NavChar.IsInactive) return;
+
             CheckGround();
             Fsm._PhysicsProcess(delta);
 
@@ -185,5 +185,6 @@ namespace StateMachine
                 );
             }
         }
+
     }
 }

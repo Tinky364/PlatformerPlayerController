@@ -47,7 +47,7 @@ namespace CustomResourceRegister
 				_scripts.Add(type.Name);
 			}
 
-			foreach (var type in GetCustomNodes())
+			/*foreach (var type in GetCustomNodes())
 			{
 				var path = ClassPath(type);
 				if (!file.FileExists(path))
@@ -58,7 +58,7 @@ namespace CustomResourceRegister
 				AddCustomType($"{Settings.ClassPrefix}{type.Name}", nameof(Node), script, null);
 				GD.Print($"Register custom node: {type.Name} -> {path}");
 				_scripts.Add(type.Name);
-			}
+			}*/
 		}
 
 		private static string ClassPath(Type type)

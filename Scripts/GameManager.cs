@@ -9,27 +9,15 @@ public class GameManager : Node
     public SceneTree Tree => GetTree();
     private Viewport Root => Tree.Root;
     private Node _currentScene;
+    private CanvasLayer _world;
+    private CanvasLayer _gui;
     
     public enum GameState { Play, Pause }
-    private GameState _currentGameState;
-    public GameState CurrentGameState
-    {
-        get => _currentGameState;
-        set
-        {
-            switch (value)
-            {
-                case GameState.Play:
-                    Tree.Paused = false;
-                    break;
-                case GameState.Pause:
-                    Tree.Paused = true;
-                    break;
-            }
-            _currentGameState = value;
-        }
-    } 
-
+    private GameState _worldState;
+    public GameState WorldState => _worldState;
+    private GameState _uiState;
+    public GameState UiState => _uiState;
+    
     public override void _EnterTree()
     {
         if (_singleton == null) _singleton = this;
@@ -38,24 +26,64 @@ public class GameManager : Node
 
     public override void _Ready()
     {
-        _currentScene = Root.GetChild(Root.GetChildCount() - 1);
-        
         PauseMode = PauseModeEnum.Process;
-        _currentScene.PauseMode = PauseModeEnum.Stop;
+        Events.Singleton.PauseMode = PauseModeEnum.Process;
+
+        SetCurrentScene(Root.GetChild(Root.GetChildCount() - 1));
     }
 
     public async void LoadScene(string path)
     {
-        CurrentGameState = GameState.Pause;
+        SetGameState(GameState.Pause, GameState.Pause);
         
         PackedScene scene = await LoadAsync<PackedScene>(path);
         _currentScene?.QueueFree();
-        _currentScene = scene.Instance();
-        Root.AddChild(_currentScene);
+        SetCurrentScene(scene.Instance());
         
-        CurrentGameState = GameState.Play;
+        SetGameState(GameState.Play, GameState.Play);
     }
     
+    public void SetGameState(GameState worldState, GameState uiState)
+    {
+        switch (worldState)
+        {
+            case GameState.Play:
+                _world.PauseMode = PauseModeEnum.Process;
+                break;
+            case GameState.Pause:
+                _world.PauseMode = PauseModeEnum.Stop;
+                break;
+        }
+        _worldState = worldState;
+        switch (uiState)
+        {
+            case GameState.Play:
+                _gui.PauseMode = PauseModeEnum.Process;
+                Root.GuiDisableInput = false;
+                break;
+            case GameState.Pause:
+                _gui.PauseMode = PauseModeEnum.Stop;
+                Root.GuiDisableInput = true;
+                break;
+        }
+        _uiState = uiState;
+
+        if (worldState == GameState.Pause || uiState == GameState.Pause)
+        {
+            Tree.Paused = true;
+            Physics2DServer.SetActive(true);
+        }
+        else
+        {
+            Tree.Paused = false;
+        }
+    }
+
+    public void GuiDisableInput(bool value)
+    {
+        Root.GuiDisableInput = value;
+    }
+
     public void QuitGame()
     {
         Tree.Quit();
@@ -79,5 +107,17 @@ public class GameManager : Node
             GD.Print($"Resource Load ended -> {path}");
             return (T) loader.GetResource();
         }
+    }
+    
+    private void SetCurrentScene(Node scene)
+    {
+        _currentScene = scene;
+        if (!_currentScene.IsInsideTree()) Root.AddChild(_currentScene);
+        _world = _currentScene.GetNode<CanvasLayer>("World");
+        _gui = _currentScene.GetNode<CanvasLayer>("Gui");
+        
+        _currentScene.PauseMode = PauseModeEnum.Process;
+        _world.PauseMode = PauseModeEnum.Stop;
+        _gui.PauseMode = PauseModeEnum.Stop;
     }
 }

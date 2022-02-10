@@ -12,7 +12,9 @@ public class Events : Node
     [Signal]
     private delegate void CoinCountChanged(int newCoinCount);
     [Signal]
-    private delegate void HealthChanged(int newHealth, int maxHealth);
+    private delegate void PlayerHealthChanged(int newHealth, int maxHealth);
+    [Signal]
+    private delegate void PlayerDied();
 
     public override void _EnterTree()
     {
