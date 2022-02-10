@@ -140,17 +140,14 @@ namespace StateMachine
 
         private void OnScreenEntered()
         {
-            GD.Print("entered");
             SetProcess(true);
             SetPhysicsProcess(true);
         }
 
         private void OnScreenExited()
         {
-            GD.Print("exited");
             SetProcess(false);
             SetPhysicsProcess(false);
         }
-
     }
 }

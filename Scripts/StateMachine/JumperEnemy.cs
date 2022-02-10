@@ -25,7 +25,6 @@ namespace StateMachine
         {
             base._Process(delta);
             StateController();
-            GD.Print(Fsm.CurrentState.Id);
         }
 
         private void StateController()

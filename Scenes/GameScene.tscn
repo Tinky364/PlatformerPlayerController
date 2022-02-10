@@ -38,7 +38,7 @@ b = Vector2( -16, -5.72205e-05 )
 [sub_resource type="Resource" id=15]
 resource_local_to_scene = true
 script = ExtResource( 14 )
-_secondPosDist = 40.0
+_secondPosDist = 20.0
 
 [sub_resource type="Resource" id=16]
 resource_local_to_scene = true
@@ -59,7 +59,7 @@ _landingMoveDist = 3.0
 
 [sub_resource type="RectangleShape2D" id=14]
 resource_local_to_scene = true
-extents = Vector2( 71.5, 8 )
+extents = Vector2( 24, 8 )
 
 [sub_resource type="AtlasTexture" id=13]
 atlas = ExtResource( 6 )
@@ -159,7 +159,7 @@ position = Vector2( -88, 192 )
 position = Vector2( 136, 48 )
 
 [node name="Enemy1" parent="World" instance=ExtResource( 18 )]
-position = Vector2( 145, 144 )
+position = Vector2( 268, 88 )
 _idleState = SubResource( 15 )
 _chaseState = SubResource( 16 )
 _attackState = SubResource( 17 )
@@ -169,8 +169,11 @@ position = Vector2( -1, 0 )
 _targetNavCharPath = NodePath("../../Player/NavChar")
 
 [node name="CollisionShape2D" parent="World/Enemy1/NavArea" index="0"]
-position = Vector2( 8.5, 0 )
+position = Vector2( 29, 0 )
 shape = SubResource( 14 )
+
+[node name="Body" parent="World/Enemy1" index="1"]
+position = Vector2( 13, 0 )
 
 [node name="Player" parent="World" instance=ExtResource( 15 )]
 position = Vector2( 232, 125 )

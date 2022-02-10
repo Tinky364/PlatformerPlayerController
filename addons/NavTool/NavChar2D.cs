@@ -47,8 +47,8 @@ namespace NavTool
         public override void _PhysicsProcess(float delta)
         {
             if (Engine.EditorHint) return;
-            if (_navArea != null) return;
-
+            if (_navArea != null && IsInactive) return;
+            
             FindGroundPositionForArea();
         }
 
