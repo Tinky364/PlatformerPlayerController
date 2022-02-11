@@ -31,6 +31,9 @@ _waitAfterAttackSec = 1.0
 _backMoveDistMin = 5.0
 _backMoveDistMax = 30.0
 _landingMoveDist = 3.0
+_waitAfterCollisionSec = 2.0
+_collisionBackWidth = 24.0
+_collisionBackSec = 1.0
 
 [sub_resource type="RectangleShape2D" id=21]
 resource_local_to_scene = true

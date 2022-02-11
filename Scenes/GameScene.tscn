@@ -194,6 +194,7 @@ position = Vector2( 3, 0 )
 shape = SubResource( 20 )
 
 [node name="NavBody2D" parent="World/RusherEnemy" index="1"]
+position = Vector2( 63, 0 )
 _targetNavBodyPath = NodePath("../../Player")
 
 [node name="JumperEnemy" parent="World" instance=ExtResource( 18 )]
