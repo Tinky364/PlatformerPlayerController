@@ -1,6 +1,6 @@
 using Godot;
 
-namespace StateMachine
+namespace AI
 {
     public abstract class State<T> : Resource
     {

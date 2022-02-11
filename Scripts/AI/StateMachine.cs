@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Collections;
 
-namespace StateMachine
+namespace AI
 {
     public class StateMachine<T> : Reference
     {
@@ -24,16 +24,19 @@ namespace StateMachine
         
         public State<T> GetState(T stateId) => States.ContainsKey(stateId) ? States[stateId] : null;
         
-        public void SetCurrentState(T stateId)
+        public void SetCurrentState(T stateId, bool isForced = false)
         {
             State<T> state = States[stateId];
-            SetCurrentState(state);
+            SetCurrentState(state, isForced);
         }
         
-        public void SetCurrentState(State<T> newState)
+        public void SetCurrentState(State<T> newState,  bool isForced = false)
         {
-            if (CurrentState == newState) return;
-            if (IsStateLocked) return;
+            if (!isForced)
+            {
+                if (CurrentState == newState) return;
+                if (IsStateLocked) return;
+            }
             if (!States.ContainsKey(newState.Id)) return;
             CurrentState?.Exit();
             CurrentState = newState;

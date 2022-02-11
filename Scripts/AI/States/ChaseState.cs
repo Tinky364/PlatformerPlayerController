@@ -1,6 +1,6 @@
 using Godot;
 
-namespace StateMachine
+namespace AI.States
 {
     public class ChaseState : State<Enemy.EnemyStates>
     {

@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using AI;
 using Godot;
 
 namespace UI
@@ -57,7 +58,7 @@ namespace UI
             _coinCountLabel.Text = newCount.ToString();
         }
 
-        private void OnHealthChanged(int newHealth, int maxHealth)
+        private void OnHealthChanged(int newHealth, int maxHealth, Enemy attacker)
         {
             if (GameManager.Singleton.UiState == GameManager.GameState.Pause) return;
 

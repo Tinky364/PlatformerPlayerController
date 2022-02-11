@@ -1,6 +1,6 @@
 ﻿using Godot;
 
-namespace StateMachine
+namespace AI.States
 {
     public class IdleState : State<Enemy.EnemyStates>
     {
@@ -35,8 +35,7 @@ namespace StateMachine
         
         public override void Enter()
         {
-            if (_enemy.DebugEnabled)
-                GD.Print($"{_enemy.Name}: {nameof(IdleState)}");
+            if (_enemy.DebugEnabled) GD.Print($"{_enemy.Name}: {nameof(IdleState)}");
             _enemy.AnimatedSprite.Play("idle");
         }
 

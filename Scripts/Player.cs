@@ -1,5 +1,6 @@
 using Godot;
 using NavTool;
+using AI;
 
 public class Player : PlayerController
 {
@@ -39,12 +40,13 @@ public class Player : PlayerController
         Events.Singleton.Connect("CoinCollected", this, nameof(AddCoin));
     }
 
-    public void OnDamaged(Node target, int damageValue, Node attacker, Vector2 hitNormal)
+    public void OnDamaged(Node2D target, int damageValue, Enemy attacker, Vector2 hitNormal)
     {
+        if (target != this) return;
         if (_isUnhurtable) return;
-        
+
         Health -= damageValue;
-        Events.Singleton.EmitSignal("PlayerHealthChanged", Health, _maxHealth);
+        Events.Singleton.EmitSignal("PlayerHealthChanged", Health, _maxHealth, attacker);
         if (Health == 0)
         {
             OnDie();

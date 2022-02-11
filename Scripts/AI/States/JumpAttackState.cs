@@ -1,8 +1,8 @@
 using Godot;
 
-namespace StateMachine
+namespace AI.States
 {
-    public class AttackState : State<Enemy.EnemyStates>
+    public class JumpAttackState : State<Enemy.EnemyStates>
     {
         private Enemy _enemy;
 
@@ -32,7 +32,7 @@ namespace StateMachine
 
         public override void Enter()
         {
-            if (_enemy.DebugEnabled) GD.Print($"{_enemy.Name}: {nameof(AttackState)}");
+            if (_enemy.DebugEnabled) GD.Print($"{_enemy.Name}: {nameof(JumpAttackState)}");
             
             _enemy.Fsm.IsStateLocked = true;
             _enemy.AnimatedSprite.Play("idle");
@@ -55,7 +55,7 @@ namespace StateMachine
             
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeAttackSec), "timeout");
             
-            _enemy.NavChar.InterpolateMove(
+            _enemy.NavChar.LerpWithDuration(
                 _enemy.NavChar.NavPosition.x + -dirToTarget.x * backMoveDist,
                 backMoveSec,
                 Tween.TransitionType.Quad
@@ -64,17 +64,15 @@ namespace StateMachine
             await ToSignal(_enemy.NavChar.Tween, "tween_completed");
 
             _enemy.AnimatedSprite.Play("run");
-            _enemy.CanAttack = true;
             _enemy.Velocity.y = -_enemy.Gravity * _jumpSec / 2f;
-            _enemy.NavChar.InterpolateMove(
+            _enemy.NavChar.LerpWithDuration(
                 targetPos.x,
                 _jumpSec
             );
             
             await ToSignal(_enemy.NavChar.Tween, "tween_completed");
             
-            _enemy.CanAttack = false;
-            _enemy.NavChar.InterpolateMove(
+            _enemy.NavChar.LerpWithDuration(
                 targetPos.x + dirToTarget.x * _landingMoveDist,
                 _landingMoveSec,
                 Tween.TransitionType.Quad,

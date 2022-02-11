@@ -1,0 +1,125 @@
+[gd_scene load_steps=15 format=2]
+
+[ext_resource path="res://Sprites/Enemy/Enemy2.png" type="Texture" id=1]
+[ext_resource path="res://Sprites/Enemy/Enemy1.png" type="Texture" id=2]
+[ext_resource path="res://Scripts/AI/Enemies/RusherEnemy.cs" type="Script" id=3]
+[ext_resource path="res://addons/NavTool/NavChar2D.cs" type="Script" id=4]
+[ext_resource path="res://addons/NavTool/NavArea2D.cs" type="Script" id=5]
+[ext_resource path="res://Scripts/AI/States/RushAttackState.cs" type="Script" id=6]
+[ext_resource path="res://Scripts/AI/States/IdleState.cs" type="Script" id=8]
+
+[sub_resource type="Resource" id=22]
+resource_local_to_scene = true
+script = ExtResource( 8 )
+_secondPosDist = 10.0
+
+[sub_resource type="Resource" id=23]
+resource_local_to_scene = true
+script = ExtResource( 6 )
+_waitBeforeRushSec = 1.0
+_waitAfterRushSec = 1.0
+_rushSpeed = 100.0
+_waitAfterCollisionSec = 2.0
+_collisionBackWidth = 24.0
+_collisionBackSec = 1.0
+
+[sub_resource type="RectangleShape2D" id=21]
+resource_local_to_scene = true
+extents = Vector2( 27, 8 )
+
+[sub_resource type="SpriteFrames" id=17]
+animations = [ {
+"frames": [ ExtResource( 2 ) ],
+"loop": true,
+"name": "idle",
+"speed": 5.0
+}, {
+"frames": [ ExtResource( 2 ), ExtResource( 1 ) ],
+"loop": true,
+"name": "run",
+"speed": 2.0
+} ]
+
+[sub_resource type="RectangleShape2D" id=15]
+extents = Vector2( 10, 7 )
+
+[sub_resource type="RectangleShape2D" id=19]
+extents = Vector2( 9, 6 )
+
+[sub_resource type="RectangleShape2D" id=16]
+extents = Vector2( 10, 1 )
+
+[node name="RusherEnemy" type="Node2D"]
+script = ExtResource( 3 )
+_idleState = SubResource( 22 )
+_attackState = SubResource( 23 )
+
+[node name="NavArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 256
+script = ExtResource( 5 )
+__meta__ = {
+"_edit_group_": true
+}
+_navCharPath = NodePath("../Body/NavChar")
+_targetNavCharPath = NodePath("")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NavArea"]
+shape = SubResource( 21 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="VisibilityNotifier2D" type="VisibilityNotifier2D" parent="NavArea"]
+
+[node name="Body" type="KinematicBody2D" parent="."]
+collision_layer = 16
+collision_mask = 6
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="AnimatedSprite" type="AnimatedSprite" parent="Body"]
+self_modulate = Color( 0, 1, 0.0392157, 1 )
+position = Vector2( -16, -32 )
+scale = Vector2( 2, 2 )
+frames = SubResource( 17 )
+animation = "idle"
+centered = false
+
+[node name="Shape" type="CollisionShape2D" parent="Body"]
+position = Vector2( 0, -7 )
+shape = SubResource( 15 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="TriggerArea" type="Area2D" parent="Body"]
+collision_layer = 16
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="Shape" type="CollisionShape2D" parent="Body/TriggerArea"]
+position = Vector2( 0, -7 )
+shape = SubResource( 19 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="NavChar" type="Area2D" parent="Body"]
+collision_layer = 256
+collision_mask = 6
+script = ExtResource( 4 )
+__meta__ = {
+"_edit_lock_": true
+}
+_navAreaPath = NodePath("../../NavArea")
+_groundRayLength = 32.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body/NavChar"]
+position = Vector2( 0, -1 )
+shape = SubResource( 16 )
+__meta__ = {
+"_edit_lock_": true
+}

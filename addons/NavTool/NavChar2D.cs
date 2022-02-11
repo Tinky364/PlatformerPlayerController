@@ -11,14 +11,27 @@ namespace NavTool
         private NavArea2D _navArea;
         public Tween Tween { get; }
         private Physics2DDirectSpaceState _spaceState;
-
+        
         [Export]
         private NodePath _navAreaPath = default;
+        [Export(PropertyHint.Range, "0.1,200,or_greater")] 
+        private float _groundRayLength = 35f;
 
         private Dictionary _ray;
         public Vector2 NavPosition { get; private set; } = new Vector2();
         public Vector2 ShapeExtents { get; private set; }
-        public bool IsInactive { get; set; }
+
+        private bool _isInactive;
+        public bool IsInactive
+        {
+            get => _isInactive;
+            set
+            {
+                _isInactive = value;
+                SetProcess(!value);
+                SetPhysicsProcess(!value);
+            }
+        }
 
         private NavChar2D()
         {
@@ -39,7 +52,7 @@ namespace NavTool
             if (_shape.Shape is RectangleShape2D shape) ShapeExtents = shape.Extents;
 
             if (_navArea != null && !_navArea.IsPositionInArea(GlobalPosition))
-                SetPosition(_navArea.GlobalPosition);
+                SetBodyPosition(_navArea.GlobalPosition);
 
             FindGroundPositionForArea();
         }
@@ -47,8 +60,7 @@ namespace NavTool
         public override void _PhysicsProcess(float delta)
         {
             if (Engine.EditorHint) return;
-            if (_navArea != null && IsInactive) return;
-            
+
             FindGroundPositionForArea();
         }
 
@@ -56,16 +68,15 @@ namespace NavTool
 
         public float DistanceTo(Vector2 to) => NavPosition.DistanceTo(to);
 
-        public void InterpolateMove(
-            float targetPosX,
-            float duration,
-            Tween.TransitionType transitionType = Tween.TransitionType.Linear,
-            Tween.EaseType easeType = Tween.EaseType.InOut,
-            float delay = 0f)
+        public void LerpWithDuration(float targetPosX, float duration,
+                                     Tween.TransitionType transitionType = Tween.TransitionType.Linear,
+                                     Tween.EaseType easeType = Tween.EaseType.InOut,
+                                     float delay = 0f)
         {
-            if (targetPosX < _navArea.ShapeRect.Position.x)
-                targetPosX = _navArea.ShapeRect.Position.x;
-            else if (targetPosX > _navArea.ShapeRect.End.x) targetPosX = _navArea.ShapeRect.End.x;
+            if (targetPosX < _navArea.ReachableAreaRect.Position.x)
+                targetPosX = _navArea.ReachableAreaRect.Position.x;
+            else if (targetPosX > _navArea.ReachableAreaRect.End.x)
+                targetPosX = _navArea.ReachableAreaRect.End.x;
 
             Tween.InterpolateProperty(
                 _body,
@@ -79,17 +90,45 @@ namespace NavTool
             );
             Tween.Start();
         }
+        
+        public void LerpWithSpeed(float targetPosX, float speed,
+                                  Tween.TransitionType transitionType = Tween.TransitionType.Linear,
+                                  Tween.EaseType easeType = Tween.EaseType.InOut,
+                                  float delay = 0f)
+        {
+            if (targetPosX < _navArea.ReachableAreaRect.Position.x)
+                targetPosX = _navArea.ReachableAreaRect.Position.x;
+            else if (targetPosX > _navArea.ReachableAreaRect.End.x)
+                targetPosX = _navArea.ReachableAreaRect.End.x;
 
-        public new void SetPosition(Vector2 position)
+            Tween.InterpolateProperty(
+                _body,
+                "global_position:x",
+                null,
+                targetPosX,
+                Mathf.Abs(targetPosX - GlobalPosition.x) / speed,
+                transitionType,
+                easeType,
+                delay
+            );
+            Tween.Start();
+        }
+
+        public void StopLerp()
+        {
+            Tween.Stop(_body, "global_position:x");
+        }
+
+        private void SetBodyPosition(Vector2 position)
         {
             _body.GlobalPosition = position;
         }
 
         public Vector2 MoveAndSlide(Vector2 velocity, float delta, Vector2? upDirection = null)
         {
-            if (_body.GlobalPosition.x + velocity.x * delta < _navArea.ShapeRect.Position.x &&
+            if (_body.GlobalPosition.x + velocity.x * delta < _navArea.AreaRect.Position.x &&
                 velocity.x < 0
-                || _body.GlobalPosition.x + velocity.x * delta > _navArea.ShapeRect.End.x &&
+                || _body.GlobalPosition.x + velocity.x * delta > _navArea.AreaRect.End.x &&
                 velocity.x > 0)
             {
                 velocity.x = 0;
@@ -105,7 +144,7 @@ namespace NavTool
             // Cast left ray.
             _ray = _spaceState.IntersectRay(
                 _body.GlobalPosition + new Vector2(-ShapeExtents.x, 0f),
-                _body.GlobalPosition + new Vector2(-ShapeExtents.x, 300f),
+                _body.GlobalPosition + new Vector2(-ShapeExtents.x, _groundRayLength),
                 new Array {this, _body},
                 _body.CollisionMask
             );
@@ -117,7 +156,7 @@ namespace NavTool
                 // Cast right ray.
                 _ray = _spaceState.IntersectRay(
                     _body.GlobalPosition + new Vector2(ShapeExtents.x, 0f),
-                    _body.GlobalPosition + new Vector2(ShapeExtents.x, 300f),
+                    _body.GlobalPosition + new Vector2(ShapeExtents.x, _groundRayLength),
                     new Array {this, _body},
                     _body.CollisionMask
                 );
@@ -140,7 +179,7 @@ namespace NavTool
                 // Cast right ray.
                 _ray = _spaceState.IntersectRay(
                     _body.GlobalPosition + new Vector2(ShapeExtents.x, 0f),
-                    _body.GlobalPosition + new Vector2(ShapeExtents.x, 300f),
+                    _body.GlobalPosition + new Vector2(ShapeExtents.x, _groundRayLength),
                     new Array {this, _body},
                     _body.CollisionMask
                 );
@@ -149,6 +188,10 @@ namespace NavTool
                     rightHitPos = (Vector2) _ray["position"]; // Right ray hit position.
 
                     NavPosition = rightHitPos + new Vector2(-ShapeExtents.x, 0);
+                }
+                else // When any rays do not hit.
+                {
+                    NavPosition = _body.GlobalPosition;
                 }
             }
 

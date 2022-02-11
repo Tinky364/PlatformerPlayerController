@@ -1,6 +1,6 @@
-[gd_scene load_steps=29 format=2]
+[gd_scene load_steps=34 format=2]
 
-[ext_resource path="res://Scripts/StateMachine/ChaseState.cs" type="Script" id=1]
+[ext_resource path="res://Scripts/AI/States/ChaseState.cs" type="Script" id=1]
 [ext_resource path="res://Resources/TileSet.tres" type="TileSet" id=2]
 [ext_resource path="res://Resources/Font26.tres" type="DynamicFont" id=3]
 [ext_resource path="res://SubScenes/Coin.tscn" type="PackedScene" id=4]
@@ -8,15 +8,17 @@
 [ext_resource path="res://Sprites/Coin/Coin.png" type="Texture" id=6]
 [ext_resource path="res://Resources/Font16.tres" type="DynamicFont" id=7]
 [ext_resource path="res://Scripts/UI/ButtonController.cs" type="Script" id=8]
+[ext_resource path="res://SubScenes/RusherEnemy.tscn" type="PackedScene" id=9]
 [ext_resource path="res://Resources/UpTileSet.tres" type="TileSet" id=10]
 [ext_resource path="res://Resources/BackgroundTileSet.tres" type="TileSet" id=11]
 [ext_resource path="res://Scripts/CamController.cs" type="Script" id=12]
-[ext_resource path="res://Scripts/StateMachine/AttackState.cs" type="Script" id=13]
-[ext_resource path="res://Scripts/StateMachine/IdleState.cs" type="Script" id=14]
+[ext_resource path="res://Scripts/AI/States/JumpAttackState.cs" type="Script" id=13]
+[ext_resource path="res://Scripts/AI/States/IdleState.cs" type="Script" id=14]
 [ext_resource path="res://SubScenes/Player.tscn" type="PackedScene" id=15]
 [ext_resource path="res://Sprites/Hearth/HearthForeground.png" type="Texture" id=16]
 [ext_resource path="res://Sprites/Hearth/HearthBackground.png" type="Texture" id=17]
-[ext_resource path="res://SubScenes/Enemy.tscn" type="PackedScene" id=18]
+[ext_resource path="res://SubScenes/JumperEnemy.tscn" type="PackedScene" id=18]
+[ext_resource path="res://Scripts/AI/States/RushAttackState.cs" type="Script" id=19]
 
 [sub_resource type="PhysicsMaterial" id=9]
 
@@ -34,6 +36,25 @@ extents = Vector2( 24, 4 )
 
 [sub_resource type="SegmentShape2D" id=5]
 b = Vector2( -16, -5.72205e-05 )
+
+[sub_resource type="Resource" id=18]
+resource_local_to_scene = true
+script = ExtResource( 14 )
+_secondPosDist = 10.0
+
+[sub_resource type="Resource" id=19]
+resource_local_to_scene = true
+script = ExtResource( 19 )
+_waitBeforeRushSec = 1.0
+_waitAfterRushSec = 1.0
+_rushSpeed = 100.0
+_waitAfterCollisionSec = 2.0
+_collisionBackWidth = 24.0
+_collisionBackSec = 1.0
+
+[sub_resource type="RectangleShape2D" id=20]
+resource_local_to_scene = true
+extents = Vector2( 72, 8 )
 
 [sub_resource type="Resource" id=15]
 resource_local_to_scene = true
@@ -158,28 +179,47 @@ position = Vector2( -88, 192 )
 [node name="Coin4" parent="World/Coins" instance=ExtResource( 4 )]
 position = Vector2( 136, 48 )
 
-[node name="Enemy1" parent="World" instance=ExtResource( 18 )]
+[node name="RusherEnemy" parent="World" instance=ExtResource( 9 )]
+position = Vector2( 149, 144 )
+DebugEnabled = true
+MoveSpeed = 5.0
+_idleState = SubResource( 18 )
+_attackState = SubResource( 19 )
+
+[node name="NavArea" parent="World/RusherEnemy" index="0"]
+_targetNavCharPath = NodePath("../../Player/NavChar")
+
+[node name="CollisionShape2D" parent="World/RusherEnemy/NavArea" index="0"]
+position = Vector2( 3, 0 )
+shape = SubResource( 20 )
+
+[node name="Body" parent="World/RusherEnemy" index="1"]
+position = Vector2( -2, 0 )
+
+[node name="JumperEnemy" parent="World" instance=ExtResource( 18 )]
 position = Vector2( 268, 88 )
 _idleState = SubResource( 15 )
 _chaseState = SubResource( 16 )
 _attackState = SubResource( 17 )
 
-[node name="NavArea" parent="World/Enemy1" index="0"]
-position = Vector2( -1, 0 )
+[node name="NavArea" parent="World/JumperEnemy" index="0"]
+position = Vector2( -1, 8 )
 _targetNavCharPath = NodePath("../../Player/NavChar")
 
-[node name="CollisionShape2D" parent="World/Enemy1/NavArea" index="0"]
+[node name="CollisionShape2D" parent="World/JumperEnemy/NavArea" index="0"]
 position = Vector2( 29, 0 )
 shape = SubResource( 14 )
 
-[node name="Body" parent="World/Enemy1" index="1"]
-position = Vector2( 13, 0 )
+[node name="Body" parent="World/JumperEnemy" index="1"]
+position = Vector2( 11, 8 )
 
 [node name="Player" parent="World" instance=ExtResource( 15 )]
 position = Vector2( 232, 125 )
 _canJumpDur = 0.1
-_maxHealth = 3
 _unhurtableDur = 1.5
+
+[node name="NavChar" parent="World/Player" index="3"]
+_groundRayLength = 32.0
 
 [node name="Camera2D" type="Camera2D" parent="World"]
 position = Vector2( 168, 132 )
@@ -349,5 +389,6 @@ text = "Quit"
 script = ExtResource( 8 )
 LoadScenePath = "res://Scenes/StartingScene.tscn"
 
-[editable path="World/Enemy1"]
+[editable path="World/RusherEnemy"]
+[editable path="World/JumperEnemy"]
 [editable path="World/Player"]

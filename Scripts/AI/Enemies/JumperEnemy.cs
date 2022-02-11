@@ -1,7 +1,7 @@
 using Godot;
-using System;
+using AI.States;
 
-namespace StateMachine
+namespace AI.Enemies
 {
     public class JumperEnemy : Enemy
     {
@@ -10,7 +10,7 @@ namespace StateMachine
         [Export]
         private ChaseState _chaseState;
         [Export]
-        private AttackState _attackState;
+        private JumpAttackState _attackState;
 
         public override void _Ready()
         {
@@ -21,13 +21,7 @@ namespace StateMachine
             Fsm.SetCurrentState(EnemyStates.Idle);
         }
 
-        public override void _Process(float delta)
-        {
-            base._Process(delta);
-            StateController();
-        }
-
-        private void StateController()
+        protected override void StateController()
         {
             if (Fsm.IsStateLocked) return;
             
