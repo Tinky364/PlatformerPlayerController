@@ -1,11 +1,9 @@
 using Godot;
 using NavTool;
-using AI;
 
+[Tool]
 public class Player : PlayerController
 {
-    private NavChar2D _navChar;
-    
     [Export(PropertyHint.Range, "0,10,or_greater")]
     private int _maxHealth = 6;
     [Export(PropertyHint.Range, "0,3,or_greater")]
@@ -26,24 +24,24 @@ public class Player : PlayerController
         }
     } 
     public int CoinCount { get; private set; } = 0;
-    private bool _isUnhurtable;
 
     public override void _Ready()
     {
+        if (Engine.EditorHint) return;
+
         base._Ready();
 
-        _navChar = GetNode<NavChar2D>("NavChar");
-        
         Health = _maxHealth;
         
         Events.Singleton.Connect("Damaged", this, nameof(OnDamaged));
         Events.Singleton.Connect("CoinCollected", this, nameof(AddCoin));
     }
 
-    public void OnDamaged(Node2D target, int damageValue, Enemy attacker, Vector2 hitNormal)
+    public void OnDamaged(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
     {
         if (target != this) return;
-        if (_isUnhurtable) return;
+        if (IsUnhurtable) return;
+        IsUnhurtable = true;
 
         Health -= damageValue;
         Events.Singleton.EmitSignal("PlayerHealthChanged", Health, _maxHealth, attacker);
@@ -63,14 +61,14 @@ public class Player : PlayerController
 
     protected override void OnDie()
     {
-        _navChar.IsInactive = true;
-        _isUnhurtable = true;
+        IsInactive = true;
+        IsUnhurtable = true;
         base.OnDie();
     }
 
     private async void UnhurtableDuration()
     {
-        _isUnhurtable = true;
+        IsUnhurtable = true;
         float count = 0f;
         while (count < _unhurtableDur)
         {
@@ -84,7 +82,7 @@ public class Player : PlayerController
             await ToSignal(GetTree().CreateTimer(waitTime), "timeout");
         }
         AnimSprite.SelfModulate = Colors.White;
-        _isUnhurtable = false;
+        IsUnhurtable = false;
         SetRecoil(false, null);
     }
 
@@ -94,5 +92,4 @@ public class Player : PlayerController
         CoinCount += coinValue;
         Events.Singleton.EmitSignal("CoinCountChanged", CoinCount);
     }
-
 }

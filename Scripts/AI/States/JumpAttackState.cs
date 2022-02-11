@@ -38,16 +38,16 @@ namespace AI.States
             _enemy.AnimatedSprite.Play("idle");
             _enemy.Velocity.x = 0;
             
-            Vector2 dirToTarget = _enemy.NavArea.DirectionToTarget();
+            Vector2 dirToTarget = _enemy.NavBody.NavArea.DirectionToTarget();
             _enemy.Direction = dirToTarget.x >= 0 ? 1 : -1;
             
-            Attack(dirToTarget, _enemy.NavArea.TargetNavChar.NavPosition);
+            Attack(dirToTarget, _enemy.NavBody.TargetNavBody.NavPos);
         }
         
         private async void Attack(Vector2 dirToTarget, Vector2 targetPos)
         {
             float backMoveDist = Mathf.Clamp(
-                _backMoveDistMax - _enemy.NavChar.DistanceTo(targetPos),
+                _backMoveDistMax - _enemy.NavBody.DistanceTo(targetPos),
                 _backMoveDistMin,
                 _backMoveDistMax
             );
@@ -55,31 +55,31 @@ namespace AI.States
             
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeAttackSec), "timeout");
             
-            _enemy.NavChar.LerpWithDuration(
-                _enemy.NavChar.NavPosition.x + -dirToTarget.x * backMoveDist,
+            _enemy.NavBody.LerpWithDuration(
+                _enemy.NavBody.NavPos.x + -dirToTarget.x * backMoveDist,
                 backMoveSec,
                 Tween.TransitionType.Quad
             );
             
-            await ToSignal(_enemy.NavChar.Tween, "tween_completed");
+            await ToSignal(_enemy.NavBody.Tween, "tween_completed");
 
             _enemy.AnimatedSprite.Play("run");
             _enemy.Velocity.y = -_enemy.Gravity * _jumpSec / 2f;
-            _enemy.NavChar.LerpWithDuration(
+            _enemy.NavBody.LerpWithDuration(
                 targetPos.x,
                 _jumpSec
             );
             
-            await ToSignal(_enemy.NavChar.Tween, "tween_completed");
+            await ToSignal(_enemy.NavBody.Tween, "tween_completed");
             
-            _enemy.NavChar.LerpWithDuration(
+            _enemy.NavBody.LerpWithDuration(
                 targetPos.x + dirToTarget.x * _landingMoveDist,
                 _landingMoveSec,
                 Tween.TransitionType.Quad,
                 Tween.EaseType.Out
             );
             
-            await ToSignal(_enemy.NavChar.Tween, "tween_completed");
+            await ToSignal(_enemy.NavBody.Tween, "tween_completed");
             
             _enemy.AnimatedSprite.Play("idle");
             

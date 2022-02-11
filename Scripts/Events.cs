@@ -1,5 +1,5 @@
 using Godot;
-using AI;
+using NavTool;
 
 public class Events : Node
 {
@@ -7,13 +7,13 @@ public class Events : Node
     public static Events Singleton => _singleton;
 
     [Signal]
-    private delegate void Damaged(Node2D target, int damageValue, Enemy attacker, Vector2 hitNormal);
+    private delegate void Damaged(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal);
     [Signal]
     private delegate void CoinCollected(Node target, int coinValue, Coin coin);
     [Signal]
     private delegate void CoinCountChanged(int newCoinCount);
     [Signal]
-    private delegate void PlayerHealthChanged(int newHealth, int maxHealth, Enemy attacker);
+    private delegate void PlayerHealthChanged(int newHealth, int maxHealth, NavBody2D attacker);
     [Signal]
     private delegate void PlayerDied();
 

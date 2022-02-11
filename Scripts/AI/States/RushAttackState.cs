@@ -1,5 +1,6 @@
 using System.Threading;
 using Godot;
+using NavTool;
 
 namespace AI.States
 {
@@ -28,7 +29,7 @@ namespace AI.States
             Initialize(Enemy.EnemyStates.Attack);
             _enemy = enemy;
             _enemy.Fsm.AddState(this);
-            Events.Singleton.Connect("PlayerHealthChanged", this, nameof(OnPlayerHit));
+            Events.Singleton.Connect("Damaged", this, nameof(OnTargetHit));
         }
 
         public override void Enter()
@@ -49,30 +50,30 @@ namespace AI.States
             // Waits before calculating the target position.
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeRushSec / 2f), "timeout");
             // Calculates the target position and sets its own direction.
-            Vector2 dirToTarget = _enemy.NavArea.DirectionToTarget();
+            Vector2 dirToTarget = _enemy.NavBody.NavArea.DirectionToTarget();
             Vector2 targetPos;
             if (dirToTarget.x >= 0)
             {
                 _enemy.Direction = 1;
-                targetPos = _enemy.NavArea.ReachableAreaRect.End;
+                targetPos = _enemy.NavBody.NavArea.ReachableAreaRect.End;
             }
             else
             {
                 _enemy.Direction = -1;
-                targetPos = _enemy.NavArea.ReachableAreaRect.Position;
+                targetPos = _enemy.NavBody.NavArea.ReachableAreaRect.Position;
             }
             // Waits before rushing to the target position.
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeRushSec / 2f), "timeout");
             _enemy.AnimatedSprite.Play("run");
             // Starts rushing to the target position.
-            _enemy.NavChar.LerpWithSpeed(
+            _enemy.NavBody.LerpWithSpeed(
                 targetPos.x,
                 _rushSpeed,
                 Tween.TransitionType.Quad
             );
             _isRushing = true;
             // Waits until rushing ends.
-            await ToSignal(_enemy.NavChar.Tween, "tween_completed");
+            await ToSignal(_enemy.NavBody.Tween, "tween_completed");
             // When rushing ends before its duration
             if (cancellationToken.IsCancellationRequested) return;
             _isRushing = false;
@@ -85,8 +86,8 @@ namespace AI.States
         
         private async void Collision()
         {
-            _enemy.NavChar.LerpWithDuration(
-                _enemy.NavChar.GlobalPosition.x - _enemy.Direction * _collisionBackWidth,
+            _enemy.NavBody.LerpWithDuration(
+                _enemy.NavBody.NavPos.x - _enemy.Direction * _collisionBackWidth,
                 _collisionBackSec,
                 Tween.TransitionType.Cubic,
                 Tween.EaseType.Out
@@ -108,15 +109,15 @@ namespace AI.States
         {
         }
 
-        private void OnPlayerHit(int newHealth, int maxHealth, Enemy attacker)
+        private void OnTargetHit(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
         {
-            if (attacker != _enemy) return;
+            if (attacker != _enemy.NavBody || target != _enemy.NavBody.TargetNavBody) return;
             if (_enemy.Fsm.CurrentState != this) return;
             if (!_isRushing) return;
             
             _isRushing = false;
             _cancellationTokenSource?.Cancel();
-            _enemy.NavChar.StopLerp();
+            _enemy.NavBody.StopLerp();
             _cancellationTokenSource = null;
             Collision();
         }

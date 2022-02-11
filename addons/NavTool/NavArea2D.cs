@@ -5,31 +5,28 @@ namespace NavTool
     [Tool]
     public class NavArea2D : Area2D
     {
-        public NavChar2D NavChar { get; private set; }
-        public NavChar2D TargetNavChar { get; private set; }
+        public NavBody2D NavBody { get; private set; }
         public VisibilityNotifier2D VisibilityNotifier { get; private set; }
         private CollisionShape2D _shape;
         
         [Signal]
-        public delegate void TargetEntered(NavChar2D navChar);
+        public delegate void TargetEntered(NavBody2D navBody);
         [Signal]
-        public delegate void TargetExited(NavChar2D navChar);
+        public delegate void TargetExited(NavBody2D navBody);
         [Signal]
         public delegate void ScreenEntered();
         [Signal]
         public delegate void ScreenExited();
         
         [Export]
-        private NodePath _navCharPath = default;
-        [Export]
-        private NodePath _targetNavCharPath = default;
-        
+        private NodePath _navBodyPath = default;
+       
         public Vector2 AreaExtents { get; private set; }
         public Rect2 AreaRect => new Rect2(GlobalPosition - AreaExtents, AreaExtents * 2f);
         public Rect2 ReachableAreaRect => new Rect2(
-            AreaRect.Position.x + NavChar.ShapeExtents.x,
+            AreaRect.Position.x + NavBody.ShapeExtents.x,
             AreaRect.Position.y,
-            AreaRect.Size.x - NavChar.ShapeExtents.x * 2f,
+            AreaRect.Size.x - NavBody.ShapeExtents.x * 2f,
             AreaRect.Size.y
         );
         public bool IsTargetReachable { get; private set; }
@@ -38,8 +35,7 @@ namespace NavTool
         {
             if (Engine.EditorHint) return;
             
-            NavChar = GetNode<NavChar2D>(_navCharPath);
-            TargetNavChar = GetNode<NavChar2D>(_targetNavCharPath);
+            NavBody = GetNode<NavBody2D>(_navBodyPath);
             _shape = GetNode<CollisionShape2D>("CollisionShape2D");
             VisibilityNotifier = GetNode<VisibilityNotifier2D>("VisibilityNotifier2D");
             
@@ -53,9 +49,9 @@ namespace NavTool
         }
 
         public Vector2 DirectionToTarget() =>
-            (TargetNavChar.NavPosition - NavChar.NavPosition).Normalized();
+            (NavBody.TargetNavBody.NavPos - NavBody.NavPos).Normalized();
 
-        public float DistanceToTarget() => (TargetNavChar.NavPosition - NavChar.NavPosition).Length();
+        public float DistanceToTarget() => (NavBody.TargetNavBody.NavPos - NavBody.NavPos).Length();
 
         public bool IsPositionInArea(Vector2 position)
         {
@@ -82,31 +78,31 @@ namespace NavTool
             VisibilityNotifier.Rect = new Rect2(AreaRect.Position - GlobalPosition, AreaRect.Size);
         }
 
-        private void OnTargetEntered(NavChar2D navChar)
+        private void OnTargetEntered(Area2D area2D)
         {
-            if (navChar != TargetNavChar) return;
+            if ((NavChar2D) area2D != NavBody.TargetNavBody.NavChar) return;
             
             IsTargetReachable = true;
-            EmitSignal(nameof(TargetEntered), TargetNavChar);
+            EmitSignal(nameof(TargetEntered), NavBody.TargetNavBody);
         }
 
-        private void OnTargetExited(NavChar2D navChar)
+        private void OnTargetExited(Node area2D)
         {
-            if (navChar != TargetNavChar) return;
+            if ((NavChar2D) area2D != NavBody.TargetNavBody.NavChar) return;
             
             IsTargetReachable = false;
-            EmitSignal(nameof(TargetExited), TargetNavChar);
+            EmitSignal(nameof(TargetExited), NavBody.TargetNavBody);
         }
         
         private void OnScreenEnter()
         {
-            NavChar.IsInactive = false;
+            NavBody.IsInactive = false;
             EmitSignal(nameof(ScreenEntered));
         }
 
         private void OnScreenExit()
         {
-            NavChar.IsInactive = true;
+            NavBody.IsInactive = true;
             EmitSignal(nameof(ScreenExited));
         }
 

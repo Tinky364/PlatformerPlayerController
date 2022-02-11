@@ -5,6 +5,9 @@
 [ext_resource path="res://Sprites/Player/tile_0046.png" type="Texture" id=3]
 [ext_resource path="res://addons/NavTool/NavChar2D.cs" type="Script" id=4]
 
+[sub_resource type="RectangleShape2D" id=4]
+extents = Vector2( 4, 1 )
+
 [sub_resource type="SpriteFrames" id=2]
 animations = [ {
 "frames": [ ExtResource( 1 ) ],
@@ -29,9 +32,6 @@ extents = Vector2( 4, 5.5 )
 [sub_resource type="RectangleShape2D" id=3]
 extents = Vector2( 4, 0.5 )
 
-[sub_resource type="RectangleShape2D" id=4]
-extents = Vector2( 4, 1 )
-
 [node name="Player" type="KinematicBody2D"]
 collision_mask = 6
 script = ExtResource( 2 )
@@ -39,7 +39,21 @@ __meta__ = {
 "_edit_group_": true,
 "_edit_lock_": true
 }
-_isOnGroundDetectionLength = 0.1
+
+[node name="NavChar2D" type="Area2D" parent="."]
+collision_layer = 256
+collision_mask = 0
+script = ExtResource( 4 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NavChar2D"]
+position = Vector2( 0, -1 )
+shape = SubResource( 4 )
+__meta__ = {
+"_edit_lock_": true
+}
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 position = Vector2( -8, -16 )
@@ -50,7 +64,7 @@ __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="Shape" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2( 0, -5.5 )
 shape = SubResource( 1 )
 __meta__ = {
@@ -64,22 +78,12 @@ __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="Shape" type="CollisionShape2D" parent="PlatformCheckArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformCheckArea"]
 position = Vector2( 0, -0.5 )
 shape = SubResource( 3 )
 __meta__ = {
 "_edit_lock_": true
 }
-
-[node name="NavChar" type="Area2D" parent="."]
-collision_layer = 256
-collision_mask = 6
-script = ExtResource( 4 )
-_navAreaPath = NodePath("")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NavChar"]
-position = Vector2( 0, -1 )
-shape = SubResource( 4 )
 
 [node name="JumpTimer" type="Timer" parent="."]
 

@@ -78,7 +78,7 @@ _backMoveDistMin = 5.0
 _backMoveDistMax = 30.0
 _landingMoveDist = 3.0
 
-[sub_resource type="RectangleShape2D" id=14]
+[sub_resource type="RectangleShape2D" id=21]
 resource_local_to_scene = true
 extents = Vector2( 24, 8 )
 
@@ -186,40 +186,29 @@ MoveSpeed = 5.0
 _idleState = SubResource( 18 )
 _attackState = SubResource( 19 )
 
-[node name="NavArea" parent="World/RusherEnemy" index="0"]
-_targetNavCharPath = NodePath("../../Player/NavChar")
-
-[node name="CollisionShape2D" parent="World/RusherEnemy/NavArea" index="0"]
+[node name="CollisionShape2D" parent="World/RusherEnemy/NavArea2D" index="0"]
 position = Vector2( 3, 0 )
 shape = SubResource( 20 )
 
-[node name="Body" parent="World/RusherEnemy" index="1"]
-position = Vector2( -2, 0 )
+[node name="NavBody2D" parent="World/RusherEnemy" index="1"]
+_targetNavBodyPath = NodePath("../../Player")
 
 [node name="JumperEnemy" parent="World" instance=ExtResource( 18 )]
-position = Vector2( 268, 88 )
+position = Vector2( 293, 96 )
 _idleState = SubResource( 15 )
 _chaseState = SubResource( 16 )
 _attackState = SubResource( 17 )
 
-[node name="NavArea" parent="World/JumperEnemy" index="0"]
-position = Vector2( -1, 8 )
-_targetNavCharPath = NodePath("../../Player/NavChar")
+[node name="CollisionShape2D" parent="World/JumperEnemy/NavArea2D" index="0"]
+position = Vector2( 3, 0 )
+shape = SubResource( 21 )
 
-[node name="CollisionShape2D" parent="World/JumperEnemy/NavArea" index="0"]
-position = Vector2( 29, 0 )
-shape = SubResource( 14 )
-
-[node name="Body" parent="World/JumperEnemy" index="1"]
-position = Vector2( 11, 8 )
+[node name="NavBody2D" parent="World/JumperEnemy" index="1"]
+position = Vector2( 1, 0 )
+_targetNavBodyPath = NodePath("../../Player")
 
 [node name="Player" parent="World" instance=ExtResource( 15 )]
-position = Vector2( 232, 125 )
-_canJumpDur = 0.1
-_unhurtableDur = 1.5
-
-[node name="NavChar" parent="World/Player" index="3"]
-_groundRayLength = 32.0
+position = Vector2( 233, 121 )
 
 [node name="Camera2D" type="Camera2D" parent="World"]
 position = Vector2( 168, 132 )

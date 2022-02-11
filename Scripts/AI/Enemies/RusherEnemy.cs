@@ -22,7 +22,7 @@ namespace AI.Enemies
         {
             if (Fsm.IsStateLocked) return;
 
-            if (NavArea.TargetNavChar.IsInactive || !NavArea.IsTargetReachable)
+            if (NavBody.TargetNavBody.IsInactive || !NavBody.NavArea.IsTargetReachable)
             {
                 Fsm.SetCurrentState(EnemyStates.Idle);
                 return;

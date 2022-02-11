@@ -1,9 +1,9 @@
 using Godot;
 using Godot.Collections;
+using NavTool;
 
-public class PlayerController : KinematicBody2D
+public class PlayerController : NavBody2D
 {
-    protected CollisionShape2D Shape;
     protected AnimatedSprite AnimSprite;
     private Timer _jumpTimer;
     
@@ -42,8 +42,6 @@ public class PlayerController : KinematicBody2D
     private Dictionary _edgeRay;
     private Vector2 _inputAxis;
     public Vector2 Velocity { get; private set; }
-    public Vector2 ShapeExtents { get; private set; }
-    public Vector2 ShapeSizes => ShapeExtents * 2f;
     private Vector2 _groundHitPos = new Vector2();
     private Vector2 _edgeHitPos = new Vector2();
     private Vector2 _recoilHitNormal;
@@ -60,7 +58,6 @@ public class PlayerController : KinematicBody2D
     private float RecoilSpeed => Mathf.Sqrt(2f * _moveAcceleration * _recoilLength); // v=sqrt{2*a*w}
     protected float RecoilDur => Mathf.Sqrt((2f * _recoilLength) / _moveAcceleration); // t=sqrt{(2*w)/a}
     private bool _hasDropFromPlatformInput;
-    private bool _isOnGround;
     private bool _isOnPlatform;
     private bool _isHangingOnEdge;
     private bool _hasClimbInput;
@@ -73,23 +70,25 @@ public class PlayerController : KinematicBody2D
     private bool _canJumpFlag;
     private bool _hasInputsLocked;
     private bool _hasRecoiled;
-    private bool _hasDied;
-    
+
     public override void _Ready()
     {
+        if (Engine.EditorHint) return;
+
+        base._Ready();
+        
         AnimSprite = GetNode<AnimatedSprite>("AnimatedSprite");
         _jumpTimer = GetNode<Timer>("JumpTimer");
-        Shape = GetNode<CollisionShape2D>("Shape");
-        if (Shape.Shape is RectangleShape2D shape)
-            ShapeExtents = shape.Extents;
         
         _jumpTimer.Connect("timeout", this, nameof(OnJumpEnd));
     }
 
     public override void _Process(float delta)
     {
+        if (Engine.EditorHint) return;
+
         if (_hasInputsLocked) return;
-        
+
         AxisInputs();
         JumpInput();
         ClimbInput();
@@ -99,19 +98,24 @@ public class PlayerController : KinematicBody2D
         Update();
     }
 
-    protected virtual void OnDie()
-    {
-        LockInputs(true);
-    }
     public override void _PhysicsProcess(float delta)
     {
+        if (Engine.EditorHint) return;
+
         CheckGround();
         CheckEdge();
         CheckCanJump();
         Velocity = CalculateMotionVelocity(delta) + CalculateSnapVelocity();
         Velocity = MoveAndSlide(Velocity, Vector2.Up);
+        
+        FindGroundPosition();
     }
-
+    
+    protected virtual void OnDie()
+    {
+        LockInputs(true);
+    }
+    
     protected void LockInputs(bool value)
     {
         _hasInputsLocked = value;
@@ -184,7 +188,7 @@ public class PlayerController : KinematicBody2D
         if (_hasSnapDisabled) return Vector2.Zero;
 
         // Snap while the player moves on the ground.
-        if (_isOnGround)
+        if (IsOnGround)
         {
             float dif = _groundHitPos.y - GlobalPosition.y;
             if (Mathf.Abs(dif) > 0.001f)
@@ -236,7 +240,7 @@ public class PlayerController : KinematicBody2D
         }
 
         // While the player is on the ground.
-        if (_isOnGround) 
+        if (IsOnGround) 
         {
             // First frame when the player is on the ground.
             OnJumpEnd();
@@ -246,7 +250,7 @@ public class PlayerController : KinematicBody2D
             {
                 _canJump = false;
                 _hasJumpEnded = false;
-                _isOnGround = false;
+                IsOnGround = false;
                 velocity.x = _desiredJumpSpeedX;
                 velocity.y = -JumpInitialSpeedY;
                 return velocity;
@@ -255,7 +259,7 @@ public class PlayerController : KinematicBody2D
             // First frame when the player starts dropping from a platform.
             if (_hasDropFromPlatformInput)
             {
-                _isOnGround = false;
+                IsOnGround = false;
                 SetCollisionMaskBit(2, false); // Layer 3
                 return velocity;
             }
@@ -263,6 +267,7 @@ public class PlayerController : KinematicBody2D
             // First frame when the player recoiled. 
             if (_hasRecoiled)
             {
+                GD.Print(_recoilHitNormal);
                 _hasRecoiled = false;
                 velocity.x = Mathf.Sign(_recoilHitNormal.x) * RecoilSpeed;
                 velocity.y = 0f;
@@ -280,6 +285,7 @@ public class PlayerController : KinematicBody2D
         // First frame when the player recoiled. 
         if (_hasRecoiled)
         {
+            GD.Print(_recoilHitNormal);
             _hasRecoiled = false;
             velocity.x = Mathf.Sign(_recoilHitNormal.x) * RecoilSpeed;
             velocity.y = 0;
@@ -293,7 +299,7 @@ public class PlayerController : KinematicBody2D
             {
                 _canJump = false;
                 _hasJumpEnded = false;
-                _isOnGround = false;
+                IsOnGround = false;
                 velocity.x = _desiredJumpSpeedX;
                 velocity.y = -JumpInitialSpeedY;
                 return velocity;
@@ -337,7 +343,7 @@ public class PlayerController : KinematicBody2D
             return;
         }
 
-        if (_isOnGround)
+        if (IsOnGround)
         {
             _canJump = true;
             _canJumpFlag = true;
@@ -369,11 +375,11 @@ public class PlayerController : KinematicBody2D
         if (_hasGroundRayDisabled) return;
 
         // Raycast from the left bottom corner of the player.
-        _groundRay = GetWorld2d().DirectSpaceState.IntersectRay(
+        _groundRay = SpaceState.IntersectRay(
             GlobalPosition + new Vector2(-ShapeExtents.x, -1f), 
             GlobalPosition + new Vector2(-ShapeExtents.x, _groundRayLength), 
             new Array {this},
-            CollisionMask
+            GroundCollisionMask
         );
         if (_groundRay.Count > 0 && 
             IsGroundAngleEnough(CalculateGroundAngle((Vector2) _groundRay["normal"]), 5f))
@@ -381,18 +387,18 @@ public class PlayerController : KinematicBody2D
             _groundHitPos = (Vector2) _groundRay["position"] + new Vector2(ShapeExtents.x, 0);
             if (_groundHitPos.DistanceTo(GlobalPosition) < _isOnGroundDetectionLength)
             {
-                _isOnGround = true;
+                IsOnGround = true;
                 CheckPlatform(_groundRay["collider"] as CollisionObject2D);
             }
             return;
         }
         // If the first raycast does not hit the ground.
         // Raycast from the right bottom corner of the player.
-        _groundRay = GetWorld2d().DirectSpaceState.IntersectRay(
+        _groundRay = SpaceState.IntersectRay(
             GlobalPosition + new Vector2(ShapeExtents.x, -1f),
             GlobalPosition + new Vector2(ShapeExtents.x, _groundRayLength),
             new Array {this},
-            CollisionMask
+            GroundCollisionMask
         );
         if (_groundRay.Count > 0 && 
             IsGroundAngleEnough(CalculateGroundAngle((Vector2) _groundRay["normal"]), 5f))
@@ -400,13 +406,13 @@ public class PlayerController : KinematicBody2D
             _groundHitPos = (Vector2) _groundRay["position"] + new Vector2(-ShapeExtents.x, 0);
             if (_groundHitPos.DistanceTo(GlobalPosition) < _isOnGroundDetectionLength)
             {
-                _isOnGround = true;
+                IsOnGround = true;
                 CheckPlatform(_groundRay["collider"] as CollisionObject2D);
             }
             return;
         }
         // If raycasts do not hit the ground.
-        _isOnGround = false;
+        IsOnGround = false;
         _isOnPlatform = false;
     }
 
@@ -424,37 +430,37 @@ public class PlayerController : KinematicBody2D
 
     private void CheckEdge()
     {
-        if (_isOnGround) return;
+        if (IsOnGround) return;
         if (_hasJumpInput) return;
 
         float rayPosX = ShapeExtents.x + _edgeAxisXRayLength;
         float rayPosY = -ShapeSizes.y - _edgeAxisYRayLength;
         // Checks whether there are inner collisions.
-        _edgeRay = GetWorld2d().DirectSpaceState.IntersectRay(
+        _edgeRay = SpaceState.IntersectRay(
             GlobalPosition + new Vector2(Direction * ShapeExtents.x, -ShapeSizes.y),
             GlobalPosition + new Vector2(Direction * ShapeExtents.x, -ShapeSizes.y + 2f),
             new Array {this},
-            CollisionMask
+            GroundCollisionMask
         );
         // If there is an inner collision, does not check for a wall.
         if (_edgeRay.Count > 0) return;
         
         // Checks whether there is a wall in front of the player.
-        _edgeRay = GetWorld2d().DirectSpaceState.IntersectRay(
+        _edgeRay = SpaceState.IntersectRay(
             GlobalPosition + new Vector2(Direction * ShapeExtents.x, rayPosY),
             GlobalPosition + new Vector2(Direction * rayPosX, rayPosY),
             new Array {this},
-            CollisionMask
+            GroundCollisionMask
         );
         // If there is a wall in front of the player, does not check for an edge.
         if (_edgeRay.Count > 0) return;
     
         // Checks whether there is an edge.
-        _edgeRay = GetWorld2d().DirectSpaceState.IntersectRay(
+        _edgeRay = SpaceState.IntersectRay(
             GlobalPosition + new Vector2(Direction * rayPosX, rayPosY),
             GlobalPosition + new Vector2(Direction * rayPosX, -ShapeSizes.y),
             new Array {this},
-            CollisionMask
+            GroundCollisionMask
         );
         // If there is an edge, the player starts hanging on the edge.
         if (_edgeRay.Count > 0)
@@ -467,11 +473,11 @@ public class PlayerController : KinematicBody2D
         if (!_isHangingOnEdge) return;
         
         // Checks the wall from the player`s feet while the player hangs on the edge.
-        _edgeRay = GetWorld2d().DirectSpaceState.IntersectRay(
+        _edgeRay = SpaceState.IntersectRay(
             GlobalPosition + new Vector2(Direction * ShapeExtents.x, 0f),
             GlobalPosition + new Vector2(Direction * rayPosX, 0f),
             new Array {this},
-            CollisionMask
+            GroundCollisionMask
         );
         _isHangingOnEdge = _edgeRay.Count > 0;
     }
@@ -493,7 +499,7 @@ public class PlayerController : KinematicBody2D
                 break;
         }
         
-        if (_isOnGround)
+        if (IsOnGround)
             AnimSprite.Play(Velocity.x == 0 ? "idle" : "run");
         else
             AnimSprite.Play("jump");
@@ -518,7 +524,7 @@ public class PlayerController : KinematicBody2D
        
         DrawLine(Vector2.Zero,
                  Vector2.Down * _groundRayLength,
-                 _isOnGround ? Colors.Green : Colors.Red
+                 IsOnGround ? Colors.Green : Colors.Red
         );
         DrawLine(new Vector2(Direction * ShapeExtents.x, rayPosY),
                  new Vector2(Direction * rayPosX, rayPosY),
