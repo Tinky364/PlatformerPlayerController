@@ -267,7 +267,6 @@ public class PlayerController : NavBody2D
             // First frame when the player recoiled. 
             if (_hasRecoiled)
             {
-                GD.Print(_recoilHitNormal);
                 _hasRecoiled = false;
                 velocity.x = Mathf.Sign(_recoilHitNormal.x) * RecoilSpeed;
                 velocity.y = 0f;
@@ -285,7 +284,6 @@ public class PlayerController : NavBody2D
         // First frame when the player recoiled. 
         if (_hasRecoiled)
         {
-            GD.Print(_recoilHitNormal);
             _hasRecoiled = false;
             velocity.x = Mathf.Sign(_recoilHitNormal.x) * RecoilSpeed;
             velocity.y = 0;

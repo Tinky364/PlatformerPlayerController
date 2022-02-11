@@ -1,4 +1,6 @@
+using System.Threading;
 using Godot;
+using NavTool;
 
 namespace AI.States
 {
@@ -22,12 +24,22 @@ namespace AI.States
         private float _backMoveDistMax = 30f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _landingMoveDist = 3f;
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private float _waitAfterCollisionSec = 2f;
+        [Export(PropertyHint.Range, "0,200,or_greater")]
+        private float _collisionBackWidth = 24f;
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private float _collisionBackSec = 1f;
+
+        private CancellationTokenSource _cancellationTokenSource;
+        private bool _isJumping;
 
         public void Initialize(Enemy enemy)
         {
             Initialize(Enemy.EnemyStates.Attack);
             _enemy = enemy;
             _enemy.Fsm.AddState(this);
+            Events.Singleton.Connect("Damaged", this, nameof(OnTargetHit));
         }
 
         public override void Enter()
@@ -41,10 +53,12 @@ namespace AI.States
             Vector2 dirToTarget = _enemy.NavBody.NavArea.DirectionToTarget();
             _enemy.Direction = dirToTarget.x >= 0 ? 1 : -1;
             
-            Attack(dirToTarget, _enemy.NavBody.TargetNavBody.NavPos);
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource = new CancellationTokenSource();
+            Attack(dirToTarget, _enemy.NavBody.TargetNavBody.NavPos, _cancellationTokenSource.Token);
         }
         
-        private async void Attack(Vector2 dirToTarget, Vector2 targetPos)
+        private async void Attack(Vector2 dirToTarget, Vector2 targetPos, CancellationToken cancellationToken)
         {
             float backMoveDist = Mathf.Clamp(
                 _backMoveDistMax - _enemy.NavBody.DistanceTo(targetPos),
@@ -52,41 +66,58 @@ namespace AI.States
                 _backMoveDistMax
             );
             float backMoveSec = backMoveDist * _backMoveSec / _backMoveDistMin;
-            
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeAttackSec), "timeout");
-            
             _enemy.NavBody.LerpWithDuration(
                 _enemy.NavBody.NavPos.x + -dirToTarget.x * backMoveDist,
                 backMoveSec,
                 Tween.TransitionType.Quad
             );
-            
             await ToSignal(_enemy.NavBody.Tween, "tween_completed");
-
             _enemy.AnimatedSprite.Play("run");
             _enemy.Velocity.y = -_enemy.Gravity * _jumpSec / 2f;
-            _enemy.NavBody.LerpWithDuration(
-                targetPos.x,
-                _jumpSec
-            );
-            
+            _enemy.NavBody.LerpWithDuration(targetPos.x, _jumpSec);
+            _isJumping = true;
             await ToSignal(_enemy.NavBody.Tween, "tween_completed");
-            
+            if (cancellationToken.IsCancellationRequested) return;
+            _isJumping = false;
             _enemy.NavBody.LerpWithDuration(
                 targetPos.x + dirToTarget.x * _landingMoveDist,
                 _landingMoveSec,
                 Tween.TransitionType.Quad,
                 Tween.EaseType.Out
             );
-            
             await ToSignal(_enemy.NavBody.Tween, "tween_completed");
-            
             _enemy.AnimatedSprite.Play("idle");
-            
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitAfterAttackSec), "timeout");
-            
             _enemy.Fsm.IsStateLocked = false;
             _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);
+        }
+        
+        private async void Collision()
+        {
+            _enemy.NavBody.LerpWithDuration(
+                _enemy.NavBody.NavPos.x - _enemy.Direction * _collisionBackWidth,
+                _collisionBackSec,
+                Tween.TransitionType.Cubic,
+                Tween.EaseType.Out
+            );
+            await ToSignal(_enemy.NavBody.Tween, "tween_completed");
+            await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitAfterCollisionSec), "timeout");
+            _enemy.Fsm.IsStateLocked = false;
+            _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);
+        }
+        
+        private void OnTargetHit(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
+        {
+            if (attacker != _enemy.NavBody || target != _enemy.NavBody.TargetNavBody) return;
+            if (_enemy.Fsm.CurrentState != this) return;
+            if (!_isJumping) return;
+            
+            _isJumping = false;
+            _cancellationTokenSource?.Cancel();
+            _enemy.NavBody.StopLerp();
+            _cancellationTokenSource = null;
+            Collision();
         }
         
         public override void Exit()

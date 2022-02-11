@@ -92,21 +92,10 @@ namespace AI.States
                 Tween.TransitionType.Cubic,
                 Tween.EaseType.Out
             );
+            await ToSignal(_enemy.NavBody.Tween, "tween_completed");
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitAfterCollisionSec), "timeout");
             _enemy.Fsm.IsStateLocked = false;
             _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);
-        }
-
-        public override void Exit()
-        {
-        }
-
-        public override void Process(float delta)
-        {
-        }
-
-        public override void PhysicsProcess(float delta)
-        {
         }
 
         private void OnTargetHit(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
@@ -121,5 +110,18 @@ namespace AI.States
             _cancellationTokenSource = null;
             Collision();
         }
+        
+        public override void Exit()
+        {
+        }
+
+        public override void Process(float delta)
+        {
+        }
+
+        public override void PhysicsProcess(float delta)
+        {
+        }
+
     }
 }

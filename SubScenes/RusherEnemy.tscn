@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=2]
+[gd_scene load_steps=17 format=2]
 
 [ext_resource path="res://Sprites/Enemy/Enemy2.png" type="Texture" id=1]
 [ext_resource path="res://Sprites/Enemy/Enemy1.png" type="Texture" id=2]
@@ -9,10 +9,13 @@
 [ext_resource path="res://addons/NavTool/NavChar2D.cs" type="Script" id=7]
 [ext_resource path="res://Scripts/AI/States/IdleState.cs" type="Script" id=8]
 
+[sub_resource type="SegmentShape2D" id=26]
+
 [sub_resource type="Resource" id=22]
 resource_local_to_scene = true
 script = ExtResource( 8 )
 _secondPosDist = 10.0
+_segmentShape = SubResource( 26 )
 
 [sub_resource type="Resource" id=23]
 resource_local_to_scene = true
