@@ -61,14 +61,12 @@ namespace AI.States
         private async void Attack(Vector2 dirToTarget, Vector2 targetPos, CancellationToken cancellationToken)
         {
             float backMoveDist = Mathf.Clamp(
-                _backMoveDistMax - _enemy.DistanceTo(targetPos),
-                _backMoveDistMin,
-                _backMoveDistMax
-            );
+                _backMoveDistMax - _enemy.DistanceTo(targetPos), _backMoveDistMin, _backMoveDistMax);
             float backMoveSec = backMoveDist * _backMoveSec / _backMoveDistMin;
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeAttackSec), "timeout");
             _enemy.MoveLerp(
-                _enemy.NavPos.x + -dirToTarget.x * backMoveDist,
+                NavBody2D.LerpingMode.X,
+                _enemy.NavPos - dirToTarget * backMoveDist,
                 backMoveSec,
                 Tween.TransitionType.Quad
             );
@@ -76,12 +74,13 @@ namespace AI.States
             _enemy.AnimatedSprite.Play("run");
             _isJumping = true;
             _enemy.Velocity.y = -_enemy.Gravity * _jumpSec / 2f;
-            _enemy.MoveLerp(targetPos.x, _jumpSec);
+            _enemy.MoveLerp(NavBody2D.LerpingMode.X, targetPos, _jumpSec);
             await ToSignal(_enemy.Tween, "tween_completed");
             if (cancellationToken.IsCancellationRequested) return;
             _isJumping = false;
             _enemy.MoveLerp(
-                targetPos.x + dirToTarget.x * _landingMoveDist,
+                NavBody2D.LerpingMode.X,
+                targetPos + dirToTarget * _landingMoveDist,
                 _landingMoveSec,
                 Tween.TransitionType.Quad,
                 Tween.EaseType.Out
@@ -96,7 +95,8 @@ namespace AI.States
         private async void Collision()
         {
             _enemy.MoveLerp(
-                _enemy.NavPos.x - _enemy.Direction * _collisionBackWidth,
+                NavBody2D.LerpingMode.X,
+                _enemy.NavPos - new Vector2(_enemy.Direction * _collisionBackWidth, 0),
                 _collisionBackSec,
                 Tween.TransitionType.Cubic,
                 Tween.EaseType.Out

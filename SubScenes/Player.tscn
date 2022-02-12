@@ -1,20 +1,11 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://Sprites/Player/tile_0045.png" type="Texture" id=1]
 [ext_resource path="res://Scripts/Player.cs" type="Script" id=2]
 [ext_resource path="res://Sprites/Player/tile_0046.png" type="Texture" id=3]
-[ext_resource path="res://addons/NavTool/NavChar2D.cs" type="Script" id=4]
-
-[sub_resource type="RectangleShape2D" id=4]
-extents = Vector2( 4, 1 )
 
 [sub_resource type="SpriteFrames" id=2]
 animations = [ {
-"frames": [ ExtResource( 1 ) ],
-"loop": true,
-"name": "idle",
-"speed": 5.0
-}, {
 "frames": [ ExtResource( 1 ), ExtResource( 3 ) ],
 "loop": true,
 "name": "run",
@@ -23,6 +14,11 @@ animations = [ {
 "frames": [ ExtResource( 3 ) ],
 "loop": true,
 "name": "jump",
+"speed": 5.0
+}, {
+"frames": [ ExtResource( 1 ) ],
+"loop": true,
+"name": "idle",
 "speed": 5.0
 } ]
 
@@ -36,27 +32,11 @@ extents = Vector2( 4, 0.5 )
 collision_mask = 6
 script = ExtResource( 2 )
 __meta__ = {
-"_edit_group_": true,
-"_edit_lock_": true
+"_edit_group_": true
 }
 Gravity = 1200.0
 GroundRayLength = 5.0
 _unhurtableDur = 1.0
-
-[node name="NavChar2D" type="Area2D" parent="."]
-collision_layer = 256
-collision_mask = 0
-script = ExtResource( 4 )
-__meta__ = {
-"_edit_lock_": true
-}
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NavChar2D"]
-position = Vector2( 0, -1 )
-shape = SubResource( 4 )
-__meta__ = {
-"_edit_lock_": true
-}
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 position = Vector2( -8, -16 )

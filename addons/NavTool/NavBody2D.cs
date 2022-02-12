@@ -1,5 +1,8 @@
+using System;
 using Godot;
 using Godot.Collections;
+using Array = Godot.Collections.Array;
+using Object = Godot.Object;
 
 namespace NavTool
 {
@@ -7,7 +10,6 @@ namespace NavTool
     public class NavBody2D : KinematicBody2D
     {
         public NavArea2D NavArea { get; private set; }
-        public NavChar2D NavChar { get; private set; }
         public Tween Tween { get; private set; }
         private CollisionShape2D _shape;
         private Area2D _area;
@@ -30,6 +32,8 @@ namespace NavTool
         public NavBody2D TargetNavBody { get; private set; }
         protected PhysicsBody2D CollidingBody;
         protected Physics2DDirectSpaceState SpaceState;
+        public enum LerpingMode { Vector2, X, Y }
+        protected LerpingMode CurLerpingMode { get; private set; }
         protected Dictionary GroundRay;
         private Dictionary _navPosRay;
         public Vector2 NavPos { get; private set; }
@@ -37,9 +41,9 @@ namespace NavTool
         public Vector2 ShapeSizes => ShapeExtents * 2f;
         public Vector2 Velocity;
         protected Vector2 GroundHitPos { get; private set; }
+        private Vector2 _lerpPos;
         protected uint GroundCollisionMask = 6; // 2^(2-1) + 2^(3-1) -> Layer 2,3
         public int Direction { get; set; } = 1;
-        private float _lerpPosX;
         public bool IsInactive
         {
             get => _isInactive;
@@ -74,7 +78,6 @@ namespace NavTool
         public override void _Ready()
         {
             if (Engine.EditorHint) return;
-            NavChar = GetNode<NavChar2D>("NavChar2D");
             _area = GetNodeOrNull<Area2D>("Area2D");
             _shape = GetNode<CollisionShape2D>("CollisionShape2D");
             SpaceState = GetWorld2d().DirectSpaceState;
@@ -84,8 +87,6 @@ namespace NavTool
                 TargetNavBody = GetNodeOrNull<NavBody2D>(_targetNavBodyPath);
             if (_shape.Shape is RectangleShape2D shape) 
                 ShapeExtents = shape.Extents;
-            if (NavChar.Shape.Shape is RectangleShape2D navCharShape)
-                navCharShape.Extents = new Vector2(ShapeExtents.x, 1f);
             if (NavArea != null && !NavArea.IsPositionInArea(GlobalPosition))
                 GlobalPosition = NavArea.GlobalPosition;
             _area?.Connect("body_entered", this, nameof(OnBodyEntered));
@@ -102,7 +103,18 @@ namespace NavTool
         private void OnMoveLerpCompleted(Object obj, NodePath key)
         {
             Tween.RemoveAll();
-            Velocity = Vector2.Zero;
+            switch (CurLerpingMode)
+            {
+                case LerpingMode.Vector2:
+                    Velocity = Vector2.Zero;
+                    break;
+                case LerpingMode.X:
+                    Velocity.x = 0;
+                    break;
+                case LerpingMode.Y:
+                    Velocity.y = 0;
+                    break;
+            }
             IsLerping = false;
         }
         
@@ -117,51 +129,70 @@ namespace NavTool
 
         private void SetLerpPosWhileIsNotLerping()
         {
-            if (!IsLerping) _lerpPosX = GlobalPosition.x;
+            if (!IsLerping) _lerpPos = GlobalPosition;
         }
         
         public Vector2 DirectionTo(Vector2 to) => NavPos.DirectionTo(to);
 
         public float DistanceTo(Vector2 to) => NavPos.DistanceTo(to);
 
-        public void MoveLerp(float targetPosX, float duration, Tween.TransitionType transitionType = Tween.TransitionType.Linear, Tween.EaseType easeType = Tween.EaseType.InOut, float delay = 0f)
+        public void MoveLerp(LerpingMode mode, Vector2 targetPos, float duration, Tween.TransitionType transitionType = Tween.TransitionType.Linear, Tween.EaseType easeType = Tween.EaseType.InOut, float delay = 0f)
         {
-            if (NavArea != null)
+            CurLerpingMode = mode;
+            if (NavArea != null && mode == LerpingMode.X)
             {
-                if (targetPosX < NavArea.ReachableAreaRect.Position.x)
-                    targetPosX = NavArea.ReachableAreaRect.Position.x;
-                else if (targetPosX > NavArea.ReachableAreaRect.End.x)
-                    targetPosX = NavArea.ReachableAreaRect.End.x;
+                if (targetPos.x < NavArea.ReachableAreaRect.Position.x)
+                    targetPos.x = NavArea.ReachableAreaRect.Position.x;
+                else if (targetPos.x > NavArea.ReachableAreaRect.End.x)
+                    targetPos.x = NavArea.ReachableAreaRect.End.x;
             }
-            Tween.InterpolateProperty(this, "_lerpPosX", null, targetPosX, duration, transitionType, easeType, delay);
+            Tween.InterpolateProperty(this, "_lerpPos", null, targetPos, duration, transitionType, easeType, delay);
             Tween.Start();
         }
         
-        public void MoveLerpWithSpeed(float targetPosX, float speed, Tween.TransitionType transitionType = Tween.TransitionType.Linear, Tween.EaseType easeType = Tween.EaseType.InOut, float delay = 0f)
+        public void MoveLerpWithSpeed(LerpingMode mode, Vector2 targetPos, float speed, Tween.TransitionType transitionType = Tween.TransitionType.Linear, Tween.EaseType easeType = Tween.EaseType.InOut, float delay = 0f)
         {
-            float duration = Mathf.Abs(targetPosX - NavPos.x) / speed;
-            MoveLerp(targetPosX, duration, transitionType, easeType, delay);
+            float duration = targetPos.DistanceTo(NavPos) / speed;
+            MoveLerp(mode, targetPos, duration, transitionType, easeType, delay);
         }
 
-        protected float CalculateLerpMotion(float delta)
+        private Vector2 CalculateLerpMotion(float delta)
         {
-            return (_lerpPosX - GlobalPosition.x) / delta;
+            return GlobalPosition.DirectionTo(_lerpPos) * _lerpPos.DistanceTo(GlobalPosition) / delta;
         } 
 
         public void StopLerp()
         {
-            Tween.Stop(this, "_lerpPosX");
+            Tween.Stop(this, "_lerpPos");
             OnMoveLerpCompleted(null, null);
-        } 
+        }
 
         protected Vector2 MoveAndSlideInArea(Vector2 velocity, float delta, Vector2? upDirection = null)
         {
-            if (NavArea != null)
+            if (IsLerping)
             {
-                if (NavPos.x + velocity.x * delta < NavArea.AreaRect.Position.x && velocity.x < 0
-                    || NavPos.x + velocity.x * delta > NavArea.AreaRect.End.x && velocity.x > 0)
+                switch (CurLerpingMode)
                 {
-                    velocity.x = 0;
+                    case LerpingMode.X:
+                        velocity.x = CalculateLerpMotion(delta).x;
+                        break;
+                    case LerpingMode.Y:
+                        velocity.y = CalculateLerpMotion(delta).y;
+                        break;
+                    case LerpingMode.Vector2:
+                        velocity = CalculateLerpMotion(delta);
+                        break;
+                }
+            }
+            else
+            {
+                if (NavArea != null)
+                {
+                    if (NavPos.x + velocity.x * delta < NavArea.AreaRect.Position.x && velocity.x < 0
+                        || NavPos.x + velocity.x * delta > NavArea.AreaRect.End.x && velocity.x > 0)
+                    {
+                        velocity.x = 0;
+                    }
                 }
             }
             return MoveAndSlide(velocity, upDirection);
@@ -294,16 +325,5 @@ namespace NavTool
     
         protected float CalculateGroundAngle(Vector2 normal) 
             => Mathf.Rad2Deg(normal.AngleTo(Vector2.Up));
-        
-        public override string _GetConfigurationWarning()
-        {
-            if (!Engine.EditorHint) return "";
-            for (int i = 0; i < GetChildCount(); i++)
-            {
-                if (GetChild(i) is NavChar2D)
-                    return "";
-            }
-            return "This node has no NavChar2D. Consider adding a NavChar2D as a child.";
-        }
     }
 }

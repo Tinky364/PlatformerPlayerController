@@ -192,9 +192,8 @@ shape = SubResource( 20 )
 
 [node name="NavBody2D" parent="World/RusherEnemy" index="1"]
 position = Vector2( -55, 0 )
-DebugEnabled = true
-_isOnBodyCollidingActive = true
-_targetNavBodyPath = NodePath("../../Player")
+_isOnBodyCollidingActive = false
+_navAreaPath = null
 _idleState = SubResource( 22 )
 _attackState = SubResource( 23 )
 
@@ -207,9 +206,8 @@ shape = SubResource( 21 )
 
 [node name="NavBody2D" parent="World/JumperEnemy" index="1"]
 position = Vector2( 1, 0 )
-_isOnBodyCollidingActive = true
-_targetNavBodyPath = NodePath("../../Player")
-Gravity = 484.789
+_isOnBodyCollidingActive = false
+_navAreaPath = null
 _idleState = SubResource( 24 )
 _chaseState = SubResource( 25 )
 _attackState = SubResource( 26 )

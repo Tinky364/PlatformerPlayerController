@@ -93,9 +93,8 @@ public class PlayerController : NavBody2D
         CheckPlatform();
         CheckEdge();
         CheckCanJump();
-        if (IsLerping) Velocity.x = CalculateLerpMotion(delta);
-        else Velocity = CalculateMotionVelocity(delta) + CalculateSnapVelocity();
-        Velocity = MoveAndSlide(Velocity, Vector2.Up);
+        Velocity = CalculateMotionVelocity(delta) + CalculateSnapVelocity();
+        Velocity = MoveAndSlideInArea(Velocity, delta, Vector2.Up);
     }
     
     protected virtual void OnDie()

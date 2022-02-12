@@ -17,13 +17,12 @@ public class Door : NavBody2D
     {
         if (!(node is Player)) return;
         GD.Print("a");
-        MoveLerp(GlobalPosition.x - 32f, 2f);
+        MoveLerp(LerpingMode.Y, GlobalPosition - new Vector2(0, 32f), 2f);
     }
     
     public override void _PhysicsProcess(float delta)
     {
         base._PhysicsProcess(delta);
-        if (IsLerping) Velocity.x = CalculateLerpMotion(delta);
-        Velocity = MoveAndSlide(Velocity);
+        Velocity = MoveAndSlideInArea(Velocity, delta, Vector2.Up);
     }
 }

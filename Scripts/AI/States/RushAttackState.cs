@@ -51,7 +51,7 @@ namespace AI.States
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeRushSec / 2f), "timeout");
             // Calculates the target position and sets its own direction.
             Vector2 dirToTarget = _enemy.NavArea.DirectionToTarget();
-            Vector2 targetPos = new Vector2();
+            Vector2 targetPos = new Vector2(0, _enemy.NavPos.y);
             if (dirToTarget.x >= 0)
             {
                 _enemy.Direction = 1;
@@ -66,7 +66,7 @@ namespace AI.States
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeRushSec / 2f), "timeout");
             _enemy.AnimatedSprite.Play("run");
             // Starts rushing to the target position.
-            _enemy.MoveLerpWithSpeed(targetPos.x, _rushSpeed, Tween.TransitionType.Quad);
+            _enemy.MoveLerpWithSpeed(NavBody2D.LerpingMode.X, targetPos, _rushSpeed, Tween.TransitionType.Quad);
             _isRushing = true;
             // Waits until rushing ends.
             await ToSignal(_enemy.Tween, "tween_completed");
@@ -83,7 +83,8 @@ namespace AI.States
         private async void Collision()
         {
             _enemy.MoveLerp(
-                _enemy.NavPos.x - _enemy.Direction * _collisionBackWidth,
+                NavBody2D.LerpingMode.X,
+                _enemy.NavPos - new Vector2(_enemy.Direction * _collisionBackWidth, 0),
                 _collisionBackSec,
                 Tween.TransitionType.Cubic,
                 Tween.EaseType.Out

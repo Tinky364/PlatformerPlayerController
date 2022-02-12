@@ -43,8 +43,12 @@ namespace NavTool
             
             _visibilityNotifier.Connect("screen_exited", this, nameof(OnScreenExit));
             _visibilityNotifier.Connect("screen_entered", this, nameof(OnScreenEnter));
-            Connect("area_entered", this, nameof(OnTargetEntered));
-            Connect("area_exited", this, nameof(OnTargetExited));
+        }
+
+        public override void _PhysicsProcess(float delta)
+        {
+            if (Engine.EditorHint) return;
+            CheckTarget();
         }
 
         public Vector2 DirectionToTarget() =>
@@ -77,29 +81,35 @@ namespace NavTool
             _visibilityNotifier.Rect = new Rect2(AreaRect.Position - GlobalPosition, AreaRect.Size);
         }
 
-        private void OnTargetEntered(Area2D area2D)
+        private void CheckTarget()
         {
-            if ((NavChar2D) area2D != _navBody.TargetNavBody.NavChar) return;
-            
-            IsTargetReachable = true;
-            EmitSignal(nameof(TargetEntered), _navBody.TargetNavBody);
-        }
-
-        private void OnTargetExited(Node area2D)
-        {
-            if ((NavChar2D) area2D != _navBody.TargetNavBody.NavChar) return;
-            
-            IsTargetReachable = false;
-            EmitSignal(nameof(TargetExited), _navBody.TargetNavBody);
+            Vector2 point = _navBody.TargetNavBody.NavPos;
+            if (IsPositionInArea(point))
+            {
+                IsTargetReachable = true;
+                EmitSignal(nameof(TargetEntered), _navBody.TargetNavBody);
+            }
+            else
+            {
+                if (IsTargetReachable)
+                {
+                    IsTargetReachable = false;
+                    EmitSignal(nameof(TargetExited), _navBody.TargetNavBody);
+                }
+            }
         }
         
         private void OnScreenEnter()
         {
+            SetProcess(true);
+            SetPhysicsProcess(true);
             EmitSignal(nameof(ScreenEntered));
         }
 
         private void OnScreenExit()
         {
+            SetProcess(false);
+            SetPhysicsProcess(false);
             EmitSignal(nameof(ScreenExited));
         }
 

@@ -1,29 +1,86 @@
-[gd_scene load_steps=17 format=2]
+[gd_scene load_steps=15 format=2]
 
 [ext_resource path="res://Sprites/Enemy/Enemy2.png" type="Texture" id=1]
 [ext_resource path="res://Sprites/Enemy/Enemy1.png" type="Texture" id=2]
-[ext_resource path="res://Scripts/AI/Enemies/JumperEnemy.cs" type="Script" id=3]
 [ext_resource path="res://addons/NavTool/NavArea2D.cs" type="Script" id=5]
 [ext_resource path="res://Scripts/AI/States/ChaseState.cs" type="Script" id=6]
 [ext_resource path="res://Scripts/AI/States/JumpAttackState.cs" type="Script" id=7]
 [ext_resource path="res://Scripts/AI/States/IdleState.cs" type="Script" id=8]
-[ext_resource path="res://addons/NavTool/NavChar2D.cs" type="Script" id=9]
 
 [sub_resource type="RectangleShape2D" id=21]
 resource_local_to_scene = true
 extents = Vector2( 27, 8 )
 
-[sub_resource type="Resource" id=27]
+[sub_resource type="CSharpScript" id=30]
+script/source = "using Godot;
+using AI.States;
+
+namespace AI.Enemies
+{
+    public class JumperEnemy : Enemy
+    {
+        [Export]
+        private IdleState _idleState;
+        [Export]
+        private ChaseState _chaseState;
+        [Export]
+        private JumpAttackState _attackState;
+
+        public override void _Ready()
+        {
+            base._Ready();
+            _idleState.Initialize(this);
+            _attackState.Initialize(this);
+            _chaseState.Initialize(this);
+            Fsm.SetCurrentState(EnemyStates.Idle);
+        }
+
+        protected override void StateController()
+        {
+            if (Fsm.IsStateLocked) return;
+            
+            if (TargetNavBody.IsInactive || !NavArea.IsTargetReachable)
+            {
+                Fsm.SetCurrentState(EnemyStates.Idle);
+                return;
+            }
+
+            Vector2 dirToTarget = NavArea.DirectionToTarget();
+            if (dirToTarget == Vector2.Zero) dirToTarget = Vector2.Right;
+            float distToTarget = NavArea.DistanceToTarget();
+            
+            if (distToTarget < _chaseState.StopDist + 1f)
+            {
+                Fsm.SetCurrentState(EnemyStates.Attack);
+                return;
+            }
+
+            if (distToTarget > _chaseState.StopDist)
+            {
+                Vector2 movePos = TargetNavBody.NavPos +
+                                  -dirToTarget * _chaseState.StopDist;
+
+                if (!NavArea.IsPositionInArea(movePos)) return;
+
+                _chaseState.TargetPos = movePos;
+                Fsm.SetCurrentState(EnemyStates.Chase);
+            }
+        }
+    }
+}
+"
+
+[sub_resource type="Resource" id=31]
 resource_local_to_scene = true
 script = ExtResource( 8 )
 _secondPosDist = 25.0
 
-[sub_resource type="Resource" id=28]
+[sub_resource type="Resource" id=32]
 resource_local_to_scene = true
 script = ExtResource( 6 )
 StopDist = 26.0
 
-[sub_resource type="Resource" id=29]
+[sub_resource type="Resource" id=33]
 resource_local_to_scene = true
 script = ExtResource( 7 )
 _waitBeforeAttackSec = 1.0
@@ -40,15 +97,15 @@ _collisionBackSec = 1.0
 
 [sub_resource type="SpriteFrames" id=17]
 animations = [ {
-"frames": [ ExtResource( 2 ) ],
-"loop": true,
-"name": "idle",
-"speed": 5.0
-}, {
 "frames": [ ExtResource( 2 ), ExtResource( 1 ) ],
 "loop": true,
 "name": "run",
 "speed": 2.0
+}, {
+"frames": [ ExtResource( 2 ) ],
+"loop": true,
+"name": "idle",
+"speed": 5.0
 } ]
 
 [sub_resource type="RectangleShape2D" id=15]
@@ -56,9 +113,6 @@ extents = Vector2( 5, 3.5 )
 
 [sub_resource type="RectangleShape2D" id=25]
 extents = Vector2( 4, 2.5 )
-
-[sub_resource type="RectangleShape2D" id=26]
-extents = Vector2( 5, 1 )
 
 [node name="JumperEnemy" type="Node2D"]
 
@@ -83,16 +137,15 @@ __meta__ = {
 [node name="NavBody2D" type="KinematicBody2D" parent="."]
 collision_layer = 16
 collision_mask = 6
-script = ExtResource( 3 )
+script = SubResource( 30 )
 __meta__ = {
 "_edit_group_": true
 }
+_isOnBodyCollidingActive = true
 _navAreaPath = NodePath("../NavArea2D")
-Gravity = 600.0
-GroundRayLength = 0.1
-_idleState = SubResource( 27 )
-_chaseState = SubResource( 28 )
-_attackState = SubResource( 29 )
+_idleState = SubResource( 31 )
+_chaseState = SubResource( 32 )
+_attackState = SubResource( 33 )
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="NavBody2D"]
 position = Vector2( -8, -16 )
@@ -119,21 +172,6 @@ __meta__ = {
 [node name="CollisionShape2D" type="CollisionShape2D" parent="NavBody2D/Area2D"]
 position = Vector2( 0, -3.5 )
 shape = SubResource( 25 )
-__meta__ = {
-"_edit_lock_": true
-}
-
-[node name="NavChar2D" type="Area2D" parent="NavBody2D"]
-collision_layer = 256
-collision_mask = 0
-script = ExtResource( 9 )
-__meta__ = {
-"_edit_lock_": true
-}
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NavBody2D/NavChar2D"]
-position = Vector2( 0, -1 )
-shape = SubResource( 26 )
 __meta__ = {
 "_edit_lock_": true
 }

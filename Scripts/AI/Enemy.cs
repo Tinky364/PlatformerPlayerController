@@ -35,7 +35,6 @@ namespace AI
             CheckGround();
             Fsm._PhysicsProcess(delta);
             if (!IsOnGround) Velocity.y += Gravity * delta; // Adds gravity force increasingly.
-            if (IsLerping) Velocity.x = CalculateLerpMotion(delta); 
             Velocity = MoveAndSlideInArea(Velocity, delta, Vector2.Up);
         }
 
