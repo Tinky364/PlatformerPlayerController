@@ -39,6 +39,8 @@ __meta__ = {
 "_edit_group_": true,
 "_edit_lock_": true
 }
+Gravity = 1200.0
+GroundRayLength = 5.0
 _unhurtableDur = 1.0
 
 [node name="NavChar2D" type="Area2D" parent="."]

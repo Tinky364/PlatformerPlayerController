@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=2]
+[gd_scene load_steps=35 format=2]
 
 [ext_resource path="res://Scripts/AI/States/ChaseState.cs" type="Script" id=1]
 [ext_resource path="res://Resources/TileSet.tres" type="TileSet" id=2]
@@ -19,6 +19,7 @@
 [ext_resource path="res://Sprites/Hearth/HearthBackground.png" type="Texture" id=17]
 [ext_resource path="res://SubScenes/JumperEnemy.tscn" type="PackedScene" id=18]
 [ext_resource path="res://Scripts/AI/States/RushAttackState.cs" type="Script" id=19]
+[ext_resource path="res://SubScenes/Door.tscn" type="PackedScene" id=20]
 
 [sub_resource type="PhysicsMaterial" id=9]
 
@@ -37,12 +38,16 @@ extents = Vector2( 24, 4 )
 [sub_resource type="SegmentShape2D" id=5]
 b = Vector2( -16, -5.72205e-05 )
 
-[sub_resource type="Resource" id=18]
+[sub_resource type="RectangleShape2D" id=20]
+resource_local_to_scene = true
+extents = Vector2( 72, 8 )
+
+[sub_resource type="Resource" id=22]
 resource_local_to_scene = true
 script = ExtResource( 14 )
-_secondPosDist = 10.0
+_secondPosDist = 40.0
 
-[sub_resource type="Resource" id=19]
+[sub_resource type="Resource" id=23]
 resource_local_to_scene = true
 script = ExtResource( 19 )
 _waitBeforeRushSec = 1.0
@@ -52,21 +57,21 @@ _waitAfterCollisionSec = 2.0
 _collisionBackWidth = 24.0
 _collisionBackSec = 1.0
 
-[sub_resource type="RectangleShape2D" id=20]
+[sub_resource type="RectangleShape2D" id=21]
 resource_local_to_scene = true
-extents = Vector2( 72, 8 )
+extents = Vector2( 24, 8 )
 
-[sub_resource type="Resource" id=15]
+[sub_resource type="Resource" id=24]
 resource_local_to_scene = true
 script = ExtResource( 14 )
 _secondPosDist = 20.0
 
-[sub_resource type="Resource" id=16]
+[sub_resource type="Resource" id=25]
 resource_local_to_scene = true
 script = ExtResource( 1 )
 StopDist = 26.0
 
-[sub_resource type="Resource" id=17]
+[sub_resource type="Resource" id=26]
 resource_local_to_scene = true
 script = ExtResource( 13 )
 _waitBeforeAttackSec = 1.0
@@ -80,10 +85,6 @@ _landingMoveDist = 3.0
 _waitAfterCollisionSec = 2.0
 _collisionBackWidth = 24.0
 _collisionBackSec = 1.0
-
-[sub_resource type="RectangleShape2D" id=21]
-resource_local_to_scene = true
-extents = Vector2( 24, 8 )
 
 [sub_resource type="AtlasTexture" id=13]
 atlas = ExtResource( 6 )
@@ -184,24 +185,21 @@ position = Vector2( 136, 48 )
 
 [node name="RusherEnemy" parent="World" instance=ExtResource( 9 )]
 position = Vector2( 149, 144 )
-DebugEnabled = true
-MoveSpeed = 5.0
-_idleState = SubResource( 18 )
-_attackState = SubResource( 19 )
 
 [node name="CollisionShape2D" parent="World/RusherEnemy/NavArea2D" index="0"]
 position = Vector2( 3, 0 )
 shape = SubResource( 20 )
 
 [node name="NavBody2D" parent="World/RusherEnemy" index="1"]
-position = Vector2( 63, 0 )
+position = Vector2( -55, 0 )
+DebugEnabled = true
+_isOnBodyCollidingActive = true
 _targetNavBodyPath = NodePath("../../Player")
+_idleState = SubResource( 22 )
+_attackState = SubResource( 23 )
 
 [node name="JumperEnemy" parent="World" instance=ExtResource( 18 )]
 position = Vector2( 293, 96 )
-_idleState = SubResource( 15 )
-_chaseState = SubResource( 16 )
-_attackState = SubResource( 17 )
 
 [node name="CollisionShape2D" parent="World/JumperEnemy/NavArea2D" index="0"]
 position = Vector2( 3, 0 )
@@ -209,10 +207,19 @@ shape = SubResource( 21 )
 
 [node name="NavBody2D" parent="World/JumperEnemy" index="1"]
 position = Vector2( 1, 0 )
+_isOnBodyCollidingActive = true
 _targetNavBodyPath = NodePath("../../Player")
+Gravity = 484.789
+_idleState = SubResource( 24 )
+_chaseState = SubResource( 25 )
+_attackState = SubResource( 26 )
+
+[node name="Door" parent="World" instance=ExtResource( 20 )]
+position = Vector2( -112, 48 )
 
 [node name="Player" parent="World" instance=ExtResource( 15 )]
-position = Vector2( 233, 121 )
+position = Vector2( 234, 128 )
+collision_mask = 14
 
 [node name="Camera2D" type="Camera2D" parent="World"]
 position = Vector2( 167, 161 )
@@ -384,4 +391,5 @@ LoadScenePath = "res://Scenes/StartingScene.tscn"
 
 [editable path="World/RusherEnemy"]
 [editable path="World/JumperEnemy"]
+[editable path="World/Door"]
 [editable path="World/Player"]

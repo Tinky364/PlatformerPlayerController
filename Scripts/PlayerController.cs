@@ -2,22 +2,19 @@ using Godot;
 using Godot.Collections;
 using NavTool;
 
+[Tool]
 public class PlayerController : NavBody2D
 {
     protected AnimatedSprite AnimSprite;
     private Timer _jumpTimer;
     
-    [Export(PropertyHint.Range, "10,2000,or_greater")]
-    private float _gravity = 1200f;
-    [Export(PropertyHint.Range, "0.1,20,or_greater")] 
-    private float _groundRayLength = 5f;
-    [Export(PropertyHint.Range, "0.1,20,or_greater")] 
+    [Export(PropertyHint.Range, "0.1,20,0.05,or_greater")] 
     private float _isOnGroundDetectionLength = 0.1f;
     [Export(PropertyHint.Range, "1,2000,or_greater")]
     private float _moveAcceleration = 400f;
     [Export(PropertyHint.Range, "1,200,or_greater")]
     private float _moveSpeed = 60f;
-    [Export(PropertyHint.Range, "0.01f,5,or_greater")] 
+    [Export(PropertyHint.Range, "0.01,5,0.05,or_greater")] 
     private float _canJumpDur = 0.1f;
     [Export(PropertyHint.Range, "1,2000,or_greater")]
     private float _jumpAccelerationX = 600f;
@@ -38,25 +35,21 @@ public class PlayerController : NavBody2D
     [Export(PropertyHint.Range, "0,100,or_greater")]
     private float _recoilLength = 24f;
 
-    private Dictionary _groundRay;
     private Dictionary _edgeRay;
     private Vector2 _inputAxis;
-    public Vector2 Velocity { get; private set; }
-    private Vector2 _groundHitPos = new Vector2();
-    private Vector2 _edgeHitPos = new Vector2();
+    private Vector2 _edgeHitPos;
     private Vector2 _recoilHitNormal;
-    public int Direction { get; private set; } = 1;
     private float _desiredMove;
     private float _desiredJumpSpeedX;
-    private float JumpInitialSpeedY => Mathf.Sqrt(2f * _gravity * _jumpHeightMin); // V=sqrt{2*g*h}
-    private float JumpAccelerationY => _gravity - Mathf.Pow(JumpInitialSpeedY, 2) / (2 * _jumpHeightMax); // a=g-(v^2/2*h)
-    private float JumpDur => JumpInitialSpeedY / (_gravity - JumpAccelerationY); // t=V/(g-a)
-    private float FallSecond => Mathf.Sqrt((2f * _jumpHeightMax) / _gravity); // t=sqrt{(2*h)/g}
-    private float JumpSpeedX => _jumpWidthMax / (JumpDur + FallSecond); // v=w/t
+    private float JumpInitialSpeedY => Mathf.Sqrt(2f * Gravity * _jumpHeightMin); // V=sqrt{2*g*h}
+    private float JumpAccelerationY => Gravity - Mathf.Pow(JumpInitialSpeedY, 2) / (2 * _jumpHeightMax); // a=g-(v^2/2*h)
+    private float JumpDur => JumpInitialSpeedY / (Gravity - JumpAccelerationY); // t=V/(g-a)
+    private float FallDur => Mathf.Sqrt(2f * _jumpHeightMax / Gravity); // t=sqrt{(2*h)/g}
+    private float JumpSpeedX => _jumpWidthMax / (JumpDur + FallDur); // v=w/t
     private float ClimbSpeedY => ShapeSizes.y / _climbDur; // v=w/t
     private float ClimbSpeedX => Mathf.Sqrt(2f * _moveAcceleration * ShapeSizes.x); // v=sqrt{2*a*w}
     private float RecoilSpeed => Mathf.Sqrt(2f * _moveAcceleration * _recoilLength); // v=sqrt{2*a*w}
-    protected float RecoilDur => Mathf.Sqrt((2f * _recoilLength) / _moveAcceleration); // t=sqrt{(2*w)/a}
+    protected float RecoilDur => Mathf.Sqrt(2f * _recoilLength / _moveAcceleration); // t=sqrt{(2*w)/a}
     private bool _hasDropFromPlatformInput;
     private bool _isOnPlatform;
     private bool _isHangingOnEdge;
@@ -64,7 +57,6 @@ public class PlayerController : NavBody2D
     private bool _hasJumpInput;
     private bool _hasJumpStarted;
     private bool _hasJumpEnded = true;
-    private bool _hasGroundRayDisabled;
     private bool _hasSnapDisabled;
     private bool _canJump;
     private bool _canJumpFlag;
@@ -74,41 +66,36 @@ public class PlayerController : NavBody2D
     public override void _Ready()
     {
         if (Engine.EditorHint) return;
-
         base._Ready();
-        
         AnimSprite = GetNode<AnimatedSprite>("AnimatedSprite");
         _jumpTimer = GetNode<Timer>("JumpTimer");
-        
         _jumpTimer.Connect("timeout", this, nameof(OnJumpEnd));
     }
 
     public override void _Process(float delta)
     {
         if (Engine.EditorHint) return;
-
         if (_hasInputsLocked) return;
-
+        base._Process(delta);
         AxisInputs();
         JumpInput();
         ClimbInput();
         DropFromPlatformInput();
-        AnimationControl();
-        
+        AnimationController();
         Update();
     }
 
     public override void _PhysicsProcess(float delta)
     {
         if (Engine.EditorHint) return;
-
+        base._PhysicsProcess(delta);
         CheckGround();
+        CheckPlatform();
         CheckEdge();
         CheckCanJump();
-        Velocity = CalculateMotionVelocity(delta) + CalculateSnapVelocity();
+        if (IsLerping) Velocity.x = CalculateLerpMotion(delta);
+        else Velocity = CalculateMotionVelocity(delta) + CalculateSnapVelocity();
         Velocity = MoveAndSlide(Velocity, Vector2.Up);
-        
-        FindGroundPosition();
     }
     
     protected virtual void OnDie()
@@ -127,7 +114,6 @@ public class PlayerController : NavBody2D
     protected void SetRecoil(bool value, Vector2? hitNormal)
     {
         _hasRecoiled = value;
-        
         if (!_hasRecoiled) return;
         AnimSprite.Play("idle");
         _recoilHitNormal = hitNormal ?? _recoilHitNormal;
@@ -162,7 +148,7 @@ public class PlayerController : NavBody2D
     {
         if (_canJump && Input.IsActionJustPressed("jump"))
         {
-            _hasGroundRayDisabled = true;
+            HasGroundRayDisabled = true;
             _hasJumpStarted = true;
             _hasJumpInput = true;
             _jumpTimer.Start(JumpDur);
@@ -177,7 +163,6 @@ public class PlayerController : NavBody2D
     private void OnJumpEnd()
     {
         if (_hasJumpEnded) return;
-        
         _hasJumpInput = false;
         _hasJumpEnded = true;
         _jumpTimer.Stop();
@@ -190,7 +175,7 @@ public class PlayerController : NavBody2D
         // Snap while the player moves on the ground.
         if (IsOnGround)
         {
-            float dif = _groundHitPos.y - GlobalPosition.y;
+            float dif = GroundHitPos.y - GlobalPosition.y;
             if (Mathf.Abs(dif) > 0.001f)
                 return Mathf.Sign(dif) * Vector2.Down * _snapSpeed;
             return Vector2.Zero;
@@ -260,7 +245,8 @@ public class PlayerController : NavBody2D
             if (_hasDropFromPlatformInput)
             {
                 IsOnGround = false;
-                SetCollisionMaskBit(2, false); // Layer 3
+                SetCollisionMaskBit(2, false); // Layer 3 = false
+                GroundCollisionMask -= (uint)Mathf.Pow(2, 3-1); // Layer 3 = false;
                 return velocity;
             }
 
@@ -309,7 +295,7 @@ public class PlayerController : NavBody2D
             if (_hasJumpStarted)
             {
                 _hasJumpStarted = false;
-                _hasGroundRayDisabled = false;
+                HasGroundRayDisabled = false;
             }
         }
        
@@ -323,43 +309,31 @@ public class PlayerController : NavBody2D
         }
         
         velocity.x = Mathf.MoveToward(velocity.x, _desiredJumpSpeedX, _jumpAccelerationX * delta);
-        velocity.y += _gravity * delta; // Adds gravity force increasingly.
+        velocity.y += Gravity * delta; // Adds gravity force increasingly.
         return velocity;
     }
 
     private void CheckCanJump()
     {
-        if (_isHangingOnEdge)
+        if (_isHangingOnEdge || !_hasJumpEnded)
         {
             _canJump = false;
             return;
         }
-
-        if (!_hasJumpEnded)
-        {
-            _canJump = false;
-            return;
-        }
-
         if (IsOnGround)
         {
             _canJump = true;
             _canJumpFlag = true;
             return;
         }
-        
-        if (_groundRay.Count <= 0)
+        if (GroundRay.Count <= 0)
         {
-            if (_canJumpFlag)
-            {
-                _canJumpFlag = false;
-                CanJumpDuration();
-            }
+            if (!_canJumpFlag) return;
+            _canJumpFlag = false;
+            CanJumpDuration();
         }
         else
-        {
             _canJump = true;
-        }
     }
 
     private async void CanJumpDuration()
@@ -367,63 +341,29 @@ public class PlayerController : NavBody2D
         await ToSignal(GetTree().CreateTimer(_canJumpDur), "timeout");
         _canJump = false;
     }
-    
+
     private void CheckGround()
     {
-        if (_hasGroundRayDisabled) return;
-
-        // Raycast from the left bottom corner of the player.
-        _groundRay = SpaceState.IntersectRay(
-            GlobalPosition + new Vector2(-ShapeExtents.x, -1f), 
-            GlobalPosition + new Vector2(-ShapeExtents.x, _groundRayLength), 
-            new Array {this},
-            GroundCollisionMask
-        );
-        if (_groundRay.Count > 0 && 
-            IsGroundAngleEnough(CalculateGroundAngle((Vector2) _groundRay["normal"]), 5f))
+        if (GroundRay.Count <= 0
+            || !IsGroundAngleEnough(CalculateGroundAngle((Vector2) GroundRay["normal"]), 5f)
+            || GroundHitPos.DistanceTo(GlobalPosition) >= _isOnGroundDetectionLength)
         {
-            _groundHitPos = (Vector2) _groundRay["position"] + new Vector2(ShapeExtents.x, 0);
-            if (_groundHitPos.DistanceTo(GlobalPosition) < _isOnGroundDetectionLength)
-            {
-                IsOnGround = true;
-                CheckPlatform(_groundRay["collider"] as CollisionObject2D);
-            }
+            IsOnGround = false;
             return;
         }
-        // If the first raycast does not hit the ground.
-        // Raycast from the right bottom corner of the player.
-        _groundRay = SpaceState.IntersectRay(
-            GlobalPosition + new Vector2(ShapeExtents.x, -1f),
-            GlobalPosition + new Vector2(ShapeExtents.x, _groundRayLength),
-            new Array {this},
-            GroundCollisionMask
-        );
-        if (_groundRay.Count > 0 && 
-            IsGroundAngleEnough(CalculateGroundAngle((Vector2) _groundRay["normal"]), 5f))
-        {
-            _groundHitPos = (Vector2) _groundRay["position"] + new Vector2(-ShapeExtents.x, 0);
-            if (_groundHitPos.DistanceTo(GlobalPosition) < _isOnGroundDetectionLength)
-            {
-                IsOnGround = true;
-                CheckPlatform(_groundRay["collider"] as CollisionObject2D);
-            }
-            return;
-        }
-        // If raycasts do not hit the ground.
-        IsOnGround = false;
-        _isOnPlatform = false;
+        IsOnGround = true;
     }
 
-    private bool IsGroundAngleEnough(float groundAngle, float limit) =>
-        groundAngle > -limit && groundAngle < limit;
-    
-    private float CalculateGroundAngle(Vector2 normal) => Mathf.Rad2Deg(normal.AngleTo(Vector2.Up));
-
-    private void CheckPlatform(CollisionObject2D body)
+    private void CheckPlatform()
     {
-        if (body == null) return;
-        foreach (int id in body.GetShapeOwners())
-            _isOnPlatform = body.IsShapeOwnerOneWayCollisionEnabled((uint)id);
+        if (!IsOnGround || !(GroundRay["collider"] is CollisionObject2D ground))
+        {
+            _isOnPlatform = false;
+            return;
+        }
+
+        foreach (int id in ground.GetShapeOwners())
+            _isOnPlatform = ground.IsShapeOwnerOneWayCollisionEnabled((uint)id);
     }
 
     private void CheckEdge()
@@ -480,7 +420,7 @@ public class PlayerController : NavBody2D
         _isHangingOnEdge = _edgeRay.Count > 0;
     }
     
-    private void AnimationControl()
+    private void AnimationController()
     {
         if (_inputAxis.x > 0)
             Direction = 1;
@@ -503,15 +443,16 @@ public class PlayerController : NavBody2D
             AnimSprite.Play("jump");
     }
 
-    private void OnPlatformBodyEntered(Node body) => _hasGroundRayDisabled = true;
+    private void OnPlatformBodyEntered(Node body) => HasGroundRayDisabled = true;
     
     private void OnPlatformBodyExited(Node body)
     {
-        _hasGroundRayDisabled = false;
+        HasGroundRayDisabled = false;
         if (!_hasDropFromPlatformInput) return;
         
         _hasDropFromPlatformInput = false;
-        SetCollisionMaskBit(2, true); // Layer 3
+        SetCollisionMaskBit(2, true); // Layer 3 = true
+        GroundCollisionMask += (uint)Mathf.Pow(2, 3-1); // Layer 3 = true
     }
 
     public override void _Draw()
@@ -519,9 +460,8 @@ public class PlayerController : NavBody2D
         float rayPosX = ShapeExtents.x + _edgeAxisXRayLength;
         float rayPosY = -ShapeSizes.y - _edgeAxisYRayLength;
         
-       
         DrawLine(Vector2.Zero,
-                 Vector2.Down * _groundRayLength,
+                 Vector2.Down * GroundRayLength,
                  IsOnGround ? Colors.Green : Colors.Red
         );
         DrawLine(new Vector2(Direction * ShapeExtents.x, rayPosY),

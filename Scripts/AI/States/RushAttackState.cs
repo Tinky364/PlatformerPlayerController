@@ -50,30 +50,26 @@ namespace AI.States
             // Waits before calculating the target position.
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeRushSec / 2f), "timeout");
             // Calculates the target position and sets its own direction.
-            Vector2 dirToTarget = _enemy.NavBody.NavArea.DirectionToTarget();
-            Vector2 targetPos;
+            Vector2 dirToTarget = _enemy.NavArea.DirectionToTarget();
+            Vector2 targetPos = new Vector2();
             if (dirToTarget.x >= 0)
             {
                 _enemy.Direction = 1;
-                targetPos = _enemy.NavBody.NavArea.ReachableAreaRect.End;
+                targetPos.x = _enemy.NavArea.ReachableAreaRect.End.x - 8f;
             }
             else
             {
                 _enemy.Direction = -1;
-                targetPos = _enemy.NavBody.NavArea.ReachableAreaRect.Position;
+                targetPos.x = _enemy.NavArea.ReachableAreaRect.Position.x + 8f;
             }
             // Waits before rushing to the target position.
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeRushSec / 2f), "timeout");
             _enemy.AnimatedSprite.Play("run");
             // Starts rushing to the target position.
-            _enemy.NavBody.LerpWithSpeed(
-                targetPos.x,
-                _rushSpeed,
-                Tween.TransitionType.Quad
-            );
+            _enemy.MoveLerpWithSpeed(targetPos.x, _rushSpeed, Tween.TransitionType.Quad);
             _isRushing = true;
             // Waits until rushing ends.
-            await ToSignal(_enemy.NavBody.Tween, "tween_completed");
+            await ToSignal(_enemy.Tween, "tween_completed");
             // When rushing ends before its duration
             if (cancellationToken.IsCancellationRequested) return;
             _isRushing = false;
@@ -86,13 +82,13 @@ namespace AI.States
         
         private async void Collision()
         {
-            _enemy.NavBody.LerpWithDuration(
-                _enemy.NavBody.NavPos.x - _enemy.Direction * _collisionBackWidth,
+            _enemy.MoveLerp(
+                _enemy.NavPos.x - _enemy.Direction * _collisionBackWidth,
                 _collisionBackSec,
                 Tween.TransitionType.Cubic,
                 Tween.EaseType.Out
             );
-            await ToSignal(_enemy.NavBody.Tween, "tween_completed");
+            await ToSignal(_enemy.Tween, "tween_completed");
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitAfterCollisionSec), "timeout");
             _enemy.Fsm.IsStateLocked = false;
             _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);
@@ -100,13 +96,13 @@ namespace AI.States
 
         private void OnTargetHit(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
         {
-            if (attacker != _enemy.NavBody || target != _enemy.NavBody.TargetNavBody) return;
+            if (attacker != _enemy || target != _enemy.TargetNavBody) return;
             if (_enemy.Fsm.CurrentState != this) return;
             if (!_isRushing) return;
             
             _isRushing = false;
             _cancellationTokenSource?.Cancel();
-            _enemy.NavBody.StopLerp();
+            _enemy.StopLerp();
             _cancellationTokenSource = null;
             Collision();
         }

@@ -35,7 +35,8 @@ namespace AI.States
 
         public override void PhysicsProcess(float delta)
         {
-            Vector2 dirToTargetPos = _enemy.NavBody.NavPos.DirectionTo(TargetPos);
+            Vector2 dirToTargetPos = _enemy.NavPos.DirectionTo(TargetPos);
+            _enemy.Direction = (int) dirToTargetPos.x;
             _enemy.Velocity.x = dirToTargetPos.x * _enemy.MoveSpeed;
         }
     }
