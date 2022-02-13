@@ -64,28 +64,28 @@ namespace AI.States
                 _backMoveDistMax - _enemy.DistanceTo(targetPos), _backMoveDistMin, _backMoveDistMax);
             float backMoveSec = backMoveDist * _backMoveSec / _backMoveDistMin;
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeAttackSec), "timeout");
-            _enemy.MoveLerp(
-                NavBody2D.LerpingMode.X,
+            _enemy.NavTween.MoveLerp(
+                NavTween.LerpingMode.X,
                 _enemy.NavPos - dirToTarget * backMoveDist,
                 backMoveSec,
                 Tween.TransitionType.Quad
             );
-            await ToSignal(_enemy.Tween, "tween_completed");
+            await ToSignal(_enemy.NavTween, "tween_completed");
             _enemy.AnimatedSprite.Play("run");
             _isJumping = true;
             _enemy.Velocity.y = -_enemy.Gravity * _jumpSec / 2f;
-            _enemy.MoveLerp(NavBody2D.LerpingMode.X, targetPos, _jumpSec);
-            await ToSignal(_enemy.Tween, "tween_completed");
+            _enemy.NavTween.MoveLerp(NavTween.LerpingMode.X, targetPos, _jumpSec);
+            await ToSignal(_enemy.NavTween, "tween_completed");
             if (cancellationToken.IsCancellationRequested) return;
             _isJumping = false;
-            _enemy.MoveLerp(
-                NavBody2D.LerpingMode.X,
+            _enemy.NavTween.MoveLerp(
+                NavTween.LerpingMode.X,
                 targetPos + dirToTarget * _landingMoveDist,
                 _landingMoveSec,
                 Tween.TransitionType.Quad,
                 Tween.EaseType.Out
             );
-            await ToSignal(_enemy.Tween, "tween_completed");
+            await ToSignal(_enemy.NavTween, "tween_completed");
             _enemy.AnimatedSprite.Play("idle");
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitAfterAttackSec), "timeout");
             _enemy.Fsm.IsStateLocked = false;
@@ -94,14 +94,14 @@ namespace AI.States
         
         private async void Collision()
         {
-            _enemy.MoveLerp(
-                NavBody2D.LerpingMode.X,
+            _enemy.NavTween.MoveLerp(
+                NavTween.LerpingMode.X,
                 _enemy.NavPos - new Vector2(_enemy.Direction * _collisionBackWidth, 0),
                 _collisionBackSec,
                 Tween.TransitionType.Cubic,
                 Tween.EaseType.Out
             );
-            await ToSignal(_enemy.Tween, "tween_completed");
+            await ToSignal(_enemy.NavTween, "tween_completed");
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitAfterCollisionSec), "timeout");
             _enemy.Fsm.IsStateLocked = false;
             _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);
@@ -115,7 +115,7 @@ namespace AI.States
             
             _isJumping = false;
             _cancellationTokenSource?.Cancel();
-            _enemy.StopLerp();
+            _enemy.NavTween.StopLerp();
             _cancellationTokenSource = null;
             Collision();
         }

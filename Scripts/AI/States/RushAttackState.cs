@@ -66,10 +66,10 @@ namespace AI.States
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeRushSec / 2f), "timeout");
             _enemy.AnimatedSprite.Play("run");
             // Starts rushing to the target position.
-            _enemy.MoveLerpWithSpeed(NavBody2D.LerpingMode.X, targetPos, _rushSpeed, Tween.TransitionType.Quad);
+            _enemy.NavTween.MoveLerpWithSpeed(NavTween.LerpingMode.X, targetPos, _rushSpeed, Tween.TransitionType.Quad);
             _isRushing = true;
             // Waits until rushing ends.
-            await ToSignal(_enemy.Tween, "tween_completed");
+            await ToSignal(_enemy.NavTween, "tween_completed");
             // When rushing ends before its duration
             if (cancellationToken.IsCancellationRequested) return;
             _isRushing = false;
@@ -82,14 +82,14 @@ namespace AI.States
         
         private async void Collision()
         {
-            _enemy.MoveLerp(
-                NavBody2D.LerpingMode.X,
+            _enemy.NavTween.MoveLerp(
+                NavTween.LerpingMode.X,
                 _enemy.NavPos - new Vector2(_enemy.Direction * _collisionBackWidth, 0),
                 _collisionBackSec,
                 Tween.TransitionType.Cubic,
                 Tween.EaseType.Out
             );
-            await ToSignal(_enemy.Tween, "tween_completed");
+            await ToSignal(_enemy.NavTween, "tween_completed");
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitAfterCollisionSec), "timeout");
             _enemy.Fsm.IsStateLocked = false;
             _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);
@@ -103,7 +103,7 @@ namespace AI.States
             
             _isRushing = false;
             _cancellationTokenSource?.Cancel();
-            _enemy.StopLerp();
+            _enemy.NavTween.StopLerp();
             _cancellationTokenSource = null;
             Collision();
         }

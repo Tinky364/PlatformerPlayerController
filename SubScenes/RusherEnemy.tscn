@@ -14,7 +14,7 @@ extents = Vector2( 27, 8 )
 [sub_resource type="Resource" id=25]
 resource_local_to_scene = true
 script = ExtResource( 8 )
-_secondPosDist = 40.0
+_secondPosDist = 25.0
 
 [sub_resource type="Resource" id=26]
 resource_local_to_scene = true
@@ -28,15 +28,15 @@ _collisionBackSec = 1.0
 
 [sub_resource type="SpriteFrames" id=17]
 animations = [ {
-"frames": [ ExtResource( 2 ), ExtResource( 1 ) ],
-"loop": true,
-"name": "run",
-"speed": 2.0
-}, {
 "frames": [ ExtResource( 2 ) ],
 "loop": true,
 "name": "idle",
 "speed": 5.0
+}, {
+"frames": [ ExtResource( 2 ), ExtResource( 1 ) ],
+"loop": true,
+"name": "run",
+"speed": 2.0
 } ]
 
 [sub_resource type="RectangleShape2D" id=15]
@@ -72,6 +72,7 @@ script = ExtResource( 3 )
 __meta__ = {
 "_edit_group_": true
 }
+DebugEnabled = true
 _isOnBodyCollidingActive = true
 _navAreaPath = NodePath("../NavArea2D")
 _idleState = SubResource( 25 )

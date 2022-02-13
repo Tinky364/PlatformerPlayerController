@@ -10,18 +10,18 @@ namespace NavTool
         {
             var scriptArea = GD.Load<Script>("addons/NavTool/NavArea2D.cs");
             var scriptBody = GD.Load<Script>("addons/NavTool/NavBody2D.cs");
-            var scriptChar = GD.Load<Script>("addons/NavTool/NavChar2D.cs");
+            var scriptTween = GD.Load<Script>("addons/NavTool/NavTween.cs");
 
             AddCustomType("NavArea2D", "Area2D", scriptArea, null);
             AddCustomType("NavBody2D", "KinematicBody2D", scriptBody, null);
-            AddCustomType("NavChar2D", "Area2D", scriptChar, null);
+            AddCustomType("NavTween", "Tween", scriptTween, null);
         }
 
         public override void _ExitTree()
         {
             RemoveCustomType("NavArea2D");
             RemoveCustomType("NavBody2D");
-            RemoveCustomType("NavChar2D");
+            RemoveCustomType("NavTween");
         }
     }
 }

@@ -2,7 +2,6 @@ using Godot;
 using Godot.Collections;
 using NavTool;
 
-[Tool]
 public class PlayerController : NavBody2D
 {
     protected AnimatedSprite AnimSprite;
@@ -65,7 +64,6 @@ public class PlayerController : NavBody2D
 
     public override void _Ready()
     {
-        if (Engine.EditorHint) return;
         base._Ready();
         AnimSprite = GetNode<AnimatedSprite>("AnimatedSprite");
         _jumpTimer = GetNode<Timer>("JumpTimer");
@@ -74,7 +72,6 @@ public class PlayerController : NavBody2D
 
     public override void _Process(float delta)
     {
-        if (Engine.EditorHint) return;
         if (_hasInputsLocked) return;
         base._Process(delta);
         AxisInputs();
@@ -82,12 +79,10 @@ public class PlayerController : NavBody2D
         ClimbInput();
         DropFromPlatformInput();
         AnimationController();
-        Update();
     }
 
     public override void _PhysicsProcess(float delta)
     {
-        if (Engine.EditorHint) return;
         base._PhysicsProcess(delta);
         CheckGround();
         CheckPlatform();
@@ -454,22 +449,22 @@ public class PlayerController : NavBody2D
         GroundCollisionMask += (uint)Mathf.Pow(2, 3-1); // Layer 3 = true
     }
 
-    public override void _Draw()
-    {
-        float rayPosX = ShapeExtents.x + _edgeAxisXRayLength;
-        float rayPosY = -ShapeSizes.y - _edgeAxisYRayLength;
-        
-        DrawLine(Vector2.Zero,
-                 Vector2.Down * GroundRayLength,
-                 IsOnGround ? Colors.Green : Colors.Red
-        );
-        DrawLine(new Vector2(Direction * ShapeExtents.x, rayPosY),
-                 new Vector2(Direction * rayPosX, rayPosY),
-                 Colors.Red
-        );
-        DrawLine(new Vector2(Direction * rayPosX, rayPosY),
-                 new Vector2(Direction * rayPosX, -ShapeSizes.y),
-                 _isHangingOnEdge ? Colors.Green : Colors.Red
-        );
-    }
+    // public override void _Draw()
+    // {
+    //     float rayPosX = ShapeExtents.x + _edgeAxisXRayLength;
+    //     float rayPosY = -ShapeSizes.y - _edgeAxisYRayLength;
+    //     
+    //     DrawLine(Vector2.Zero,
+    //              Vector2.Down * GroundRayLength,
+    //              IsOnGround ? Colors.Green : Colors.Red
+    //     );
+    //     DrawLine(new Vector2(Direction * ShapeExtents.x, rayPosY),
+    //              new Vector2(Direction * rayPosX, rayPosY),
+    //              Colors.Red
+    //     );
+    //     DrawLine(new Vector2(Direction * rayPosX, rayPosY),
+    //              new Vector2(Direction * rayPosX, -ShapeSizes.y),
+    //              _isHangingOnEdge ? Colors.Green : Colors.Red
+    //     );
+    // }
 }

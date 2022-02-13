@@ -1,16 +1,12 @@
-using System;
 using Godot;
 using Godot.Collections;
-using Array = Godot.Collections.Array;
-using Object = Godot.Object;
 
 namespace NavTool
 {
-    [Tool]
     public class NavBody2D : KinematicBody2D
     {
         public NavArea2D NavArea { get; private set; }
-        public Tween Tween { get; private set; }
+        public NavTween NavTween { get; private set; }
         private CollisionShape2D _shape;
         private Area2D _area;
         
@@ -32,8 +28,6 @@ namespace NavTool
         public NavBody2D TargetNavBody { get; private set; }
         protected PhysicsBody2D CollidingBody;
         protected Physics2DDirectSpaceState SpaceState;
-        public enum LerpingMode { Vector2, X, Y }
-        protected LerpingMode CurLerpingMode { get; private set; }
         protected Dictionary GroundRay;
         private Dictionary _navPosRay;
         public Vector2 NavPos { get; private set; }
@@ -41,43 +35,38 @@ namespace NavTool
         public Vector2 ShapeSizes => ShapeExtents * 2f;
         public Vector2 Velocity;
         protected Vector2 GroundHitPos { get; private set; }
-        private Vector2 _lerpPos;
         protected uint GroundCollisionMask = 6; // 2^(2-1) + 2^(3-1) -> Layer 2,3
         public int Direction { get; set; } = 1;
         public bool IsInactive
         {
             get => _isInactive;
-            set
+            protected set
             {
                 _isInactive = value;
                 SetProcess(!value);
                 SetPhysicsProcess(!value);
+                Visible = !value;
                 foreach (Node child in GetChildren())
                 {
-                    child.SetProcess(value);
-                    child.SetPhysicsProcess(value);
+                    child.SetProcess(!value);
+                    child.SetPhysicsProcess(!value);
                 }
             }
         }
         protected bool IsUnhurtable { get; set; }
         protected bool IsOnGround { get; set; }
-        protected bool IsLerping { get; private set; }
         protected bool HasGroundRayDisabled;
         private bool _isColliding;
         private bool _isInactive;
 
         public override void _EnterTree()
         {
-            if (Engine.EditorHint) return;
-            Tween = new Tween();
-            AddChild(Tween);
-            Tween.Name = "Tween";
-            Tween.PlaybackProcessMode = Tween.TweenProcessMode.Physics;
+            NavTween = new NavTween();
+            AddChild(NavTween);
         }
 
         public override void _Ready()
         {
-            if (Engine.EditorHint) return;
             _area = GetNodeOrNull<Area2D>("Area2D");
             _shape = GetNode<CollisionShape2D>("CollisionShape2D");
             SpaceState = GetWorld2d().DirectSpaceState;
@@ -93,106 +82,34 @@ namespace NavTool
             _area?.Connect("body_exited", this, nameof(OnBodyExited));
             NavArea?.Connect("ScreenEntered", this, nameof(OnScreenEnter));
             NavArea?.Connect("ScreenExited", this, nameof(OnScreenExit));
-            Tween.Connect("tween_started", this, nameof(OnMoveLerpStarted));
-            Tween.Connect("tween_completed", this, nameof(OnMoveLerpCompleted));
             SetNavPos();
         }
 
-        private void OnMoveLerpStarted(Object obj, NodePath key) => IsLerping = true;
-        
-        private void OnMoveLerpCompleted(Object obj, NodePath key)
-        {
-            Tween.RemoveAll();
-            switch (CurLerpingMode)
-            {
-                case LerpingMode.Vector2:
-                    Velocity = Vector2.Zero;
-                    break;
-                case LerpingMode.X:
-                    Velocity.x = 0;
-                    break;
-                case LerpingMode.Y:
-                    Velocity.y = 0;
-                    break;
-            }
-            IsLerping = false;
-        }
-        
         public override void _PhysicsProcess(float delta)
         {
-            if (Engine.EditorHint) return;
             CastGroundRay();
             SetNavPos();
-            SetLerpPosWhileIsNotLerping();
             OnBodyColliding(CollidingBody);
         }
 
-        private void SetLerpPosWhileIsNotLerping()
-        {
-            if (!IsLerping) _lerpPos = GlobalPosition;
-        }
-        
         public Vector2 DirectionTo(Vector2 to) => NavPos.DirectionTo(to);
 
         public float DistanceTo(Vector2 to) => NavPos.DistanceTo(to);
 
-        public void MoveLerp(LerpingMode mode, Vector2 targetPos, float duration, Tween.TransitionType transitionType = Tween.TransitionType.Linear, Tween.EaseType easeType = Tween.EaseType.InOut, float delay = 0f)
-        {
-            CurLerpingMode = mode;
-            if (NavArea != null && mode == LerpingMode.X)
-            {
-                if (targetPos.x < NavArea.ReachableAreaRect.Position.x)
-                    targetPos.x = NavArea.ReachableAreaRect.Position.x;
-                else if (targetPos.x > NavArea.ReachableAreaRect.End.x)
-                    targetPos.x = NavArea.ReachableAreaRect.End.x;
-            }
-            Tween.InterpolateProperty(this, "_lerpPos", null, targetPos, duration, transitionType, easeType, delay);
-            Tween.Start();
-        }
-        
-        public void MoveLerpWithSpeed(LerpingMode mode, Vector2 targetPos, float speed, Tween.TransitionType transitionType = Tween.TransitionType.Linear, Tween.EaseType easeType = Tween.EaseType.InOut, float delay = 0f)
-        {
-            float duration = targetPos.DistanceTo(NavPos) / speed;
-            MoveLerp(mode, targetPos, duration, transitionType, easeType, delay);
-        }
-
-        private Vector2 CalculateLerpMotion(float delta)
-        {
-            return GlobalPosition.DirectionTo(_lerpPos) * _lerpPos.DistanceTo(GlobalPosition) / delta;
-        } 
-
-        public void StopLerp()
-        {
-            Tween.Stop(this, "_lerpPos");
-            OnMoveLerpCompleted(null, null);
-        }
-
         protected Vector2 MoveAndSlideInArea(Vector2 velocity, float delta, Vector2? upDirection = null)
         {
-            if (IsLerping)
+            if (NavTween.IsLerping)
             {
-                switch (CurLerpingMode)
-                {
-                    case LerpingMode.X:
-                        velocity.x = CalculateLerpMotion(delta).x;
-                        break;
-                    case LerpingMode.Y:
-                        velocity.y = CalculateLerpMotion(delta).y;
-                        break;
-                    case LerpingMode.Vector2:
-                        velocity = CalculateLerpMotion(delta);
-                        break;
-                }
+                NavTween.EqualizeVelocity(ref velocity);
             }
-            else
+            
+            if (NavArea != null)
             {
-                if (NavArea != null)
+                float nextFramePosX = NavPos.x + velocity.x * delta;
+                if (nextFramePosX < NavArea.ReachableAreaRect.Position.x && velocity.x < 0
+                    || nextFramePosX > NavArea.ReachableAreaRect.End.x && velocity.x > 0)
                 {
-                    if (NavPos.x + velocity.x * delta < NavArea.AreaRect.Position.x && velocity.x < 0
-                        || NavPos.x + velocity.x * delta > NavArea.AreaRect.End.x && velocity.x > 0)
-                    {
-                        velocity.x = 0;
-                    }
+                    velocity.x = 0;
                 }
             }
             return MoveAndSlide(velocity, upDirection);
@@ -261,12 +178,12 @@ namespace NavTool
             _isColliding = true;
             CollidingBody = body;
         }
-        
+
         private void OnBodyColliding(Node body)
         {
             if (!_isOnBodyCollidingActive) return;
             if (!_isColliding) return;
-            
+
             if (!(body is NavBody2D targetNavBody)) return;
             if (targetNavBody.IsUnhurtable) return;
             Events.Singleton.EmitSignal(
@@ -277,7 +194,7 @@ namespace NavTool
                 DirectionTo(targetNavBody.NavPos)
             );
         }
-        
+
         private void OnBodyExited(Node node)
         {
             if (!(node is PhysicsBody2D body)) return;
@@ -285,15 +202,15 @@ namespace NavTool
             _isColliding = false;
             CollidingBody = null;
         }
-        
+
         private void CastGroundRay()
         {
             if (HasGroundRayDisabled) return;
 
             // Raycast from the left bottom corner.
             GroundRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(-ShapeExtents.x, -1f), 
-                GlobalPosition + new Vector2(-ShapeExtents.x, GroundRayLength), 
+                GlobalPosition + new Vector2(-ShapeExtents.x, -1f),
+                GlobalPosition + new Vector2(-ShapeExtents.x, GroundRayLength),
                 new Array {this},
                 GroundCollisionMask
             );
@@ -302,6 +219,7 @@ namespace NavTool
                 GroundHitPos = (Vector2) GroundRay["position"] + new Vector2(ShapeExtents.x, 0);
                 return;
             }
+
             // If the first raycast does not hit the ground.
             // Raycast from the right bottom corner.
             GroundRay = SpaceState.IntersectRay(

@@ -45,7 +45,7 @@ extents = Vector2( 72, 8 )
 [sub_resource type="Resource" id=22]
 resource_local_to_scene = true
 script = ExtResource( 14 )
-_secondPosDist = 40.0
+_secondPosDist = 25.0
 
 [sub_resource type="Resource" id=23]
 resource_local_to_scene = true
@@ -64,7 +64,7 @@ extents = Vector2( 24, 8 )
 [sub_resource type="Resource" id=24]
 resource_local_to_scene = true
 script = ExtResource( 14 )
-_secondPosDist = 20.0
+_secondPosDist = 25.0
 
 [sub_resource type="Resource" id=25]
 resource_local_to_scene = true
@@ -192,8 +192,7 @@ shape = SubResource( 20 )
 
 [node name="NavBody2D" parent="World/RusherEnemy" index="1"]
 position = Vector2( -55, 0 )
-_isOnBodyCollidingActive = false
-_navAreaPath = null
+_targetNavBodyPath = NodePath("../../Player")
 _idleState = SubResource( 22 )
 _attackState = SubResource( 23 )
 
@@ -205,19 +204,17 @@ position = Vector2( 3, 0 )
 shape = SubResource( 21 )
 
 [node name="NavBody2D" parent="World/JumperEnemy" index="1"]
-position = Vector2( 1, 0 )
-_isOnBodyCollidingActive = false
-_navAreaPath = null
+position = Vector2( -14, 0 )
+_targetNavBodyPath = NodePath("../../Player")
 _idleState = SubResource( 24 )
 _chaseState = SubResource( 25 )
 _attackState = SubResource( 26 )
 
+[node name="Player" parent="World" instance=ExtResource( 15 )]
+position = Vector2( 42, 93 )
+
 [node name="Door" parent="World" instance=ExtResource( 20 )]
 position = Vector2( -112, 48 )
-
-[node name="Player" parent="World" instance=ExtResource( 15 )]
-position = Vector2( 234, 128 )
-collision_mask = 14
 
 [node name="Camera2D" type="Camera2D" parent="World"]
 position = Vector2( 167, 161 )
@@ -390,4 +387,3 @@ LoadScenePath = "res://Scenes/StartingScene.tscn"
 [editable path="World/RusherEnemy"]
 [editable path="World/JumperEnemy"]
 [editable path="World/Door"]
-[editable path="World/Player"]

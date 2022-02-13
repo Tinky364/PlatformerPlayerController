@@ -83,8 +83,7 @@ namespace NavTool
 
         private void CheckTarget()
         {
-            Vector2 point = _navBody.TargetNavBody.NavPos;
-            if (IsPositionInArea(point))
+            if (IsPositionInArea(_navBody.TargetNavBody.NavPos))
             {
                 IsTargetReachable = true;
                 EmitSignal(nameof(TargetEntered), _navBody.TargetNavBody);

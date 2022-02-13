@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://addons/NavTool/NavBody2D.cs" type="Script" id=1]
+
+[sub_resource type="RectangleShape2D" id=1]
+resource_local_to_scene = true
+extents = Vector2( 4, 5.5 )
+
+[node name="NavBody2D" type="KinematicBody2D"]
+script = ExtResource( 1 )
+_navAreaPath = NodePath("")
+_targetNavBodyPath = NodePath("")
+Gravity = 1200.0
+GroundRayLength = 5.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource( 1 )
