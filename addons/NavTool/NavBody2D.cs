@@ -63,6 +63,7 @@ namespace NavTool
         {
             NavTween = new NavTween();
             AddChild(NavTween);
+            NavTween.Name = "NavTween";
         }
 
         public override void _Ready()

@@ -1,7 +1,6 @@
 using Godot;
 using NavTool;
 
-[Tool]
 public class Player : PlayerController
 {
     [Export(PropertyHint.Range, "0,10,or_greater")]
@@ -27,8 +26,6 @@ public class Player : PlayerController
 
     public override void _Ready()
     {
-        if (Engine.EditorHint) return;
-
         base._Ready();
 
         Health = _maxHealth;
