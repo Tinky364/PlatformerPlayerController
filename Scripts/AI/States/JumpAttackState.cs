@@ -50,7 +50,7 @@ namespace AI.States
             _enemy.AnimatedSprite.Play("idle");
             _enemy.Velocity.x = 0;
             
-            Vector2 dirToTarget = _enemy.NavArea.DirectionToTarget();
+            Vector2 dirToTarget = _enemy.DirectionToTarget();
             _enemy.Direction = dirToTarget.x >= 0 ? 1 : -1;
             
             _cancellationTokenSource?.Cancel();
@@ -61,7 +61,8 @@ namespace AI.States
         private async void Attack(Vector2 dirToTarget, Vector2 targetPos, CancellationToken cancellationToken)
         {
             float backMoveDist = Mathf.Clamp(
-                _backMoveDistMax - _enemy.DistanceTo(targetPos), _backMoveDistMin, _backMoveDistMax);
+                _backMoveDistMax - _enemy.DistanceTo(targetPos), _backMoveDistMin, _backMoveDistMax
+            );
             float backMoveSec = backMoveDist * _backMoveSec / _backMoveDistMin;
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeAttackSec), "timeout");
             _enemy.NavTween.MoveLerp(

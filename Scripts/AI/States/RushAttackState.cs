@@ -50,9 +50,8 @@ namespace AI.States
             // Waits before calculating the target position.
             await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeRushSec / 2f), "timeout");
             // Calculates the target position and sets its own direction.
-            Vector2 dirToTarget = _enemy.NavArea.DirectionToTarget();
             Vector2 targetPos = new Vector2(0, _enemy.NavPos.y);
-            if (dirToTarget.x >= 0)
+            if (_enemy.DirectionToTarget().x >= 0)
             {
                 _enemy.Direction = 1;
                 targetPos.x = _enemy.NavArea.ReachableAreaRect.End.x - 8f;

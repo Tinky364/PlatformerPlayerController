@@ -31,9 +31,7 @@ namespace AI.Enemies
                 return;
             }
 
-            Vector2 dirToTarget = NavArea.DirectionToTarget();
-            if (dirToTarget == Vector2.Zero) dirToTarget = Vector2.Right;
-            float distToTarget = NavArea.DistanceToTarget();
+            float distToTarget = DistanceToTarget();
             
             if (distToTarget < _chaseState.StopDist + 1f)
             {
@@ -44,7 +42,7 @@ namespace AI.Enemies
             if (distToTarget > _chaseState.StopDist)
             {
                 Vector2 movePos = TargetNavBody.NavPos +
-                                  -dirToTarget * _chaseState.StopDist;
+                                  -DirectionToTarget() * _chaseState.StopDist;
 
                 if (!NavArea.IsPositionInArea(movePos)) return;
 

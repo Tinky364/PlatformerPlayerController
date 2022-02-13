@@ -11,6 +11,8 @@ namespace NavTool
         private Area2D _area;
         
         [Export]
+        private NavBodyType _navBodyType = NavBodyType.Platformer;
+        [Export]
         public bool DebugEnabled { get; private set; }
         [Export]
         private bool _isOnBodyCollidingActive;
@@ -24,7 +26,8 @@ namespace NavTool
         protected float GroundRayLength = 0.1f;
         [Export(PropertyHint.Range, "0.1,200,or_greater")] 
         private float _navPosRayLength = 35f;
-        
+
+        public enum NavBodyType { Platformer, TopDown }
         public NavBody2D TargetNavBody { get; private set; }
         protected PhysicsBody2D CollidingBody;
         protected Physics2DDirectSpaceState SpaceState;
@@ -88,7 +91,8 @@ namespace NavTool
 
         public override void _PhysicsProcess(float delta)
         {
-            CastGroundRay();
+            if (_navBodyType == NavBodyType.Platformer)
+                CastGroundRay();
             SetNavPos();
             OnBodyColliding(CollidingBody);
         }
@@ -103,20 +107,41 @@ namespace NavTool
             {
                 NavTween.EqualizeVelocity(ref velocity);
             }
-            
+
             if (NavArea != null)
             {
-                float nextFramePosX = NavPos.x + velocity.x * delta;
-                if (nextFramePosX < NavArea.ReachableAreaRect.Position.x && velocity.x < 0
-                    || nextFramePosX > NavArea.ReachableAreaRect.End.x && velocity.x > 0)
+                Vector2 nextFramePos = NavPos + velocity * delta;
+                switch (_navBodyType)
                 {
-                    velocity.x = 0;
+                    case NavBodyType.Platformer:
+                        if (nextFramePos.x < NavArea.ReachableAreaRect.Position.x && velocity.x < 0 || nextFramePos.x > NavArea.ReachableAreaRect.End.x && velocity.x > 0)
+                            velocity.x = 0;
+                        break;
+                    case NavBodyType.TopDown:
+                        if (nextFramePos.x < NavArea.ReachableAreaRect.Position.x && velocity.x < 0 || nextFramePos.x > NavArea.ReachableAreaRect.End.x && velocity.x > 0)
+                            velocity.x = 0;
+                        if (nextFramePos.y < NavArea.ReachableAreaRect.Position.y && velocity.y < 0 || nextFramePos.y > NavArea.ReachableAreaRect.End.y && velocity.y > 0)
+                            velocity.y = 0;
+                        break;
                 }
             }
             return MoveAndSlide(velocity, upDirection);
         }
 
         private void SetNavPos()
+        {
+            switch (_navBodyType)
+            {
+                case NavBodyType.Platformer:
+                    NavPos = CastNavPosRay();
+                    break;
+                case NavBodyType.TopDown:
+                    NavPos = GlobalPosition;
+                    break;
+            }
+        }
+
+        private Vector2 CastNavPosRay()
         {
             Vector2 rightHitPos;
             // Cast left ray.
@@ -126,10 +151,10 @@ namespace NavTool
                 new Array {this},
                 GroundCollisionMask
             );
-            if (_navPosRay.Count > 0) // When left ray hits.
+            // When left ray hits.
+            if (_navPosRay.Count > 0) 
             {
                 Vector2 leftHitPos = (Vector2) _navPosRay["position"]; // Left ray hit position.
-
                 // Cast right ray.
                 _navPosRay = SpaceState.IntersectRay(
                     GlobalPosition + new Vector2(ShapeExtents.x, 0f),
@@ -137,40 +162,34 @@ namespace NavTool
                     new Array {this},
                     GroundCollisionMask
                 );
-                if (_navPosRay.Count > 0) // When both rays hit.
+                // When both rays hit.
+                if (_navPosRay.Count > 0) 
                 {
                     rightHitPos = (Vector2) _navPosRay["position"]; // Right ray hit position.
-
                     // Decides position according to the close hit position.
-                    if (rightHitPos.DistanceTo(GlobalPosition) >
-                        leftHitPos.DistanceTo(GlobalPosition))
-                        NavPos = leftHitPos + new Vector2(ShapeExtents.x, 0);
-                    else
-                        NavPos = rightHitPos + new Vector2(-ShapeExtents.x, 0);
+                    if (rightHitPos.DistanceTo(GlobalPosition) > leftHitPos.DistanceTo(GlobalPosition))
+                        return leftHitPos + new Vector2(ShapeExtents.x, 0);
+                    return rightHitPos + new Vector2(-ShapeExtents.x, 0);
                 }
-                else // When only left ray hits.
-                    NavPos = leftHitPos + new Vector2(ShapeExtents.x, 0);
+                // When only left ray hits.
+                return leftHitPos + new Vector2(ShapeExtents.x, 0);
             }
-            else // When left ray does not hit.
+            // When left ray does not hit.
+            // Cast right ray.
+            _navPosRay = SpaceState.IntersectRay(
+                GlobalPosition + new Vector2(ShapeExtents.x, 0f),
+                GlobalPosition + new Vector2(ShapeExtents.x, _navPosRayLength),
+                new Array {this},
+                GroundCollisionMask
+            );
+            // When only right ray hits. 
+            if (_navPosRay.Count > 0) 
             {
-                // Cast right ray.
-                _navPosRay = SpaceState.IntersectRay(
-                    GlobalPosition + new Vector2(ShapeExtents.x, 0f),
-                    GlobalPosition + new Vector2(ShapeExtents.x, _navPosRayLength),
-                    new Array {this},
-                    GroundCollisionMask
-                );
-                if (_navPosRay.Count > 0) // When only right ray hits. 
-                {
-                    rightHitPos = (Vector2) _navPosRay["position"]; // Right ray hit position.
-
-                    NavPos = rightHitPos + new Vector2(-ShapeExtents.x, 0);
-                }
-                else // When any rays do not hit.
-                {
-                    NavPos = GlobalPosition;
-                }
+                rightHitPos = (Vector2) _navPosRay["position"]; // Right ray hit position.
+                return rightHitPos + new Vector2(-ShapeExtents.x, 0);
             }
+            // When any rays do not hit.
+            return GlobalPosition;
         }
         
         private void OnBodyEntered(Node node)
@@ -233,6 +252,20 @@ namespace NavTool
             {
                 GroundHitPos = (Vector2) GroundRay["position"] + new Vector2(-ShapeExtents.x, 0);
             }
+        }
+        
+        public Vector2 DirectionToTarget()
+        {
+            if (TargetNavBody == null) return Vector2.Zero;
+            Vector2 dir = (TargetNavBody.NavPos - NavPos).Normalized();
+            if (dir == Vector2.Zero) dir = Vector2.Right;
+            return dir;
+        } 
+
+        public float DistanceToTarget()
+        { 
+            if (TargetNavBody == null) return 0;
+            return (TargetNavBody.NavPos - NavPos).Length();
         }
 
         protected virtual void OnScreenEnter() => IsInactive = false;

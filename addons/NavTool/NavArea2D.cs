@@ -33,7 +33,6 @@ namespace NavTool
         public override void _Ready()
         {
             if (Engine.EditorHint) return;
-            
             _navBody = GetNode<NavBody2D>(_navBodyPath);
             _shape = GetNode<CollisionShape2D>("CollisionShape2D");
             _visibilityNotifier = GetNode<VisibilityNotifier2D>("VisibilityNotifier2D");
@@ -48,13 +47,8 @@ namespace NavTool
         public override void _PhysicsProcess(float delta)
         {
             if (Engine.EditorHint) return;
-            CheckTarget();
+            CheckTargetInArea();
         }
-
-        public Vector2 DirectionToTarget() =>
-            (_navBody.TargetNavBody.NavPos - _navBody.NavPos).Normalized();
-
-        public float DistanceToTarget() => (_navBody.TargetNavBody.NavPos - _navBody.NavPos).Length();
 
         public bool IsPositionInArea(Vector2 position)
         {
@@ -81,8 +75,9 @@ namespace NavTool
             _visibilityNotifier.Rect = new Rect2(AreaRect.Position - GlobalPosition, AreaRect.Size);
         }
 
-        private void CheckTarget()
+        private void CheckTargetInArea()
         {
+            if (_navBody.TargetNavBody == null) return;
             Vector2 point1 = _navBody.TargetNavBody.NavPos + new Vector2(_navBody.TargetNavBody.ShapeExtents.x, 0);
             Vector2 point2 = _navBody.TargetNavBody.NavPos - new Vector2(_navBody.TargetNavBody.ShapeExtents.x, 0);
             if (IsPositionInArea(point1) || IsPositionInArea(point2))
@@ -105,6 +100,7 @@ namespace NavTool
             SetProcess(true);
             SetPhysicsProcess(true);
             EmitSignal(nameof(ScreenEntered));
+            Visible = true;
         }
 
         private void OnScreenExit()
@@ -112,6 +108,7 @@ namespace NavTool
             SetProcess(false);
             SetPhysicsProcess(false);
             EmitSignal(nameof(ScreenExited));
+            Visible = false;
         }
 
         public override string _GetConfigurationWarning()
