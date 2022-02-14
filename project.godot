@@ -16,11 +16,12 @@ ClassPrefix=""
 [application]
 
 config/name="PlatformerPlayerController"
+run/main_scene="res://Scenes/GameScene.tscn"
 
 [autoload]
 
-Events="*res://Scripts/Events.cs"
-GameManager="*res://Scripts/GameManager.cs"
+Events="*res://Scripts/Manager/Events.cs"
+GameManager="*res://Scripts/Manager/GameManager.cs"
 
 [display]
 

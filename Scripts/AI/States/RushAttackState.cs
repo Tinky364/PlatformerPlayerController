@@ -1,5 +1,6 @@
 using System.Threading;
 using Godot;
+using Manager;
 using NavTool;
 
 namespace AI.States
@@ -48,24 +49,26 @@ namespace AI.States
         private async void Attack(CancellationToken cancellationToken)
         {
             // Waits before calculating the target position.
-            await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeRushSec / 2f), "timeout");
+            await ToSignal(_enemy.GetTree().CreateTimer(_waitBeforeRushSec / 2f), "timeout");
             // Calculates the target position and sets its own direction.
             Vector2 targetPos = new Vector2(0, _enemy.NavPos.y);
             if (_enemy.DirectionToTarget().x >= 0)
             {
                 _enemy.Direction = 1;
-                targetPos.x = _enemy.NavArea.AreaRect.End.x - 16f;
+                targetPos.x = _enemy.NavArea.AreaRect.End.x - 12f;
             }
             else
             {
                 _enemy.Direction = -1;
-                targetPos.x = _enemy.NavArea.AreaRect.Position.x + 16f;
+                targetPos.x = _enemy.NavArea.AreaRect.Position.x + 12f;
             }
             // Waits before rushing to the target position.
-            await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeRushSec / 2f), "timeout");
+            await ToSignal(_enemy.GetTree().CreateTimer(_waitBeforeRushSec / 2f), "timeout");
             _enemy.AnimatedSprite.Play("run");
             // Starts rushing to the target position.
-            _enemy.NavTween.MoveToward(NavTween.TweenMode.X, null, targetPos, _rushSpeed);
+            _enemy.NavTween.MoveToward(
+                NavTween.TweenMode.X, null, targetPos, 50f, Tween.TransitionType.Cubic
+            );
             _isRushing = true;
             // Waits until rushing ends.
             await ToSignal(_enemy.NavTween, "MoveCompleted");
@@ -74,7 +77,7 @@ namespace AI.States
             _isRushing = false;
             _enemy.AnimatedSprite.Play("idle");
             // Waits before changing state.
-            await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitAfterRushSec), "timeout");
+            await ToSignal(_enemy.GetTree().CreateTimer(_waitAfterRushSec), "timeout");
             _enemy.Fsm.IsStateLocked = false;
             _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);
         }
@@ -90,7 +93,7 @@ namespace AI.States
                 Tween.EaseType.Out
             );
             await ToSignal(_enemy.NavTween, "MoveCompleted");
-            await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitAfterCollisionSec), "timeout");
+            await ToSignal(_enemy.GetTree().CreateTimer(_waitAfterCollisionSec), "timeout");
             _enemy.Fsm.IsStateLocked = false;
             _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);
         }
@@ -108,15 +111,15 @@ namespace AI.States
             Collision(hitNormal);
         }
         
-        public override void Exit()
-        {
-        }
-
         public override void Process(float delta)
         {
         }
 
         public override void PhysicsProcess(float delta)
+        {
+        }
+        
+        public override void Exit()
         {
         }
     }

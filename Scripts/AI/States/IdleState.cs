@@ -39,10 +39,6 @@ namespace AI.States
             _enemy.AnimatedSprite.Play("idle");
         }
 
-        public override void Exit()
-        {
-        }
-
         public override void Process(float delta)
         {
         }
@@ -54,12 +50,19 @@ namespace AI.States
             {
                 _enemy.AnimatedSprite.Play("run");
                 _enemy.Direction = (int) dirToTarget.Normalized().x;
-                _enemy.Velocity.x = dirToTarget.Normalized().x * _enemy.MoveSpeed;
+                _enemy.Velocity.x = Mathf.MoveToward(
+                    _enemy.Velocity.x, _enemy.Direction * _enemy.MoveSpeed,
+                    _enemy.MoveAcceleration * delta
+                );
             }
             else
             {
                 _targetPos = _targetPos == _pos2 ? _pos1 : _pos2;
             }
+        }
+
+        public override void Exit()
+        {
         }
     }
 }

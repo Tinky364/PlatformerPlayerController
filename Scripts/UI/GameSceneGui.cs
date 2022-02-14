@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
-using AI;
 using Godot;
+using Manager;
 using NavTool;
 
 namespace UI
@@ -45,10 +45,11 @@ namespace UI
         private async void OnPlayerDied()
         {
             if (GameManager.Singleton.UiState == GameManager.GameState.Pause) return;
-            
+
             GameManager.Singleton.GuiDisableInput(true);
-            await FadeControlAlpha(_hud, 1, 0, 1f, true);
-            await FadeControlAlpha(_pausePanel, 0, 1, _pausePanelOpenDur);
+            await ToSignal(GetTree().CreateTimer(1f), "timeout");
+            await FadeControlAlpha(_hud, 1f, 0f, 1f);
+            await FadeControlAlpha(_pausePanel, 0f, 1f, _pausePanelOpenDur);
             GameManager.Singleton.GuiDisableInput(false);
         }
         
@@ -87,22 +88,21 @@ namespace UI
             _healthProgress.Value = to;
         }
         
-        private async Task FadeControlAlpha(Control control, float from, float to, float duration, bool setVisibilityAtTheEndFalse = false)
+        private async Task FadeControlAlpha(Control control, float from, float to, float duration)
         {
             control.Visible = true;
             float count = 0f;
             while (count < duration)
             {
                 float alpha = Mathf.Lerp(from, to, count / duration);
-                control.Modulate = new Color(control.Modulate.r, control.Modulate.g,
-                                             control.Modulate.b, alpha
+                control.Modulate = new Color(
+                    control.Modulate.r, control.Modulate.g, control.Modulate.b, alpha
                 );
                 count += GetProcessDeltaTime();
                 await ToSignal(GetTree(), "idle_frame");
             }
             control.Modulate = new Color(control.Modulate.r, control.Modulate.g, control.Modulate.b, to);
-            if (setVisibilityAtTheEndFalse)
-                control.Visible = false;
+            if (to == 0) control.Visible = false;
         }
     }
 }

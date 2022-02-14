@@ -7,7 +7,9 @@ namespace AI.States
         private Enemy _enemy;
 
         [Export(PropertyHint.Range, "0,100,or_greater")]
-        public float StopDist = 26f;
+        public float StopDist { get; private set; } = 26f;
+        [Export(PropertyHint.Range, "0,200,or_greater")]
+        private float _chaseSpeed = 30f;
 
         public Vector2 TargetPos;
         
@@ -25,10 +27,6 @@ namespace AI.States
             _enemy.AnimatedSprite.Play("run");
         }
 
-        public override void Exit()
-        {
-        }
-
         public override void Process(float delta)
         {
         }
@@ -37,7 +35,13 @@ namespace AI.States
         {
             Vector2 dirToTargetPos = _enemy.NavPos.DirectionTo(TargetPos);
             _enemy.Direction = (int) dirToTargetPos.x;
-            _enemy.Velocity.x = dirToTargetPos.x * _enemy.MoveSpeed;
+            _enemy.Velocity.x = Mathf.MoveToward(
+                _enemy.Velocity.x, _enemy.Direction * _chaseSpeed, _enemy.MoveAcceleration * delta
+            );
+        }
+        
+        public override void Exit()
+        {
         }
     }
 }

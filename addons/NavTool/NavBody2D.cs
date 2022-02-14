@@ -7,25 +7,31 @@ namespace NavTool
     {
         public NavArea2D NavArea { get; private set; }
         public NavTween NavTween { get; private set; }
-        private CollisionShape2D _shape;
-        private Area2D _area;
+        private Area2D _interactionArea;
         
         [Export]
         private NavBodyType CurNavBodyType { get; set; }  = NavBodyType.Platformer;
         [Export]
+        private NodePath NavAreaPath { get; set; }
+        [Export]
+        private NodePath TargetNavBodyPath { get; set; }
+        [Export]
         public bool DebugEnabled { get; private set; }
         [Export]
-        private bool _isOnBodyCollidingActive;
-        [Export]
-        private NodePath _navAreaPath = default;
-        [Export]
-        private NodePath _targetNavBodyPath = default;
-        [Export(PropertyHint.Range, "10,2000,or_greater")]
-        public float Gravity = 600f;
+        private bool IsOnBodyCollidingActive { get; set; }
+        [Export(PropertyHint.Range, "0,500,or_greater")]
+        public Vector2 ShapeSizes { get; private set; }
         [Export(PropertyHint.Range, "0.1,20,0.05,or_greater")] 
-        protected float GroundRayLength = 0.1f;
+        protected float GroundRayLength { get; private set; } = 0.1f;
         [Export(PropertyHint.Range, "0.1,200,or_greater")] 
-        private float _navPosRayLength = 35f;
+        private float NavPosRayLength { get; set; } = 35f;
+        
+        [Signal]
+        protected delegate void BodyEntered(Node body);
+        [Signal]
+        protected delegate void BodyColliding(Node body);
+        [Signal]
+        protected delegate void BodyExited(Node body);
 
         public enum NavBodyType { Platformer, TopDown }
         public NavBody2D TargetNavBody { get; private set; }
@@ -34,8 +40,7 @@ namespace NavTool
         protected Dictionary GroundRay;
         private Dictionary _navPosRay;
         public Vector2 NavPos { get; private set; }
-        public Vector2 ShapeExtents { get; private set; }
-        public Vector2 ShapeSizes => ShapeExtents * 2f;
+        public Vector2 ShapeExtents => ShapeSizes / 2f;
         public Vector2 Velocity;
         protected Vector2 GroundHitPos { get; private set; }
         protected uint GroundCollisionMask = 6; // 2^(2-1) + 2^(3-1) -> Layer 2,3
@@ -56,7 +61,7 @@ namespace NavTool
                 }
             }
         }
-        protected bool IsUnhurtable { get; set; }
+        public bool IsUnhurtable { get; protected set; }
         protected bool IsOnGround { get; set; }
         protected bool HasGroundRayDisabled;
         private bool _isColliding;
@@ -67,24 +72,21 @@ namespace NavTool
             NavTween = new NavTween();
             AddChild(NavTween);
             NavTween.Name = "NavTween";
+            NavTween.ConnectTween(this, "Velocity");
         }
 
         public override void _Ready()
         {
-            NavTween.ConnectVelocityVariable("Velocity");
-            _area = GetNodeOrNull<Area2D>("Area2D");
-            _shape = GetNode<CollisionShape2D>("CollisionShape2D");
+            _interactionArea = GetNodeOrNull<Area2D>("Area2D");
             SpaceState = GetWorld2d().DirectSpaceState;
-            if (_targetNavBodyPath != null) 
-                TargetNavBody = GetNodeOrNull<NavBody2D>(_targetNavBodyPath);
-            if (_shape.Shape is RectangleShape2D shape) 
-                ShapeExtents = shape.Extents;
-            if (_navAreaPath != null) 
-                NavArea = GetNodeOrNull<NavArea2D>(_navAreaPath);
+            if (TargetNavBodyPath != null) 
+                TargetNavBody = GetNodeOrNull<NavBody2D>(TargetNavBodyPath);
+            if (NavAreaPath != null) 
+                NavArea = GetNodeOrNull<NavArea2D>(NavAreaPath);
             if (NavArea != null && !NavArea.IsPositionInArea(GlobalPosition))
                 GlobalPosition = NavArea.GlobalPosition;
-            _area?.Connect("body_entered", this, nameof(OnBodyEntered));
-            _area?.Connect("body_exited", this, nameof(OnBodyExited));
+            _interactionArea?.Connect("body_entered", this, nameof(OnBodyEntered));
+            _interactionArea?.Connect("body_exited", this, nameof(OnBodyExited));
             NavArea?.Connect("ScreenEntered", this, nameof(OnScreenEnter));
             NavArea?.Connect("ScreenExited", this, nameof(OnScreenExit));
             SetNavPos();
@@ -93,8 +95,7 @@ namespace NavTool
         public override void _PhysicsProcess(float delta)
         {
             NavArea?.CheckTargetInArea(TargetNavBody);
-            if (CurNavBodyType == NavBodyType.Platformer)
-                CastGroundRay();
+            if (CurNavBodyType == NavBodyType.Platformer) CastGroundRay();
             SetNavPos();
             OnBodyColliding(CollidingBody);
         }
@@ -107,7 +108,7 @@ namespace NavTool
         {
             if (NavTween.IsPlaying)
             {
-                velocity = NavTween.EqualizeVelocity(velocity);
+                velocity = NavTween.EqualizeVelocity(velocity, delta);
             }
             if (NavArea != null)
             {
@@ -148,7 +149,7 @@ namespace NavTool
             // Cast left ray.
             _navPosRay = SpaceState.IntersectRay(
                 GlobalPosition + new Vector2(-ShapeExtents.x, 0f),
-                GlobalPosition + new Vector2(-ShapeExtents.x, _navPosRayLength),
+                GlobalPosition + new Vector2(-ShapeExtents.x, NavPosRayLength),
                 new Array {this},
                 GroundCollisionMask
             );
@@ -159,7 +160,7 @@ namespace NavTool
                 // Cast right ray.
                 _navPosRay = SpaceState.IntersectRay(
                     GlobalPosition + new Vector2(ShapeExtents.x, 0f),
-                    GlobalPosition + new Vector2(ShapeExtents.x, _navPosRayLength),
+                    GlobalPosition + new Vector2(ShapeExtents.x, NavPosRayLength),
                     new Array {this},
                     GroundCollisionMask
                 );
@@ -179,7 +180,7 @@ namespace NavTool
             // Cast right ray.
             _navPosRay = SpaceState.IntersectRay(
                 GlobalPosition + new Vector2(ShapeExtents.x, 0f),
-                GlobalPosition + new Vector2(ShapeExtents.x, _navPosRayLength),
+                GlobalPosition + new Vector2(ShapeExtents.x, NavPosRayLength),
                 new Array {this},
                 GroundCollisionMask
             );
@@ -198,22 +199,14 @@ namespace NavTool
             if (!(node is PhysicsBody2D body)) return;
             _isColliding = true;
             CollidingBody = body;
+            EmitSignal(nameof(BodyEntered), node);
         }
 
         private void OnBodyColliding(Node body)
         {
-            if (!_isOnBodyCollidingActive) return;
+            if (!IsOnBodyCollidingActive) return;
             if (!_isColliding) return;
-
-            if (!(body is NavBody2D targetNavBody)) return;
-            if (targetNavBody.IsUnhurtable) return;
-            Events.Singleton.EmitSignal(
-                "Damaged",
-                targetNavBody,
-                1,
-                this,
-                GlobalPosition.DirectionTo(targetNavBody.GlobalPosition)
-            );
+            EmitSignal(nameof(BodyColliding), body);
         }
 
         private void OnBodyExited(Node node)
@@ -222,6 +215,7 @@ namespace NavTool
             if (body != CollidingBody) return;
             _isColliding = false;
             CollidingBody = null;
+            EmitSignal(nameof(BodyExited), node);
         }
 
         private void CastGroundRay()
@@ -258,9 +252,7 @@ namespace NavTool
         public Vector2 DirectionToTarget()
         {
             if (TargetNavBody == null) return Vector2.Zero;
-            Vector2 dir = (TargetNavBody.NavPos - NavPos).Normalized();
-            if (dir == Vector2.Zero) dir = Vector2.Right;
-            return dir;
+            return (TargetNavBody.NavPos - NavPos).Normalized();
         } 
 
         public float DistanceToTarget()

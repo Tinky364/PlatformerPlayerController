@@ -4,7 +4,7 @@ namespace NavTool
 {
     public class NavTween : Tween
     {
-        private Node2D _connectedNode;
+        private Node2D _conNode;
 
         [Signal]
         private delegate void MoveStarted();
@@ -13,65 +13,56 @@ namespace NavTool
         
         public enum TweenMode { Vector2, X, Y }
         public TweenMode CurTweenMode { get; private set; }
-        private Vector2 _pos;
         public Vector2 Pos => _pos;
-        private Vector2 _velocity;
         public Vector2 Velocity => _velocity;
-        private Vector2 _moveTowardTargetPos;
-        private float _moveTowardSpeed;
         public bool IsPlaying { get; private set; }
-        private bool _isTowarding;
+        public bool IsTweenConnected { get; private set; }
+        public bool IsVelocityConnected { get; private set; }
+        
+        private Vector2 _pos;
+        private Vector2 _velocity;
         private string _velocityVar;
-        public bool IsVelocityVarConnected { get; private set; }
-
-        public override void _EnterTree()
-        {
-            _connectedNode = GetParent<Node2D>();
-        }
 
         public override void _Ready()
         {
+            Name = "NavTween";
             PlaybackProcessMode = TweenProcessMode.Physics;
             Connect("tween_started", this, nameof(OnTweenStarted));
             Connect("tween_completed", this, nameof(OnTweenCompleted));
-            Connect("MoveStarted", this, nameof(OnMoveStarted));
-            Connect("MoveCompleted", this, nameof(OnMoveCompleted));
+            Connect(nameof(MoveStarted), this, nameof(OnMoveStarted));
+            Connect(nameof(MoveCompleted), this, nameof(OnMoveCompleted));
         }
 
         public override void _PhysicsProcess(float delta)
         {
-            CalculateLerpVelocity(delta);
-            CalculateMoveTowards(delta);
+            if (!IsTweenConnected)
+            {
+                GD.PushWarning("NavTween is not connected!");
+                return;
+            }
         }
 
-        public void ConnectVelocityVariable(string velocityVariableName)
+        public void ConnectTween(Node2D connectedNode, string velocityVariableName = "")
         {
+            if (connectedNode == null) return;
+            _conNode = connectedNode;
+            IsTweenConnected = true;
+            if (_conNode.Get(velocityVariableName) == null) return;
             _velocityVar = velocityVariableName;
-            if (_connectedNode.Get(_velocityVar) != null)
-                IsVelocityVarConnected = true;
-        }
-
-        private void CalculateLerpVelocity(float delta)
-        {
-            if (!IsPlaying) return;
-            _velocity = _connectedNode.GlobalPosition.DirectionTo(_pos) * _connectedNode.GlobalPosition.DistanceTo(_pos) / delta;
+            IsVelocityConnected = true;
         }
         
-        public void MoveLerp(
-            TweenMode mode,
-            Vector2? initialPos,
-            Vector2 targetPos,
-            float duration,
-            TransitionType transitionType = TransitionType.Linear,
-            EaseType easeType = EaseType.InOut,
-            float delay = 0f)
+        public void MoveLerp(TweenMode mode, Vector2? initialPos, Vector2 targetPos, float duration,
+                             TransitionType transitionType = TransitionType.Linear,
+                             EaseType easeType = EaseType.InOut, float delay = 0f)
         {
             if (IsPlaying)
             {
                 GD.Print("Already lerping wait until finish or call StopMove method!");
                 return;
             }
-            _pos = initialPos ?? _connectedNode.GlobalPosition;
+            _pos = initialPos ?? _conNode.GlobalPosition;
+            CurTweenMode = mode;
             switch (CurTweenMode)
             {
                 case TweenMode.X:
@@ -81,19 +72,21 @@ namespace NavTool
                     targetPos.x = _pos.x;
                     break;
             }
-            CurTweenMode = mode;
             InterpolateProperty(this, "_pos", _pos, targetPos, duration, transitionType, easeType, delay);
             Start();
         }
-
-        public void MoveToward(TweenMode mode, Vector2? initialPos, Vector2 targetPos, float speed)
+        
+        public void MoveToward(TweenMode mode, Vector2? initialPos, Vector2 targetPos, float speed, 
+                               TransitionType transitionType = TransitionType.Linear,
+                               EaseType easeType = EaseType.InOut, float delay = 0f)
         {
             if (IsPlaying)
             {
                 GD.Print("Already lerping wait until finish or call StopMove method!");
                 return;
             }
-            _pos = initialPos ?? _connectedNode.GlobalPosition;
+            _pos = initialPos ?? _conNode.GlobalPosition;
+            CurTweenMode = mode;
             switch (CurTweenMode)
             {
                 case TweenMode.X:
@@ -103,30 +96,16 @@ namespace NavTool
                     targetPos.x = _pos.x;
                     break;
             }
-            CurTweenMode = mode;
-            EmitSignal(nameof(MoveStarted));           
-            _moveTowardTargetPos = targetPos;
-            _moveTowardSpeed = speed;
+            float duration = _pos.DistanceTo(targetPos) / speed;
+            InterpolateProperty(this, "_pos", _pos, targetPos, duration, transitionType, easeType, delay);
+            Start();
         }
         
-        private void CalculateMoveTowards(float delta)
+        public Vector2 EqualizeVelocity(Vector2 velocity, float delta)
         {
-            if (!_isTowarding) return;
-            if (!IsPlaying) return;
-            if (_pos != _moveTowardTargetPos)
-            {
-                _pos = _pos.MoveToward(_moveTowardTargetPos, _moveTowardSpeed * delta);
-            }
-            else
-            {
-                if (!_isTowarding) return;
-                EmitSignal(nameof(MoveCompleted));      
-            }
-        }
-        
-        public Vector2 EqualizeVelocity(Vector2 velocity)
-        {
-            if (!IsPlaying) return velocity;
+            if (!IsPlaying || !IsVelocityConnected) return velocity;
+            _velocity = _conNode.GlobalPosition.DirectionTo(_pos)
+                * _conNode.GlobalPosition.DistanceTo(_pos) / delta;
             switch (CurTweenMode)
             {
                 case TweenMode.Vector2:
@@ -159,7 +138,7 @@ namespace NavTool
             }
             return position;
         }
-
+        
         public void StopMove()
         {
             Stop(this, "_pos");
@@ -178,32 +157,34 @@ namespace NavTool
         private void OnMoveStarted()
         {
             IsPlaying = true;
-            _isTowarding = true;
         }
         
         private void OnMoveCompleted()
         {
             RemoveAll();
-            Vector2? parentVelocity = (Vector2?) _connectedNode.Get(_velocityVar);
-            switch (CurTweenMode)
+            if (IsVelocityConnected)
             {
-                case TweenMode.Vector2:
-                    _velocity = Vector2.Zero;
-                    _connectedNode.Set(_velocityVar, Vector2.Zero);
-                    break;
-                case TweenMode.X:
-                    _velocity.x = 0;
-                    if (parentVelocity.HasValue)
-                        _connectedNode.Set(_velocityVar, new Vector2(0, parentVelocity.Value.y));
-                    break;
-                case TweenMode.Y:
-                    _velocity.y = 0;
-                    if (parentVelocity.HasValue)
-                        _connectedNode.Set(_velocityVar, new Vector2(parentVelocity.Value.x, 0));
-                    break;
+                Vector2? parentVelocity = (Vector2?) _conNode.Get(_velocityVar);
+                switch (CurTweenMode)
+                {
+                    case TweenMode.Vector2:
+                        _velocity = Vector2.Zero;
+                        _conNode.Set(_velocityVar, Vector2.Zero);
+                        break;
+                    case TweenMode.X:
+                        _velocity.x = 0;
+                        if (parentVelocity.HasValue)
+                            _conNode.Set(_velocityVar, new Vector2(0, parentVelocity.Value.y));
+                        break;
+                    case TweenMode.Y:
+                        _velocity.y = 0;
+                        if (parentVelocity.HasValue)
+                            _conNode.Set(_velocityVar, new Vector2(parentVelocity.Value.x, 0));
+                        break;
+                }
             }
             IsPlaying = false;
-            _isTowarding = false;
         }
+        
     }
 }

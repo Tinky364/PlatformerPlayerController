@@ -14,14 +14,14 @@ extents = Vector2( 27, 8 )
 [sub_resource type="Resource" id=25]
 resource_local_to_scene = true
 script = ExtResource( 8 )
-_secondPosDist = 25.0
+_secondPosDist = 10.0
 
 [sub_resource type="Resource" id=26]
 resource_local_to_scene = true
 script = ExtResource( 6 )
-_waitBeforeRushSec = 1.0
+_waitBeforeRushSec = 0.6
 _waitAfterRushSec = 1.0
-_rushSpeed = 100.0
+_rushSpeed = 150.0
 _waitAfterCollisionSec = 2.0
 _collisionBackWidth = 24.0
 _collisionBackSec = 1.0
@@ -55,30 +55,31 @@ __meta__ = {
 "_edit_group_": true,
 "_edit_lock_": true
 }
-_navBodyPath = NodePath("../NavBody2D")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NavArea2D"]
-shape = SubResource( 21 )
 
 [node name="VisibilityNotifier2D" type="VisibilityNotifier2D" parent="NavArea2D"]
 __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="NavBody2D" type="KinematicBody2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NavArea2D"]
+shape = SubResource( 21 )
+
+[node name="RusherEnemy" type="KinematicBody2D" parent="."]
 collision_layer = 16
 collision_mask = 6
 script = ExtResource( 3 )
 __meta__ = {
 "_edit_group_": true
 }
-DebugEnabled = true
-_isOnBodyCollidingActive = true
-_navAreaPath = NodePath("../NavArea2D")
+NavAreaPath = NodePath("../NavArea2D")
+IsOnBodyCollidingActive = true
+ShapeSizes = Vector2( 20, 14 )
+MoveSpeed = 30.0
+MoveAcceleration = 150.0
 _idleState = SubResource( 25 )
 _attackState = SubResource( 26 )
 
-[node name="AnimatedSprite" type="AnimatedSprite" parent="NavBody2D"]
+[node name="AnimatedSprite" type="AnimatedSprite" parent="RusherEnemy"]
 self_modulate = Color( 0, 1, 0.0392157, 1 )
 position = Vector2( -16, -32 )
 scale = Vector2( 2, 2 )
@@ -89,20 +90,20 @@ __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NavBody2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RusherEnemy"]
 position = Vector2( 0, -7 )
 shape = SubResource( 15 )
 __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="Area2D" type="Area2D" parent="NavBody2D"]
+[node name="Area2D" type="Area2D" parent="RusherEnemy"]
 collision_layer = 0
 __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NavBody2D/Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RusherEnemy/Area2D"]
 position = Vector2( 0, -7 )
 shape = SubResource( 24 )
 __meta__ = {

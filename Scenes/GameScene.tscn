@@ -11,7 +11,7 @@
 [ext_resource path="res://SubScenes/RusherEnemy.tscn" type="PackedScene" id=9]
 [ext_resource path="res://Resources/UpTileSet.tres" type="TileSet" id=10]
 [ext_resource path="res://Resources/BackgroundTileSet.tres" type="TileSet" id=11]
-[ext_resource path="res://Scripts/CamController.cs" type="Script" id=12]
+[ext_resource path="res://Scripts/Other/CamController.cs" type="Script" id=12]
 [ext_resource path="res://Scripts/AI/States/JumpAttackState.cs" type="Script" id=13]
 [ext_resource path="res://Scripts/AI/States/IdleState.cs" type="Script" id=14]
 [ext_resource path="res://SubScenes/Player.tscn" type="PackedScene" id=15]
@@ -43,17 +43,18 @@ b = Vector2( -16, -5.72205e-05 )
 resource_local_to_scene = true
 extents = Vector2( 56, 8 )
 
-[sub_resource type="Resource" id=15]
+[sub_resource type="Resource" id=19]
 resource_local_to_scene = true
 script = ExtResource( 14 )
 _secondPosDist = 25.0
 
-[sub_resource type="Resource" id=16]
+[sub_resource type="Resource" id=20]
 resource_local_to_scene = true
 script = ExtResource( 1 )
 StopDist = 26.0
+_chaseSpeed = 30.0
 
-[sub_resource type="Resource" id=17]
+[sub_resource type="Resource" id=21]
 resource_local_to_scene = true
 script = ExtResource( 13 )
 _waitBeforeAttackSec = 1.0
@@ -61,9 +62,9 @@ _backMoveSec = 0.4
 _jumpSec = 0.6
 _landingMoveSec = 0.2
 _waitAfterAttackSec = 1.0
-_backMoveDistMin = 5.0
+_backMoveDistMin = 15.0
 _backMoveDistMax = 30.0
-_landingMoveDist = 3.0
+_landingMoveDist = 6.0
 _waitAfterCollisionSec = 2.0
 _collisionBackWidth = 24.0
 _collisionBackSec = 1.0
@@ -72,17 +73,17 @@ _collisionBackSec = 1.0
 resource_local_to_scene = true
 extents = Vector2( 48, 8 )
 
-[sub_resource type="Resource" id=19]
+[sub_resource type="Resource" id=22]
 resource_local_to_scene = true
 script = ExtResource( 14 )
-_secondPosDist = 25.0
+_secondPosDist = 10.0
 
-[sub_resource type="Resource" id=20]
+[sub_resource type="Resource" id=23]
 resource_local_to_scene = true
 script = ExtResource( 19 )
-_waitBeforeRushSec = 1.0
+_waitBeforeRushSec = 0.6
 _waitAfterRushSec = 1.0
-_rushSpeed = 100.0
+_rushSpeed = 150.0
 _waitAfterCollisionSec = 2.0
 _collisionBackWidth = 24.0
 _collisionBackSec = 1.0
@@ -184,32 +185,32 @@ position = Vector2( 136, 48 )
 [node name="JumperEnemy" parent="World" index="4" instance=ExtResource( 18 )]
 position = Vector2( 278, 96 )
 
-[node name="CollisionShape2D" parent="World/JumperEnemy/NavArea2D" index="0"]
+[node name="CollisionShape2D" parent="World/JumperEnemy/NavArea2D" index="1"]
 position = Vector2( -14, 0 )
 shape = SubResource( 14 )
 
-[node name="NavBody2D" parent="World/JumperEnemy" index="1"]
-_targetNavBodyPath = NodePath("../../Player")
-_idleState = SubResource( 15 )
-_chaseState = SubResource( 16 )
-_attackState = SubResource( 17 )
+[node name="JumperEnemy" parent="World/JumperEnemy" index="1"]
+TargetNavBodyPath = NodePath("../../Player")
+MoveAcceleration = 50.0
+_idleState = SubResource( 19 )
+_chaseState = SubResource( 20 )
+_attackState = SubResource( 21 )
 
 [node name="RusherEnemy" parent="World" index="5" instance=ExtResource( 9 )]
 position = Vector2( 107, 144 )
 
-[node name="CollisionShape2D" parent="World/RusherEnemy/NavArea2D" index="0"]
+[node name="CollisionShape2D" parent="World/RusherEnemy/NavArea2D" index="1"]
 position = Vector2( 21, 0 )
 shape = SubResource( 18 )
 
-[node name="NavBody2D" parent="World/RusherEnemy" index="1"]
-_targetNavBodyPath = NodePath("../../Player")
-_idleState = SubResource( 19 )
-_attackState = SubResource( 20 )
+[node name="RusherEnemy" parent="World/RusherEnemy" index="1"]
+position = Vector2( -16, 0 )
+TargetNavBodyPath = NodePath("../../Player")
+_idleState = SubResource( 22 )
+_attackState = SubResource( 23 )
 
 [node name="Player" parent="World" index="6" instance=ExtResource( 15 )]
-position = Vector2( 221, 96 )
-Gravity = 1100.0
-_moveAcceleration = 500.0
+position = Vector2( 189, 123 )
 
 [node name="Door" parent="World" index="7" instance=ExtResource( 20 )]
 position = Vector2( -1, 144 )

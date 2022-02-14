@@ -1,14 +1,8 @@
 [gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://Sprites/Player/tile_0045.png" type="Texture" id=1]
-[ext_resource path="res://Scripts/Player.cs" type="Script" id=2]
+[ext_resource path="res://Scripts/Other/Player.cs" type="Script" id=2]
 [ext_resource path="res://Sprites/Player/tile_0046.png" type="Texture" id=3]
-
-[sub_resource type="RectangleShape2D" id=4]
-extents = Vector2( 4, 5.5 )
-
-[sub_resource type="CircleShape2D" id=5]
-radius = 4.0
 
 [sub_resource type="SpriteFrames" id=2]
 animations = [ {
@@ -17,16 +11,22 @@ animations = [ {
 "name": "idle",
 "speed": 5.0
 }, {
-"frames": [ ExtResource( 3 ) ],
-"loop": true,
-"name": "jump",
-"speed": 5.0
-}, {
 "frames": [ ExtResource( 1 ), ExtResource( 3 ) ],
 "loop": true,
 "name": "run",
 "speed": 10.0
+}, {
+"frames": [ ExtResource( 3 ) ],
+"loop": true,
+"name": "jump",
+"speed": 5.0
 } ]
+
+[sub_resource type="RectangleShape2D" id=4]
+extents = Vector2( 4, 3.5 )
+
+[sub_resource type="CircleShape2D" id=5]
+radius = 4.0
 
 [sub_resource type="RectangleShape2D" id=3]
 extents = Vector2( 4, 0.5 )
@@ -37,20 +37,12 @@ script = ExtResource( 2 )
 __meta__ = {
 "_edit_group_": true
 }
-Gravity = 1200.0
+ShapeSizes = Vector2( 8, 11 )
 GroundRayLength = 5.0
+_gravity = 1100.0
+_moveSpeed = 70.0
+_recoilLength = 32.0
 _unhurtableDur = 1.0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2( 0, -5.5 )
-shape = SubResource( 4 )
-__meta__ = {
-"_edit_lock_": true
-}
-
-[node name="CollisionShape2D2" type="CollisionShape2D" parent="."]
-position = Vector2( 0, -11 )
-shape = SubResource( 5 )
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 position = Vector2( -8, -16 )
@@ -60,6 +52,17 @@ centered = false
 __meta__ = {
 "_edit_lock_": true
 }
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( 0, -3.5 )
+shape = SubResource( 4 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="."]
+position = Vector2( 0, -7 )
+shape = SubResource( 5 )
 
 [node name="PlatformCheckArea" type="Area2D" parent="."]
 collision_layer = 0

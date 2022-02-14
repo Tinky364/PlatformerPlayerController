@@ -1,4 +1,5 @@
 using Godot;
+using Manager;
 using NavTool;
 
 namespace AI
@@ -8,8 +9,12 @@ namespace AI
         public StateMachine<EnemyStates> Fsm { get; } = new StateMachine<EnemyStates>();
         public AnimatedSprite AnimatedSprite;
 
+        [Export(PropertyHint.Range, "10,2000,or_greater")]
+        public float Gravity = 600f;
         [Export(PropertyHint.Range, "0,200,or_greater")]
-        public float MoveSpeed = 15f;
+        public float MoveSpeed { get; private set; } = 15f;
+        [Export(PropertyHint.Range, "1,2000,or_greater")]
+        public float MoveAcceleration { get; private set; } = 100f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private int _damageValue = 1;
         
@@ -19,6 +24,7 @@ namespace AI
         {
             base._Ready();
             AnimatedSprite = GetNode<AnimatedSprite>("AnimatedSprite");
+            Connect(nameof(BodyColliding), this, nameof(OnBodyColliding));
         }
 
         public override void _Process(float delta)
@@ -36,6 +42,19 @@ namespace AI
             Fsm._PhysicsProcess(delta);
             if (!IsOnGround) Velocity.y += Gravity * delta; // Adds gravity force increasingly.
             Velocity = MoveAndSlideInArea(Velocity, delta, Vector2.Up);
+        }
+
+        private void OnBodyColliding(Node body)
+        {
+            if (!(body is NavBody2D targetNavBody)) return;
+            if (targetNavBody.IsUnhurtable) return;
+            Events.Singleton.EmitSignal(
+                "Damaged",
+                targetNavBody,
+                _damageValue,
+                this,
+                GlobalPosition.DirectionTo(targetNavBody.GlobalPosition)
+            );
         }
 
         protected abstract void StateController();

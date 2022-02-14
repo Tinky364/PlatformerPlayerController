@@ -1,5 +1,6 @@
 using System.Threading;
 using Godot;
+using Manager;
 using NavTool;
 
 namespace AI.States
@@ -19,7 +20,7 @@ namespace AI.States
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitAfterAttackSec = 1f;
         [Export(PropertyHint.Range, "0,100,or_greater")]
-        private float _backMoveDistMin = 5f;
+        private float _backMoveDistMin = 15f;
         [Export(PropertyHint.Range, "0,100,or_greater")]
         private float _backMoveDistMax = 30f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
@@ -63,13 +64,12 @@ namespace AI.States
             float backMoveDist = Mathf.Clamp(
                 _backMoveDistMax - _enemy.DistanceTo(targetPos), _backMoveDistMin, _backMoveDistMax
             );
-            float backMoveSec = backMoveDist * _backMoveSec / _backMoveDistMin;
-            await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitBeforeAttackSec), "timeout");
-            _enemy.NavTween.MoveLerp(
+            await ToSignal(_enemy.GetTree().CreateTimer(_waitBeforeAttackSec), "timeout");
+            _enemy.NavTween.MoveToward(
                 NavTween.TweenMode.X,
                 null,
                 _enemy.NavPos - dirToTarget * backMoveDist,
-                backMoveSec,
+                _enemy.MoveSpeed,
                 Tween.TransitionType.Quad
             );
             await ToSignal(_enemy.NavTween, "MoveCompleted");
@@ -90,7 +90,7 @@ namespace AI.States
             );
             await ToSignal(_enemy.NavTween, "MoveCompleted");
             _enemy.AnimatedSprite.Play("idle");
-            await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitAfterAttackSec), "timeout");
+            await ToSignal(_enemy.GetTree().CreateTimer(_waitAfterAttackSec), "timeout");
             _enemy.Fsm.IsStateLocked = false;
             _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);
         }
@@ -106,7 +106,7 @@ namespace AI.States
                 Tween.EaseType.Out
             );
             await ToSignal(_enemy.NavTween, "MoveCompleted");
-            await ToSignal(GameManager.Singleton.Tree.CreateTimer(_waitAfterCollisionSec), "timeout");
+            await ToSignal(_enemy.GetTree().CreateTimer(_waitAfterCollisionSec), "timeout");
             _enemy.Fsm.IsStateLocked = false;
             _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);
         }
@@ -124,15 +124,15 @@ namespace AI.States
             Collision(hitNormal);
         }
         
-        public override void Exit()
-        {
-        }
-
         public override void Process(float delta)
         {
         }
 
         public override void PhysicsProcess(float delta)
+        {
+        }
+        
+        public override void Exit()
         {
         }
     }
