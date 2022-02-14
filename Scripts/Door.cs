@@ -4,13 +4,15 @@ using NavTool;
 public class Door : StaticBody2D
 {
     private Area2D _triggerArea;
-    public NavTween NavTween { get; private set; }
+    private NavTween _navTween;
+
+    private bool _isOpen;
 
     public override void _EnterTree()
     {
-        NavTween = new NavTween();
-        AddChild(NavTween);
-        NavTween.Name = "TweenPhy";
+        _navTween = new NavTween();
+        AddChild(_navTween);
+        _navTween.Name = "TweenPhy";
     }
     
     public override void _Ready()
@@ -22,20 +24,23 @@ public class Door : StaticBody2D
     private void OnTriggerred(Node node)
     {
         if (!(node is Player)) return;
-        if (NavTween.IsLerping) return;
-        NavTween.MoveLerp(NavTween.LerpingMode.Vector2, GlobalPosition - new Vector2(0, 16), 2f);
+        if (_navTween.IsPlaying) return;
+        float targetPosY = _isOpen ? 16 : -16;
+        _isOpen = !_isOpen;
+        _navTween.MoveLerp(
+            NavTween.TweenMode.Y,
+            null,
+            GlobalPosition + new Vector2(0, targetPosY), 2f,
+            Tween.TransitionType.Cubic
+        );
     }
     
     public override void _PhysicsProcess(float delta)
     {
-        if (NavTween.IsLerping)
+        if (_navTween.IsPlaying)
         {
-            Vector2 dummy = ConstantLinearVelocity;
-            NavTween.EqualizeVelocity(ref dummy);
-            ConstantLinearVelocity = dummy;
-            dummy = GlobalPosition;
-            NavTween.EqualizePosition(ref dummy);
-            GlobalPosition = dummy;
+            ConstantLinearVelocity = _navTween.EqualizeVelocity(ConstantLinearVelocity);
+            GlobalPosition = _navTween.EqualizePosition(GlobalPosition);
         }
         else
         {

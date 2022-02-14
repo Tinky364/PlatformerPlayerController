@@ -5,6 +5,7 @@ using NavTool;
 public class PlayerController : NavBody2D
 {
     protected AnimatedSprite AnimSprite;
+    private Area2D _platformCheckArea;
     private Timer _jumpTimer;
     
     [Export(PropertyHint.Range, "0.1,20,0.05,or_greater")] 
@@ -37,7 +38,7 @@ public class PlayerController : NavBody2D
     private Dictionary _edgeRay;
     private Vector2 _inputAxis;
     private Vector2 _edgeHitPos;
-    private Vector2 _recoilHitNormal;
+    private Vector2 _recoilVelocity;
     private float _desiredMove;
     private float _desiredJumpSpeedX;
     private float JumpInitialSpeedY => Mathf.Sqrt(2f * Gravity * _jumpHeightMin); // V=sqrt{2*g*h}
@@ -66,7 +67,10 @@ public class PlayerController : NavBody2D
     {
         base._Ready();
         AnimSprite = GetNode<AnimatedSprite>("AnimatedSprite");
+        _platformCheckArea = GetNode<Area2D>("PlatformCheckArea");
         _jumpTimer = GetNode<Timer>("JumpTimer");
+        _platformCheckArea.Connect("body_entered", this, nameof(OnPlatformEntered));
+        _platformCheckArea.Connect("body_exited", this, nameof(OnPlatformExited));
         _jumpTimer.Connect("timeout", this, nameof(OnJumpEnd));
     }
 
@@ -110,7 +114,12 @@ public class PlayerController : NavBody2D
         _hasRecoiled = value;
         if (!_hasRecoiled) return;
         AnimSprite.Play("idle");
-        _recoilHitNormal = hitNormal ?? _recoilHitNormal;
+        Vector2 recoilDir = hitNormal ?? new Vector2(-Direction, 0);
+        _recoilVelocity.x = Mathf.Clamp(Mathf.Abs(recoilDir.x), 0.7f, 1f) * Mathf.Sign(recoilDir.x);
+        _recoilVelocity.y = Mathf.Clamp(Mathf.Abs(recoilDir.y), 0.2f, 1f) * Mathf.Sign(recoilDir.y);
+        float recoilSpeedY = recoilDir.y < 0 ? RecoilSpeed * 1.5f : RecoilSpeed / 2f;
+        float recoilSpeedX = RecoilSpeed * 0.85f;
+        _recoilVelocity = new Vector2(_recoilVelocity.x * recoilSpeedX, _recoilVelocity.y * recoilSpeedY);
     }
     
     private void AxisInputs()
@@ -248,8 +257,8 @@ public class PlayerController : NavBody2D
             if (_hasRecoiled)
             {
                 _hasRecoiled = false;
-                velocity.x = Mathf.Sign(_recoilHitNormal.x) * RecoilSpeed;
-                velocity.y = 0f;
+                OnJumpEnd();
+                velocity = _recoilVelocity;
                 return velocity;
             }
             
@@ -265,8 +274,8 @@ public class PlayerController : NavBody2D
         if (_hasRecoiled)
         {
             _hasRecoiled = false;
-            velocity.x = Mathf.Sign(_recoilHitNormal.x) * RecoilSpeed;
-            velocity.y = 0;
+            OnJumpEnd();
+            velocity = _recoilVelocity;
             return velocity;
         }
         
@@ -437,9 +446,9 @@ public class PlayerController : NavBody2D
             AnimSprite.Play("jump");
     }
 
-    private void OnPlatformBodyEntered(Node body) => HasGroundRayDisabled = true;
+    private void OnPlatformEntered(Node body) => HasGroundRayDisabled = true;
     
-    private void OnPlatformBodyExited(Node body)
+    private void OnPlatformExited(Node body)
     {
         HasGroundRayDisabled = false;
         if (!_hasDropFromPlatformInput) return;

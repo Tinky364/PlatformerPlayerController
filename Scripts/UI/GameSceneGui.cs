@@ -2,6 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AI;
 using Godot;
+using NavTool;
 
 namespace UI
 {
@@ -25,7 +26,7 @@ namespace UI
         [Export]
         private float _pausePanelOpenDur = 3f;
 
-        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource _cancellationSource;
         
         public override void _Ready()
         {
@@ -58,27 +59,25 @@ namespace UI
             _coinCountLabel.Text = newCount.ToString();
         }
 
-        private void OnHealthChanged(int newHealth, int maxHealth, Enemy attacker)
+        private void OnHealthChanged(int newHealth, int maxHealth, NavBody2D attacker)
         {
             if (GameManager.Singleton.UiState == GameManager.GameState.Pause) return;
 
             int targetHealth = (int)_healthProgress.MaxValue * newHealth / maxHealth;
-            
-            _cancellationTokenSource?.Cancel();
-            _cancellationTokenSource = new CancellationTokenSource();
-            HealthLerp(targetHealth, _cancellationTokenSource.Token);
+
+            _cancellationSource?.Cancel();
+            _cancellationSource = new CancellationTokenSource();
+            HealthLerp(targetHealth, _cancellationSource.Token);
         }
 
-        private async void HealthLerp(int newHealth, CancellationToken cancellationToken)
+        private async void HealthLerp(int newHealth, CancellationToken token)
         {
             float from = (float)_healthProgress.Value;
             float to = newHealth;
-
             float count = 0f;
             while (count < _healthProgressDur)
             {
-                if (cancellationToken.IsCancellationRequested) return;
-
+                if (token.IsCancellationRequested) return;
                 float t = count / _healthProgressDur;
                 t = 1 - Mathf.Pow(1 - t, 3);
                 _healthProgress.Value = Mathf.Lerp(from, to, t);
@@ -86,11 +85,9 @@ namespace UI
                 await ToSignal(GetTree(), "idle_frame");
             }
             _healthProgress.Value = to;
-            _cancellationTokenSource = null;
         }
         
-        private async Task FadeControlAlpha(Control control, float from, float to, float duration, 
-                                            bool setVisibilityAtTheEndFalse = false)
+        private async Task FadeControlAlpha(Control control, float from, float to, float duration, bool setVisibilityAtTheEndFalse = false)
         {
             control.Visible = true;
             float count = 0f;

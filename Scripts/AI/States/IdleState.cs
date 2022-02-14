@@ -21,10 +21,10 @@ namespace AI.States
             
             _pos1 = _enemy.NavPos;
             _pos2 = _pos1 + new Vector2(_secondPosDist, 0f);
-            if (!_enemy.NavArea.IsPositionInReachableArea(_pos2))
+            if (!_enemy.NavArea.IsPositionInArea(_pos2))
             {
                 _pos2 = _pos1 - new Vector2(_secondPosDist, 0f);
-                if (!_enemy.NavArea.IsPositionInReachableArea(_pos2))
+                if (!_enemy.NavArea.IsPositionInArea(_pos2))
                 {
                     GD.PrintErr("Not enough space for the enemy idle motion!");
                     return;

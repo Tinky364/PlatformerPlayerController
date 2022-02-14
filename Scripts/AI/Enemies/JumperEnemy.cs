@@ -41,8 +41,7 @@ namespace AI.Enemies
 
             if (distToTarget > _chaseState.StopDist)
             {
-                Vector2 movePos = TargetNavBody.NavPos +
-                                  -DirectionToTarget() * _chaseState.StopDist;
+                Vector2 movePos = TargetNavBody.NavPos + -DirectionToTarget() * _chaseState.StopDist;
 
                 if (!NavArea.IsPositionInArea(movePos)) return;
 

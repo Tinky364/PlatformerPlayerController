@@ -39,7 +39,6 @@ public class Player : PlayerController
         if (target != this) return;
         if (IsUnhurtable) return;
         IsUnhurtable = true;
-
         Health -= damageValue;
         Events.Singleton.EmitSignal("PlayerHealthChanged", Health, _maxHealth, attacker);
         if (Health == 0)
@@ -71,7 +70,6 @@ public class Player : PlayerController
         {
             if (count > RecoilDur) LockInputs(false);
             AnimSprite.SelfModulate = AnimSprite.SelfModulate == Colors.Red ? Colors.White : Colors.Red;
-            
             float t = count / _unhurtableDur;
             t = 1 - Mathf.Pow(1 - t, 5);
             float waitTime = Mathf.Lerp(0.01f, 0.2f, t);

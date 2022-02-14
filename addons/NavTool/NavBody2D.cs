@@ -11,7 +11,7 @@ namespace NavTool
         private Area2D _area;
         
         [Export]
-        private NavBodyType _navBodyType = NavBodyType.Platformer;
+        private NavBodyType CurNavBodyType { get; set; }  = NavBodyType.Platformer;
         [Export]
         public bool DebugEnabled { get; private set; }
         [Export]
@@ -71,15 +71,16 @@ namespace NavTool
 
         public override void _Ready()
         {
+            NavTween.ConnectVelocityVariable("Velocity");
             _area = GetNodeOrNull<Area2D>("Area2D");
             _shape = GetNode<CollisionShape2D>("CollisionShape2D");
             SpaceState = GetWorld2d().DirectSpaceState;
-            if (_navAreaPath != null) 
-                NavArea = GetNodeOrNull<NavArea2D>(_navAreaPath);
             if (_targetNavBodyPath != null) 
                 TargetNavBody = GetNodeOrNull<NavBody2D>(_targetNavBodyPath);
             if (_shape.Shape is RectangleShape2D shape) 
                 ShapeExtents = shape.Extents;
+            if (_navAreaPath != null) 
+                NavArea = GetNodeOrNull<NavArea2D>(_navAreaPath);
             if (NavArea != null && !NavArea.IsPositionInArea(GlobalPosition))
                 GlobalPosition = NavArea.GlobalPosition;
             _area?.Connect("body_entered", this, nameof(OnBodyEntered));
@@ -91,7 +92,8 @@ namespace NavTool
 
         public override void _PhysicsProcess(float delta)
         {
-            if (_navBodyType == NavBodyType.Platformer)
+            NavArea?.CheckTargetInArea(TargetNavBody);
+            if (CurNavBodyType == NavBodyType.Platformer)
                 CastGroundRay();
             SetNavPos();
             OnBodyColliding(CollidingBody);
@@ -103,24 +105,23 @@ namespace NavTool
 
         protected Vector2 MoveAndSlideInArea(Vector2 velocity, float delta, Vector2? upDirection = null)
         {
-            if (NavTween.IsLerping)
+            if (NavTween.IsPlaying)
             {
-                NavTween.EqualizeVelocity(ref velocity);
+                velocity = NavTween.EqualizeVelocity(velocity);
             }
-
             if (NavArea != null)
             {
                 Vector2 nextFramePos = NavPos + velocity * delta;
-                switch (_navBodyType)
+                switch (CurNavBodyType)
                 {
                     case NavBodyType.Platformer:
-                        if (nextFramePos.x < NavArea.ReachableAreaRect.Position.x && velocity.x < 0 || nextFramePos.x > NavArea.ReachableAreaRect.End.x && velocity.x > 0)
+                        if (nextFramePos.x < NavArea.AreaRect.Position.x && velocity.x < 0 || nextFramePos.x > NavArea.AreaRect.End.x && velocity.x > 0)
                             velocity.x = 0;
                         break;
                     case NavBodyType.TopDown:
-                        if (nextFramePos.x < NavArea.ReachableAreaRect.Position.x && velocity.x < 0 || nextFramePos.x > NavArea.ReachableAreaRect.End.x && velocity.x > 0)
+                        if (nextFramePos.x < NavArea.AreaRect.Position.x && velocity.x < 0 || nextFramePos.x > NavArea.AreaRect.End.x && velocity.x > 0)
                             velocity.x = 0;
-                        if (nextFramePos.y < NavArea.ReachableAreaRect.Position.y && velocity.y < 0 || nextFramePos.y > NavArea.ReachableAreaRect.End.y && velocity.y > 0)
+                        if (nextFramePos.y < NavArea.AreaRect.Position.y && velocity.y < 0 || nextFramePos.y > NavArea.AreaRect.End.y && velocity.y > 0)
                             velocity.y = 0;
                         break;
                 }
@@ -130,7 +131,7 @@ namespace NavTool
 
         private void SetNavPos()
         {
-            switch (_navBodyType)
+            switch (CurNavBodyType)
             {
                 case NavBodyType.Platformer:
                     NavPos = CastNavPosRay();
@@ -211,7 +212,7 @@ namespace NavTool
                 targetNavBody,
                 1,
                 this,
-                DirectionTo(targetNavBody.NavPos)
+                GlobalPosition.DirectionTo(targetNavBody.GlobalPosition)
             );
         }
 

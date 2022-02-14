@@ -1,16 +1,39 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://Scenes/SceneTemplate.tscn" type="PackedScene" id=1]
-[ext_resource path="res://Scenes/TopDown.cs" type="Script" id=2]
+[ext_resource path="res://Scripts/TopDown.cs" type="Script" id=2]
+[ext_resource path="res://addons/NavTool/NavArea2D.cs" type="Script" id=3]
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 75, 53 )
 
 [sub_resource type="RectangleShape2D" id=1]
 
 [node name="TopDownScene" instance=ExtResource( 1 )]
 
-[node name="Player" type="Area2D" parent="World" index="0"]
+[node name="NavArea2D" type="Area2D" parent="World" index="0"]
+position = Vector2( 135, 73 )
+collision_layer = 0
+collision_mask = 0
+script = ExtResource( 3 )
+
+[node name="VisibilityNotifier2D" type="VisibilityNotifier2D" parent="World/NavArea2D" index="0"]
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/NavArea2D" index="1"]
+position = Vector2( -29, 2 )
+shape = SubResource( 2 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="Player" type="Area2D" parent="World" index="1"]
 position = Vector2( 93, 82 )
 collision_mask = 0
 script = ExtResource( 2 )
+_navAreaPath = NodePath("../NavArea2D")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="World/Player" index="0"]
 position = Vector2( 0, -10 )
