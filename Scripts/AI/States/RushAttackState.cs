@@ -10,19 +10,19 @@ namespace AI.States
         private Enemy _enemy;
         
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _waitBeforeRushSec = 1f;
+        private float _waitBeforeRushDur = 1f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _waitAfterRushSec = 1f;
+        private float _waitAfterRushDur = 1f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _rushSpeed = 100f;
-        [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _waitAfterCollisionSec = 2f;
+        private float _rushSpeed = 50f;
         [Export(PropertyHint.Range, "0,200,or_greater")]
         private float _collisionBackWidth = 24f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _collisionBackSec = 1f;
+        private float _collisionBackDur = 1f;
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private float _waitAfterCollisionDur = 2f;
 
-        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource _attackCancel;
         private bool _isRushing;
         
         public void Initialize(Enemy enemy)
@@ -35,79 +35,73 @@ namespace AI.States
 
         public override void Enter()
         {
-            if (_enemy.DebugEnabled) GD.Print($"{_enemy.Name}: {nameof(RushAttackState)}");
+            if (_enemy.Body.DebugEnabled) GD.Print($"{_enemy.Name}: {nameof(RushAttackState)}");
 
-            _enemy.Fsm.IsStateLocked = true;
             _enemy.AnimatedSprite.Play("idle");
-            _enemy.Velocity.x = 0;
+            _enemy.Body.Velocity.x = 0;
 
-            _cancellationTokenSource?.Cancel();
-            _cancellationTokenSource = new CancellationTokenSource();
-            Attack(_cancellationTokenSource.Token);
+            _attackCancel = new CancellationTokenSource();
+            Attack(_attackCancel.Token);
         }
 
         private async void Attack(CancellationToken cancellationToken)
         {
             // Waits before calculating the target position.
-            await ToSignal(_enemy.GetTree().CreateTimer(_waitBeforeRushSec / 2f), "timeout");
+            await ToSignal(_enemy.GetTree().CreateTimer(_waitBeforeRushDur / 2f), "timeout");
             // Calculates the target position and sets its own direction.
-            Vector2 targetPos = new Vector2(0, _enemy.NavPos.y);
-            if (_enemy.DirectionToTarget().x >= 0)
+            Vector2 targetPos = new Vector2(0, _enemy.Body.NavPos.y);
+            if (_enemy.Body.DirectionToTarget().x >= 0)
             {
-                _enemy.Direction = 1;
-                targetPos.x = _enemy.NavArea.AreaRect.End.x - 12f;
+                _enemy.Body.Direction = 1;
+                targetPos.x = _enemy.Body.NavArea.AreaRect.End.x - 12f;
             }
             else
             {
-                _enemy.Direction = -1;
-                targetPos.x = _enemy.NavArea.AreaRect.Position.x + 12f;
+                _enemy.Body.Direction = -1;
+                targetPos.x = _enemy.Body.NavArea.AreaRect.Position.x + 12f;
             }
             // Waits before rushing to the target position.
-            await ToSignal(_enemy.GetTree().CreateTimer(_waitBeforeRushSec / 2f), "timeout");
+            await ToSignal(_enemy.GetTree().CreateTimer(_waitBeforeRushDur / 2f), "timeout");
             _enemy.AnimatedSprite.Play("run");
             // Starts rushing to the target position.
-            _enemy.NavTween.MoveToward(
-                NavTween.TweenMode.X, null, targetPos, 50f, Tween.TransitionType.Cubic
+            _enemy.Body.NavTween.MoveToward(
+                NavTween.TweenMode.X, null, targetPos, _rushSpeed, Tween.TransitionType.Cubic
             );
             _isRushing = true;
             // Waits until rushing ends.
-            await ToSignal(_enemy.NavTween, "MoveCompleted");
+            await ToSignal(_enemy.Body.NavTween, "MoveCompleted");
             // When rushing ends before its duration
             if (cancellationToken.IsCancellationRequested) return;
             _isRushing = false;
             _enemy.AnimatedSprite.Play("idle");
             // Waits before changing state.
-            await ToSignal(_enemy.GetTree().CreateTimer(_waitAfterRushSec), "timeout");
-            _enemy.Fsm.IsStateLocked = false;
-            _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);
+            await ToSignal(_enemy.GetTree().CreateTimer(_waitAfterRushDur), "timeout");
+            _enemy.Fsm.StopCurrentState();
         }
         
         private async void Collision(Vector2 hitNormal)
         {
-            _enemy.NavTween.MoveLerp(
+            _enemy.Body.NavTween.MoveLerp(
                 NavTween.TweenMode.X,
                 null,
                 _enemy.GlobalPosition - hitNormal * _collisionBackWidth,
-                _collisionBackSec,
+                _collisionBackDur,
                 Tween.TransitionType.Cubic,
                 Tween.EaseType.Out
             );
-            await ToSignal(_enemy.NavTween, "MoveCompleted");
-            await ToSignal(_enemy.GetTree().CreateTimer(_waitAfterCollisionSec), "timeout");
-            _enemy.Fsm.IsStateLocked = false;
-            _enemy.Fsm.SetCurrentState(Enemy.EnemyStates.Idle);
+            await ToSignal(_enemy.Body.NavTween, "MoveCompleted");
+            await ToSignal(_enemy.GetTree().CreateTimer(_waitAfterCollisionDur), "timeout");
+            _enemy.Fsm.StopCurrentState();
         }
 
         private void OnTargetHit(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
         {
-            if (attacker != _enemy || target != _enemy.TargetNavBody) return;
-            if (_enemy.Fsm.CurrentState != this) return;
-            if (!_isRushing) return;
+            if (attacker != _enemy.Body || target != _enemy.Body.TargetNavBody) return;
+            if (_enemy.Fsm.CurrentState != this || !_isRushing) return;
             
             _isRushing = false;
-            _cancellationTokenSource?.Cancel();
-            _enemy.NavTween.StopMove();
-            _cancellationTokenSource = null;
+            _attackCancel?.Cancel();
+            _enemy.Body.NavTween.StopMove();
             Collision(hitNormal);
         }
         

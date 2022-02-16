@@ -54,8 +54,8 @@ namespace NavTool
         public void CheckTargetInArea(NavBody2D target)
         {
             if (target == null) return;
-            Vector2 point1 = target.NavPos + new Vector2(target.ShapeExtents.x, 0);
-            Vector2 point2 = target.NavPos - new Vector2(target.ShapeExtents.x, 0);
+            Vector2 point1 = target.NavPos + new Vector2(target.ExtentsHalf.x, 0);
+            Vector2 point2 = target.NavPos - new Vector2(target.ExtentsHalf.x, 0);
             if (IsPositionInArea(point1) || IsPositionInArea(point2))
             {
                 IsTargetReachable = true;

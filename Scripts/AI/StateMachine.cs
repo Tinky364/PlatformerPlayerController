@@ -5,44 +5,41 @@ namespace AI
 {
     public class StateMachine<T> : Reference
     {
+        private readonly Dictionary<T, State<T>> _states;
         public State<T> CurrentState { get; private set; }
-        
-        protected readonly Dictionary<T, State<T>> States;
-        public bool IsStateLocked { get; set; }
+        public bool IsStateLocked { get; private set; }
         
         public StateMachine()
         {
-            States = new Dictionary<T, State<T>>();
+            _states = new Dictionary<T, State<T>>();
             IsStateLocked = false;
         }
 
         public void AddState(State<T> state)
         {
-            if (States.ContainsKey(state.Id)) return;
-            States.Add(state.Id, state);
+            if (_states.ContainsKey(state.Key)) return;
+            _states.Add(state.Key, state);
         }
         
-        public State<T> GetState(T stateId) => States.ContainsKey(stateId) ? States[stateId] : null;
+        public State<T> GetState(T stateKey) => _states.ContainsKey(stateKey) ? _states[stateKey] : null;
         
-        public void SetCurrentState(T stateId, bool isForced = false)
+        public void SetCurrentState(T stateKey, bool isStateLocked = false)
         {
-            State<T> state = States[stateId];
-            SetCurrentState(state, isForced);
-        }
-        
-        public void SetCurrentState(State<T> newState,  bool isForced = false)
-        {
-            if (!isForced)
-            {
-                if (CurrentState == newState) return;
-                if (IsStateLocked) return;
-            }
-            if (!States.ContainsKey(newState.Id)) return;
+            if (IsStateLocked || !_states.ContainsKey(stateKey)) return;
+            if (CurrentState == _states[stateKey]) return;
             CurrentState?.Exit();
-            CurrentState = newState;
+            IsStateLocked = isStateLocked;
+            CurrentState = _states[stateKey];
             CurrentState?.Enter();
         }
         
+        public void StopCurrentState()
+        {
+            IsStateLocked = false;
+            CurrentState?.Exit();
+            CurrentState = null;
+        }
+
         public void _Process(float delta)
         {
             CurrentState?.Process(delta);

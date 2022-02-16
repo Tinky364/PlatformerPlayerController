@@ -26,23 +26,21 @@ animations = [ {
 extents = Vector2( 4, 3.5 )
 
 [sub_resource type="CircleShape2D" id=5]
-radius = 4.0
+radius = 4.03113
 
 [sub_resource type="RectangleShape2D" id=3]
 extents = Vector2( 4, 0.5 )
 
 [node name="Player" type="KinematicBody2D"]
 collision_mask = 14
+collision/safe_margin = 1.0
 script = ExtResource( 2 )
 __meta__ = {
 "_edit_group_": true
 }
-ShapeSizes = Vector2( 8, 11 )
+Extents = Vector2( 8, 11 )
 GroundRayLength = 5.0
-_gravity = 1100.0
-_moveSpeed = 70.0
-_recoilLength = 32.0
-_unhurtableDur = 1.0
+_isOnGroundDetectionLength = 2.0
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 position = Vector2( -8, -16 )
@@ -63,6 +61,9 @@ __meta__ = {
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="."]
 position = Vector2( 0, -7 )
 shape = SubResource( 5 )
+__meta__ = {
+"_edit_lock_": true
+}
 
 [node name="PlatformCheckArea" type="Area2D" parent="."]
 collision_layer = 0
@@ -74,8 +75,5 @@ __meta__ = {
 [node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformCheckArea"]
 position = Vector2( 0, -0.5 )
 shape = SubResource( 3 )
-__meta__ = {
-"_edit_lock_": true
-}
 
 [node name="JumpTimer" type="Timer" parent="."]

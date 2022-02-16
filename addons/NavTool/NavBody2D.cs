@@ -10,21 +10,21 @@ namespace NavTool
         private Area2D _interactionArea;
         
         [Export]
-        private NavBodyType CurNavBodyType { get; set; }  = NavBodyType.Platformer;
-        [Export]
-        private NodePath NavAreaPath { get; set; }
+        private NavBodyType CurNavBodyType { get; set; } = NavBodyType.Platformer;
         [Export]
         private NodePath TargetNavBodyPath { get; set; }
         [Export]
         public bool DebugEnabled { get; private set; }
         [Export]
         private bool IsOnBodyCollidingActive { get; set; }
-        [Export(PropertyHint.Range, "0,500,or_greater")]
-        public Vector2 ShapeSizes { get; private set; }
+        [Export(PropertyHint.Range, "0,500,1,or_greater")]
+        public Vector2 Extents { get; private set; }
         [Export(PropertyHint.Range, "0.1,20,0.05,or_greater")] 
         protected float GroundRayLength { get; private set; } = 0.1f;
         [Export(PropertyHint.Range, "0.1,200,or_greater")] 
         private float NavPosRayLength { get; set; } = 35f;
+        [Export(PropertyHint.Layers2dPhysics)]
+        protected uint GroundCollisionMask = 6;
         
         [Signal]
         protected delegate void BodyEntered(Node body);
@@ -34,16 +34,15 @@ namespace NavTool
         protected delegate void BodyExited(Node body);
 
         public enum NavBodyType { Platformer, TopDown }
-        public NavBody2D TargetNavBody { get; private set; }
+        public NavBody2D TargetNavBody { get; set; }
         protected PhysicsBody2D CollidingBody;
         protected Physics2DDirectSpaceState SpaceState;
-        protected Dictionary GroundRay;
+        public Dictionary GroundRay { get; private set; }
         private Dictionary _navPosRay;
         public Vector2 NavPos { get; private set; }
-        public Vector2 ShapeExtents => ShapeSizes / 2f;
+        public Vector2 ExtentsHalf => Extents / 2f;
         public Vector2 Velocity;
         protected Vector2 GroundHitPos { get; private set; }
-        protected uint GroundCollisionMask = 6; // 2^(2-1) + 2^(3-1) -> Layer 2,3
         public int Direction { get; set; } = 1;
         public bool IsInactive
         {
@@ -62,7 +61,7 @@ namespace NavTool
             }
         }
         public bool IsUnhurtable { get; protected set; }
-        protected bool IsOnGround { get; set; }
+        public bool IsOnGround { get; set; }
         protected bool HasGroundRayDisabled;
         private bool _isColliding;
         private bool _isInactive;
@@ -79,10 +78,9 @@ namespace NavTool
         {
             _interactionArea = GetNodeOrNull<Area2D>("Area2D");
             SpaceState = GetWorld2d().DirectSpaceState;
-            if (TargetNavBodyPath != null) 
+            if (TargetNavBodyPath != null)
                 TargetNavBody = GetNodeOrNull<NavBody2D>(TargetNavBodyPath);
-            if (NavAreaPath != null) 
-                NavArea = GetNodeOrNull<NavArea2D>(NavAreaPath);
+            NavArea = GetNodeOrNull<NavArea2D>("../NavArea2D");
             if (NavArea != null && !NavArea.IsPositionInArea(GlobalPosition))
                 GlobalPosition = NavArea.GlobalPosition;
             _interactionArea?.Connect("body_entered", this, nameof(OnBodyEntered));
@@ -104,7 +102,7 @@ namespace NavTool
 
         public float DistanceTo(Vector2 to) => NavPos.DistanceTo(to);
 
-        protected Vector2 MoveAndSlideInArea(Vector2 velocity, float delta, Vector2? upDirection = null)
+        public Vector2 MoveAndSlideInArea(Vector2 velocity, float delta, Vector2? upDirection = null)
         {
             if (NavTween.IsPlaying)
             {
@@ -148,8 +146,8 @@ namespace NavTool
             Vector2 rightHitPos;
             // Cast left ray.
             _navPosRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(-ShapeExtents.x, 0f),
-                GlobalPosition + new Vector2(-ShapeExtents.x, NavPosRayLength),
+                GlobalPosition + new Vector2(-ExtentsHalf.x, 0f),
+                GlobalPosition + new Vector2(-ExtentsHalf.x, NavPosRayLength),
                 new Array {this},
                 GroundCollisionMask
             );
@@ -159,8 +157,8 @@ namespace NavTool
                 Vector2 leftHitPos = (Vector2) _navPosRay["position"]; // Left ray hit position.
                 // Cast right ray.
                 _navPosRay = SpaceState.IntersectRay(
-                    GlobalPosition + new Vector2(ShapeExtents.x, 0f),
-                    GlobalPosition + new Vector2(ShapeExtents.x, NavPosRayLength),
+                    GlobalPosition + new Vector2(ExtentsHalf.x, 0f),
+                    GlobalPosition + new Vector2(ExtentsHalf.x, NavPosRayLength),
                     new Array {this},
                     GroundCollisionMask
                 );
@@ -170,17 +168,17 @@ namespace NavTool
                     rightHitPos = (Vector2) _navPosRay["position"]; // Right ray hit position.
                     // Decides position according to the close hit position.
                     if (rightHitPos.DistanceTo(GlobalPosition) > leftHitPos.DistanceTo(GlobalPosition))
-                        return leftHitPos + new Vector2(ShapeExtents.x, 0);
-                    return rightHitPos + new Vector2(-ShapeExtents.x, 0);
+                        return leftHitPos + new Vector2(ExtentsHalf.x, 0);
+                    return rightHitPos + new Vector2(-ExtentsHalf.x, 0);
                 }
                 // When only left ray hits.
-                return leftHitPos + new Vector2(ShapeExtents.x, 0);
+                return leftHitPos + new Vector2(ExtentsHalf.x, 0);
             }
             // When left ray does not hit.
             // Cast right ray.
             _navPosRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(ShapeExtents.x, 0f),
-                GlobalPosition + new Vector2(ShapeExtents.x, NavPosRayLength),
+                GlobalPosition + new Vector2(ExtentsHalf.x, 0f),
+                GlobalPosition + new Vector2(ExtentsHalf.x, NavPosRayLength),
                 new Array {this},
                 GroundCollisionMask
             );
@@ -188,7 +186,7 @@ namespace NavTool
             if (_navPosRay.Count > 0) 
             {
                 rightHitPos = (Vector2) _navPosRay["position"]; // Right ray hit position.
-                return rightHitPos + new Vector2(-ShapeExtents.x, 0);
+                return rightHitPos + new Vector2(-ExtentsHalf.x, 0);
             }
             // When any rays do not hit.
             return GlobalPosition;
@@ -224,28 +222,28 @@ namespace NavTool
 
             // Raycast from the left bottom corner.
             GroundRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(-ShapeExtents.x, -1f),
-                GlobalPosition + new Vector2(-ShapeExtents.x, GroundRayLength),
+                GlobalPosition + new Vector2(-ExtentsHalf.x, -5f),
+                GlobalPosition + new Vector2(-ExtentsHalf.x, GroundRayLength),
                 new Array {this},
                 GroundCollisionMask
             );
             if (GroundRay.Count > 0)
             {
-                GroundHitPos = (Vector2) GroundRay["position"] + new Vector2(ShapeExtents.x, 0);
+                GroundHitPos = (Vector2) GroundRay["position"] + new Vector2(ExtentsHalf.x, 0);
                 return;
             }
 
             // If the first raycast does not hit the ground.
             // Raycast from the right bottom corner.
             GroundRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(ShapeExtents.x, -1f),
-                GlobalPosition + new Vector2(ShapeExtents.x, GroundRayLength),
+                GlobalPosition + new Vector2(ExtentsHalf.x, -5f),
+                GlobalPosition + new Vector2(ExtentsHalf.x, GroundRayLength),
                 new Array {this},
                 GroundCollisionMask
             );
             if (GroundRay.Count > 0)
             {
-                GroundHitPos = (Vector2) GroundRay["position"] + new Vector2(-ShapeExtents.x, 0);
+                GroundHitPos = (Vector2) GroundRay["position"] + new Vector2(-ExtentsHalf.x, 0);
             }
         }
         

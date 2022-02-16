@@ -6,22 +6,31 @@ namespace Other
     public class Door : Node2D
     {
         private Area2D _triggerArea;
+        private StaticBody2D _body;
         private NavTween _navTween;
-        private StaticBody2D _staticBody;
 
         private bool _isOpen;
 
         public override void _Ready()
         {
             _triggerArea = GetNode<Area2D>("TriggerArea");
-            _staticBody = GetNode<StaticBody2D>("DoorBody");
+            _body = GetNode<StaticBody2D>("DoorBody");
             _navTween = new NavTween();
-            _staticBody.AddChild(_navTween);
-            _navTween.Name = "TweenPhy";
-            _navTween.ConnectTween(_staticBody, "constant_linear_velocity");
+            _body.AddChild(_navTween);
+            _navTween.Name = "NavTween";
+            _navTween.ConnectTween(_body, "constant_linear_velocity");
             _triggerArea.Connect("body_entered", this, nameof(OnTriggerred));
         }
 
+        public override void _PhysicsProcess(float delta)
+        {
+            if (_navTween.IsPlaying)
+            {
+                _body.ConstantLinearVelocity = _navTween.EqualizeVelocity(_body.ConstantLinearVelocity, delta);
+                _body.GlobalPosition = _navTween.EqualizePosition(_body.GlobalPosition);
+            }
+        }
+        
         private void OnTriggerred(Node node)
         {
             if (!(node is Player)) return;
@@ -31,19 +40,10 @@ namespace Other
             _navTween.MoveLerp(
                 NavTween.TweenMode.Y,
                 null,
-                _staticBody.GlobalPosition + new Vector2(0, targetPosY),
+                _body.GlobalPosition + new Vector2(0, targetPosY),
                 2f,
                 Tween.TransitionType.Cubic
             );
-        }
-
-        public override void _PhysicsProcess(float delta)
-        {
-            if (_navTween.IsPlaying)
-            {
-                _staticBody.ConstantLinearVelocity = _navTween.EqualizeVelocity(_staticBody.ConstantLinearVelocity, delta);
-                _staticBody.GlobalPosition = _navTween.EqualizePosition(_staticBody.GlobalPosition);
-            }
         }
     }
 }

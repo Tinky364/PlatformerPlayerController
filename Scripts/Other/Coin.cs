@@ -9,7 +9,7 @@ namespace Other
         private CollisionShape2D _shape;
 
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private int _value = 1;
+        public int Value { get; private set; } = 1;
 
         public override void _Ready()
         {
@@ -24,7 +24,7 @@ namespace Other
 
         private void OnBodyEntered(Node body)
         {
-            Events.Singleton.EmitSignal("CoinCollected", body, _value, this);
+            Events.Singleton.EmitSignal("CoinCollected", body, this);
             _animationPlayer.Stop();
             _animationPlayer.Play("collect");
             _shape.SetDeferred("disabled", true);

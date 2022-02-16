@@ -22,13 +22,13 @@ namespace AI.Enemies
         {
             if (Fsm.IsStateLocked) return;
 
-            if (TargetNavBody.IsInactive || !NavArea.IsTargetReachable)
+            if (Body.TargetNavBody.IsInactive || !Body.NavArea.IsTargetReachable)
             {
                 Fsm.SetCurrentState(EnemyStates.Idle);
                 return;
             }
 
-            Fsm.SetCurrentState(EnemyStates.Attack);
+            Fsm.SetCurrentState(EnemyStates.Attack, true);
         }
     }
 }

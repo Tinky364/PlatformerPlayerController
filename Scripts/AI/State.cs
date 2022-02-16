@@ -4,9 +4,9 @@ namespace AI
 {
     public abstract class State<T> : Resource
     {
-        public T Id { get; private set; }
+        public T Key { get; private set; }
 
-        protected void Initialize(T id) => Id = id;
+        protected void Initialize(T key) => Key = key;
         public abstract void Enter();
         public abstract void Process(float delta);
         public abstract void PhysicsProcess(float delta);

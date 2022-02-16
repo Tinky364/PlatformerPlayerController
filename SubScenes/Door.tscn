@@ -13,13 +13,14 @@ height = 28.0
 script = ExtResource( 1 )
 
 [node name="TriggerArea" type="Area2D" parent="."]
+collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="TriggerArea"]
 position = Vector2( 20, -4 )
 shape = SubResource( 3 )
 
 [node name="DoorBody" type="StaticBody2D" parent="."]
-collision_layer = 8
+collision_layer = 2
 
 [node name="Sprite" type="Sprite" parent="DoorBody"]
 

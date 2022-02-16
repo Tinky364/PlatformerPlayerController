@@ -29,8 +29,6 @@ namespace NavTool
             PlaybackProcessMode = TweenProcessMode.Physics;
             Connect("tween_started", this, nameof(OnTweenStarted));
             Connect("tween_completed", this, nameof(OnTweenCompleted));
-            Connect(nameof(MoveStarted), this, nameof(OnMoveStarted));
-            Connect(nameof(MoveCompleted), this, nameof(OnMoveCompleted));
         }
 
         public override void _PhysicsProcess(float delta)
@@ -38,7 +36,6 @@ namespace NavTool
             if (!IsTweenConnected)
             {
                 GD.PushWarning("NavTween is not connected!");
-                return;
             }
         }
 
@@ -52,10 +49,11 @@ namespace NavTool
             IsVelocityConnected = true;
         }
         
-        public void MoveLerp(TweenMode mode, Vector2? initialPos, Vector2 targetPos, float duration,
+        public async void MoveLerp(TweenMode mode, Vector2? initialPos, Vector2 targetPos, float duration,
                              TransitionType transitionType = TransitionType.Linear,
                              EaseType easeType = EaseType.InOut, float delay = 0f)
         {
+            await ToSignal(GetTree().CreateTimer(delay), "timeout");
             if (IsPlaying)
             {
                 GD.Print("Already lerping wait until finish or call StopMove method!");
@@ -72,14 +70,15 @@ namespace NavTool
                     targetPos.x = _pos.x;
                     break;
             }
-            InterpolateProperty(this, "_pos", _pos, targetPos, duration, transitionType, easeType, delay);
+            InterpolateProperty(this, "_pos", _pos, targetPos, duration, transitionType, easeType);
             Start();
         }
         
-        public void MoveToward(TweenMode mode, Vector2? initialPos, Vector2 targetPos, float speed, 
+        public async void MoveToward(TweenMode mode, Vector2? initialPos, Vector2 targetPos, float speed, 
                                TransitionType transitionType = TransitionType.Linear,
                                EaseType easeType = EaseType.InOut, float delay = 0f)
         {
+            if (delay != 0) await ToSignal(GetTree().CreateTimer(delay), "timeout");
             if (IsPlaying)
             {
                 GD.Print("Already lerping wait until finish or call StopMove method!");
@@ -97,7 +96,7 @@ namespace NavTool
                     break;
             }
             float duration = _pos.DistanceTo(targetPos) / speed;
-            InterpolateProperty(this, "_pos", _pos, targetPos, duration, transitionType, easeType, delay);
+            InterpolateProperty(this, "_pos", _pos, targetPos, duration, transitionType, easeType);
             Start();
         }
         
@@ -142,15 +141,18 @@ namespace NavTool
         public void StopMove()
         {
             Stop(this, "_pos");
+            OnMoveCompleted();
             EmitSignal(nameof(MoveCompleted));
         }
 
         private void OnTweenStarted(Object obj, NodePath key)
         {
+            OnMoveStarted();
             EmitSignal(nameof(MoveStarted));
         }
         private void OnTweenCompleted(Object obj, NodePath key)
         {
+            OnMoveCompleted();
             EmitSignal(nameof(MoveCompleted));
         }
         
@@ -185,6 +187,5 @@ namespace NavTool
             }
             IsPlaying = false;
         }
-        
     }
 }

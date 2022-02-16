@@ -4,9 +4,10 @@ using NavTool;
 
 namespace AI
 {
-    public abstract class Enemy : NavBody2D
+    public abstract class Enemy : Node2D
     {
         public StateMachine<EnemyStates> Fsm { get; } = new StateMachine<EnemyStates>();
+        public NavBody2D Body { get; private set; }
         public AnimatedSprite AnimatedSprite;
 
         [Export(PropertyHint.Range, "10,2000,or_greater")]
@@ -20,11 +21,18 @@ namespace AI
         
         public enum EnemyStates { Idle, Chase, Attack }
 
+        public override void _EnterTree()
+        {
+            base._EnterTree();
+            AddToGroup("Enemy");
+        }
+
         public override void _Ready()
         {
             base._Ready();
-            AnimatedSprite = GetNode<AnimatedSprite>("AnimatedSprite");
-            Connect(nameof(BodyColliding), this, nameof(OnBodyColliding));
+            Body = GetNode<NavBody2D>("NavBody2D");
+            AnimatedSprite = GetNode<AnimatedSprite>("NavBody2D/AnimatedSprite");
+            Body.Connect("BodyColliding", this, nameof(OnBodyColliding));
         }
 
         public override void _Process(float delta)
@@ -40,8 +48,8 @@ namespace AI
             base._PhysicsProcess(delta);
             CheckGround();
             Fsm._PhysicsProcess(delta);
-            if (!IsOnGround) Velocity.y += Gravity * delta; // Adds gravity force increasingly.
-            Velocity = MoveAndSlideInArea(Velocity, delta, Vector2.Up);
+            if (!Body.IsOnGround) Body.Velocity.y += Gravity * delta; // Adds gravity force increasingly.
+            Body.Velocity = Body.MoveAndSlideInArea(Body.Velocity, delta, Vector2.Up);
         }
 
         private void OnBodyColliding(Node body)
@@ -53,17 +61,17 @@ namespace AI
                 targetNavBody,
                 _damageValue,
                 this,
-                GlobalPosition.DirectionTo(targetNavBody.GlobalPosition)
+                Body.GlobalPosition.DirectionTo(targetNavBody.GlobalPosition)
             );
         }
 
         protected abstract void StateController();
         
-        private void CheckGround() => IsOnGround = GroundRay.Count > 0;
+        private void CheckGround() => Body.IsOnGround = Body.GroundRay?.Count > 0;
 
         private void AnimationController()
         {
-            switch (Direction)
+            switch (Body.Direction)
             {
                 case 1:
                     AnimatedSprite.FlipH = false;

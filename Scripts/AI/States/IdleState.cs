@@ -19,12 +19,12 @@ namespace AI.States
             _enemy = enemy;
             _enemy.Fsm.AddState(this);
             
-            _pos1 = _enemy.NavPos;
+            _pos1 = _enemy.Body.NavPos;
             _pos2 = _pos1 + new Vector2(_secondPosDist, 0f);
-            if (!_enemy.NavArea.IsPositionInArea(_pos2))
+            if (!_enemy.Body.NavArea.IsPositionInArea(_pos2))
             {
                 _pos2 = _pos1 - new Vector2(_secondPosDist, 0f);
-                if (!_enemy.NavArea.IsPositionInArea(_pos2))
+                if (!_enemy.Body.NavArea.IsPositionInArea(_pos2))
                 {
                     GD.PrintErr("Not enough space for the enemy idle motion!");
                     return;
@@ -35,7 +35,7 @@ namespace AI.States
         
         public override void Enter()
         {
-            if (_enemy.DebugEnabled) GD.Print($"{_enemy.Name}: {nameof(IdleState)}");
+            if (_enemy.Body.DebugEnabled) GD.Print($"{_enemy.Name}: {nameof(IdleState)}");
             _enemy.AnimatedSprite.Play("idle");
         }
 
@@ -45,13 +45,13 @@ namespace AI.States
 
         public override void PhysicsProcess(float delta)
         {
-            Vector2 dirToTarget = _targetPos - _enemy.NavPos;
+            Vector2 dirToTarget = _targetPos - _enemy.Body.NavPos;
             if (Mathf.Abs(dirToTarget.x) > 1f)
             {
                 _enemy.AnimatedSprite.Play("run");
-                _enemy.Direction = (int) dirToTarget.Normalized().x;
-                _enemy.Velocity.x = Mathf.MoveToward(
-                    _enemy.Velocity.x, _enemy.Direction * _enemy.MoveSpeed,
+                _enemy.Body.Direction = (int) dirToTarget.Normalized().x;
+                _enemy.Body.Velocity.x = Mathf.MoveToward(
+                    _enemy.Body.Velocity.x, _enemy.Body.Direction * _enemy.MoveSpeed,
                     _enemy.MoveAcceleration * delta
                 );
             }

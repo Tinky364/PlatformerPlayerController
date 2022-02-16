@@ -22,8 +22,8 @@ namespace AI.States
 
         public override void Enter()
         {
-            if (_enemy.DebugEnabled) GD.Print($"{_enemy.Name}: {nameof(ChaseState)}");
-            _enemy.Velocity.x = 0f;
+            if (_enemy.Body.DebugEnabled) GD.Print($"{_enemy.Name}: {nameof(ChaseState)}");
+            _enemy.Body.Velocity.x = 0f;
             _enemy.AnimatedSprite.Play("run");
         }
 
@@ -33,10 +33,10 @@ namespace AI.States
 
         public override void PhysicsProcess(float delta)
         {
-            Vector2 dirToTargetPos = _enemy.NavPos.DirectionTo(TargetPos);
-            _enemy.Direction = (int) dirToTargetPos.x;
-            _enemy.Velocity.x = Mathf.MoveToward(
-                _enemy.Velocity.x, _enemy.Direction * _chaseSpeed, _enemy.MoveAcceleration * delta
+            Vector2 dirToTargetPos = _enemy.Body.NavPos.DirectionTo(TargetPos);
+            _enemy.Body.Direction = (int) dirToTargetPos.x;
+            _enemy.Body.Velocity.x = Mathf.MoveToward(
+                _enemy.Body.Velocity.x, _enemy.Body.Direction * _chaseSpeed, _enemy.MoveAcceleration * delta
             );
         }
         

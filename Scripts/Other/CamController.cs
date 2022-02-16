@@ -4,14 +4,16 @@ namespace Other
 {
     public class CamController : Camera2D
     {
-        private Player _player;
-
+        [Export]
+        private NodePath _playerPath;
         [Export(PropertyHint.Range, "0")]
         private float _offsetAcceleration = 2f;
+        
+        private Player _player;
 
         public override void _Ready()
         {
-            _player = GetNode<Player>("../Player");
+            _player = GetNode<Player>(_playerPath);
             SetCamPosition(_player.Position);
         }
 

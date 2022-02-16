@@ -13,10 +13,10 @@ namespace Manager
         private delegate void Damaged(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal);
 
         [Signal]
-        private delegate void CoinCollected(Node target, int coinValue, Coin coin);
+        private delegate void CoinCollected(Node collector, Coin coin);
 
         [Signal]
-        private delegate void CoinCountChanged(int newCoinCount);
+        private delegate void PlayerCoinCountChanged(int coinCount);
 
         [Signal]
         private delegate void PlayerHealthChanged(int newHealth, int maxHealth, NavBody2D attacker);

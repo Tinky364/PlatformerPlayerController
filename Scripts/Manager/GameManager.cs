@@ -8,11 +8,9 @@ namespace Manager
         private static GameManager _singleton;
         public static GameManager Singleton => _singleton;
 
-        public SceneTree Tree => GetTree();
+        private SceneTree Tree => GetTree();
         private Viewport Root => Tree.Root;
-        private Node _currentScene;
-        private CanvasLayer _world;
-        private CanvasLayer _gui;
+        public SceneManager CurrentScene { get; private set; }
 
         public enum GameState { Play, Pause }
 
@@ -23,10 +21,8 @@ namespace Manager
 
         public override void _EnterTree()
         {
-            if (_singleton == null)
-                _singleton = this;
-            else
-                GD.Print($"Multiple instances of singleton class named {Name}!");
+            if (_singleton == null) _singleton = this;
+            else GD.Print($"Multiple instances of singleton class named {Name}!");
         }
 
         public override void _Ready()
@@ -34,18 +30,27 @@ namespace Manager
             PauseMode = PauseModeEnum.Process;
             Events.Singleton.PauseMode = PauseModeEnum.Process;
 
-            SetCurrentScene(Root.GetChild(Root.GetChildCount() - 1));
+            if (Root.GetChild(Root.GetChildCount() - 1) is SceneManager scene) SetCurrentScene(scene);
+            else GD.PushWarning("First scene is not a SceneManager node!");
         }
 
         public async void LoadScene(string path)
         {
             SetGameState(GameState.Pause, GameState.Pause);
 
-            PackedScene scene = await LoadAsync<PackedScene>(path);
-            _currentScene?.QueueFree();
-            SetCurrentScene(scene.Instance());
+            PackedScene packedScene = await LoadAsync<PackedScene>(path);
+            await UnloadCurrentScene();
+            if (packedScene.Instance() is SceneManager scene) SetCurrentScene(scene);
+            else GD.PushWarning("New loaded scene is not a SceneManager node!");
 
             SetGameState(GameState.Play, GameState.Play);
+        }
+
+        private async Task UnloadCurrentScene()
+        {
+            CurrentScene?.QueueFree();
+            while (IsInstanceValid(CurrentScene))
+                await ToSignal(Tree, "idle_frame");
         }
 
         public void SetGameState(GameState worldState, GameState uiState)
@@ -53,10 +58,10 @@ namespace Manager
             switch (worldState)
             {
                 case GameState.Play:
-                    _world.PauseMode = PauseModeEnum.Process;
+                    CurrentScene.World.PauseMode = PauseModeEnum.Process;
                     break;
                 case GameState.Pause:
-                    _world.PauseMode = PauseModeEnum.Stop;
+                    CurrentScene.World.PauseMode = PauseModeEnum.Stop;
                     break;
             }
 
@@ -64,11 +69,11 @@ namespace Manager
             switch (uiState)
             {
                 case GameState.Play:
-                    _gui.PauseMode = PauseModeEnum.Process;
+                    CurrentScene.Gui.PauseMode = PauseModeEnum.Process;
                     Root.GuiDisableInput = false;
                     break;
                 case GameState.Pause:
-                    _gui.PauseMode = PauseModeEnum.Stop;
+                    CurrentScene.Gui.PauseMode = PauseModeEnum.Stop;
                     Root.GuiDisableInput = true;
                     break;
             }
@@ -115,16 +120,10 @@ namespace Manager
             }
         }
 
-        private void SetCurrentScene(Node scene)
+        private void SetCurrentScene(SceneManager scene)
         {
-            _currentScene = scene;
-            if (!_currentScene.IsInsideTree()) Root.AddChild(_currentScene);
-            _world = _currentScene.GetNode<CanvasLayer>("World");
-            _gui = _currentScene.GetNode<CanvasLayer>("Gui");
-
-            _currentScene.PauseMode = PauseModeEnum.Process;
-            _world.PauseMode = PauseModeEnum.Stop;
-            _gui.PauseMode = PauseModeEnum.Stop;
+            CurrentScene = scene;
+            if (!CurrentScene.IsInsideTree()) Root.AddChild(CurrentScene);
         }
     }
 }

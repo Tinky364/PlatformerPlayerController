@@ -1,30 +1,31 @@
-[gd_scene load_steps=13 format=2]
+[gd_scene load_steps=14 format=2]
 
 [ext_resource path="res://Sprites/Enemy/Enemy2.png" type="Texture" id=1]
 [ext_resource path="res://Sprites/Enemy/Enemy1.png" type="Texture" id=2]
 [ext_resource path="res://Scripts/AI/Enemies/RusherEnemy.cs" type="Script" id=3]
+[ext_resource path="res://addons/NavTool/NavBody2D.cs" type="Script" id=4]
 [ext_resource path="res://addons/NavTool/NavArea2D.cs" type="Script" id=5]
 [ext_resource path="res://Scripts/AI/States/RushAttackState.cs" type="Script" id=6]
 [ext_resource path="res://Scripts/AI/States/IdleState.cs" type="Script" id=8]
 
-[sub_resource type="RectangleShape2D" id=21]
-resource_local_to_scene = true
-extents = Vector2( 27, 8 )
-
-[sub_resource type="Resource" id=25]
+[sub_resource type="Resource" id=28]
 resource_local_to_scene = true
 script = ExtResource( 8 )
 _secondPosDist = 10.0
 
-[sub_resource type="Resource" id=26]
+[sub_resource type="Resource" id=29]
 resource_local_to_scene = true
 script = ExtResource( 6 )
-_waitBeforeRushSec = 0.6
-_waitAfterRushSec = 1.0
-_rushSpeed = 150.0
-_waitAfterCollisionSec = 2.0
+_waitBeforeRushDur = 1.0
+_waitAfterRushDur = 1.0
+_rushSpeed = 50.0
 _collisionBackWidth = 24.0
-_collisionBackSec = 1.0
+_collisionBackDur = 1.0
+_waitAfterCollisionDur = 2.0
+
+[sub_resource type="RectangleShape2D" id=21]
+resource_local_to_scene = true
+extents = Vector2( 27, 8 )
 
 [sub_resource type="SpriteFrames" id=17]
 animations = [ {
@@ -42,10 +43,15 @@ animations = [ {
 [sub_resource type="RectangleShape2D" id=15]
 extents = Vector2( 10, 7 )
 
-[sub_resource type="RectangleShape2D" id=24]
+[sub_resource type="RectangleShape2D" id=27]
 extents = Vector2( 9, 6 )
 
 [node name="RusherEnemy" type="Node2D"]
+script = ExtResource( 3 )
+MoveSpeed = 20.0
+MoveAcceleration = 200.0
+_idleState = SubResource( 28 )
+_attackState = SubResource( 29 )
 
 [node name="NavArea2D" type="Area2D" parent="."]
 collision_layer = 0
@@ -64,22 +70,17 @@ __meta__ = {
 [node name="CollisionShape2D" type="CollisionShape2D" parent="NavArea2D"]
 shape = SubResource( 21 )
 
-[node name="RusherEnemy" type="KinematicBody2D" parent="."]
+[node name="NavBody2D" type="KinematicBody2D" parent="."]
 collision_layer = 16
 collision_mask = 6
-script = ExtResource( 3 )
+script = ExtResource( 4 )
 __meta__ = {
 "_edit_group_": true
 }
-NavAreaPath = NodePath("../NavArea2D")
 IsOnBodyCollidingActive = true
-ShapeSizes = Vector2( 20, 14 )
-MoveSpeed = 30.0
-MoveAcceleration = 150.0
-_idleState = SubResource( 25 )
-_attackState = SubResource( 26 )
+Extents = Vector2( 20, 14 )
 
-[node name="AnimatedSprite" type="AnimatedSprite" parent="RusherEnemy"]
+[node name="AnimatedSprite" type="AnimatedSprite" parent="NavBody2D"]
 self_modulate = Color( 0, 1, 0.0392157, 1 )
 position = Vector2( -16, -32 )
 scale = Vector2( 2, 2 )
@@ -90,22 +91,22 @@ __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="RusherEnemy"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NavBody2D"]
 position = Vector2( 0, -7 )
 shape = SubResource( 15 )
 __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="Area2D" type="Area2D" parent="RusherEnemy"]
+[node name="Area2D" type="Area2D" parent="NavBody2D"]
 collision_layer = 0
 __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="RusherEnemy/Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NavBody2D/Area2D"]
 position = Vector2( 0, -7 )
-shape = SubResource( 24 )
+shape = SubResource( 27 )
 __meta__ = {
 "_edit_lock_": true
 }

@@ -10,50 +10,58 @@ namespace Other
         private Area2D _platformCheckArea;
         private Timer _jumpTimer;
 
+        [Export]
+        protected bool JumpActive = true;
+        [Export]
+        protected bool EdgeHangActive = true;
+        [Export]
+        protected bool SnapActive = true;
         [Export(PropertyHint.Range, "10,2000,or_greater")]
-        private float _gravity = 600f;
+        private float _gravity = 1100f;
+        [Export(PropertyHint.Range, "100,1000,or_greater,or_lesser")]
+        private float _gravitySpeedMax = 225f;
         [Export(PropertyHint.Range, "0.1,20,0.05,or_greater")]
-        private float _isOnGroundDetectionLength = 0.1f;
+        private float _isOnGroundDetectionLength = 0.3f;
         [Export(PropertyHint.Range, "1,2000,or_greater")]
         private float _moveAcceleration = 400f;
         [Export(PropertyHint.Range, "1,200,or_greater")]
-        private float _moveSpeed = 60f;
+        private float _moveSpeed = 70f;
         [Export(PropertyHint.Range, "0.01,5,0.05,or_greater")]
         private float _canJumpDur = 0.1f;
-        [Export(PropertyHint.Range, "1,2000,or_greater")]
-        private float _jumpAccelerationX = 600f;
         [Export(PropertyHint.Range, "1,50,or_greater")]
         private float _jumpHeightMin = 10f;
         [Export(PropertyHint.Range, "1,200,or_greater")]
         private float _jumpHeightMax = 33f;
         [Export(PropertyHint.Range, "0,400,or_greater")]
         private float _jumpWidthMax = 40f;
+        [Export(PropertyHint.Range, "1,2000,or_greater")]
+        private float _jumpAccelerationX = 600f;
         [Export(PropertyHint.Range, "1,40,or_greater")]
-        private float _edgeAxisXRayLength = 3f;
+        private float _edgeRayWidth = 3f;
         [Export(PropertyHint.Range, "1,40,or_greater")]
-        private float _edgeAxisYRayLength = 3f;
+        private float _edgeRayHeight = 3f;
         [Export(PropertyHint.Range, "0.2f,4,or_greater")]
         private float _climbDur = 0.25f;
         [Export(PropertyHint.Range, "1,200,or_greater")]
         private float _snapSpeed = 100f;
-        [Export(PropertyHint.Range, "0,100,or_greater")]
-        private float _recoilLength = 24f;
+        [Export(PropertyHint.Range, "0,1000,or_greater")]
+        private float _recoilImpulse = 150f;
+        [Export(PropertyHint.Layers2dPhysics)]
+        protected uint PlatformCollisionMask { get; set; } = 4;
 
         private Dictionary _edgeRay;
         private Vector2 _inputAxis;
         private Vector2 _edgeHitPos;
         private Vector2 _recoilVelocity;
-        private float _desiredMoveSpeed;
-        private float _desiredJumpSpeedX;
-        private float JumpInitialSpeedY => Mathf.Sqrt(2f * _gravity * _jumpHeightMin); // V=sqrt{2*g*h}
-        private float JumpAccelerationY => _gravity - Mathf.Pow(JumpInitialSpeedY, 2) / (2 * _jumpHeightMax); // a=g-(v^2/2*h)
-        private float JumpDur => JumpInitialSpeedY / (_gravity - JumpAccelerationY); // t=V/(g-a)
+        private float DesiredMoveSpeed => _moveSpeed * _inputAxis.x;
+        private float DesiredJumpSpeedX => JumpSpeedX * _inputAxis.x;
+        private float JumpImpulseY => Mathf.Sqrt(2f * _gravity * _jumpHeightMin); // V=sqrt{2*g*h}
+        private float JumpAccelerationY => _gravity - Mathf.Pow(JumpImpulseY, 2) / (2 * _jumpHeightMax); // a=g-(v^2/2*h)
+        private float JumpDur => JumpImpulseY / (_gravity - JumpAccelerationY); // t=V/(g-a)
         private float FallDur => Mathf.Sqrt(2f * _jumpHeightMax / _gravity); // t=sqrt{(2*h)/g}
         private float JumpSpeedX => _jumpWidthMax / (JumpDur + FallDur); // v=w/t
-        private float ClimbSpeedY => ShapeSizes.y / _climbDur; // v=w/t
-        private float ClimbSpeedX => Mathf.Sqrt(2f * _moveAcceleration * ShapeSizes.x); // v=sqrt{2*a*w}
-        private float RecoilSpeed => Mathf.Sqrt(2f * _moveAcceleration * _recoilLength); // v=sqrt{2*a*w}
-        protected float RecoilDur => Mathf.Sqrt(2f * _recoilLength / _moveAcceleration); // t=sqrt{(2*w)/a}
+        private float ClimbSpeedY => Extents.y / _climbDur; // v=w/t
+        private float ClimbImpulseX => Mathf.Sqrt(2f * _moveAcceleration * Extents.x); // v=sqrt{2*a*w}
         private bool _hasDropFromPlatformInput;
         private bool _isOnPlatform;
         private bool _isHangingOnEdge;
@@ -61,7 +69,6 @@ namespace Other
         private bool _hasJumpInput;
         private bool _hasJumpStarted;
         private bool _hasJumpEnded = true;
-        private bool _hasSnapDisabled;
         private bool _canJump;
         private bool _canJumpFlag;
         private bool _hasInputsLocked;
@@ -73,19 +80,14 @@ namespace Other
             AnimSprite = GetNode<AnimatedSprite>("AnimatedSprite");
             _platformCheckArea = GetNode<Area2D>("PlatformCheckArea");
             _jumpTimer = GetNode<Timer>("JumpTimer");
-            _platformCheckArea.Connect("body_entered", this, nameof(OnPlatformEntered));
             _platformCheckArea.Connect("body_exited", this, nameof(OnPlatformExited));
             _jumpTimer.Connect("timeout", this, nameof(OnJumpEnd));
         }
 
         public override void _Process(float delta)
         {
-            if (_hasInputsLocked) return;
             base._Process(delta);
-            AxisInputs();
-            JumpInput();
-            ClimbInput();
-            DropFromPlatformInput();
+            HandleInputs();
             AnimationController();
         }
 
@@ -96,8 +98,17 @@ namespace Other
             CheckPlatform();
             CheckEdge();
             CheckCanJump();
-            Velocity = CalculateMotionVelocity(delta) + CalculateSnapVelocity();
+            Velocity = CalculateMotionVelocity(delta) + CalculateSnapVelocity(delta);
             Velocity = MoveAndSlideInArea(Velocity, delta, Vector2.Up);
+        }
+
+        private void HandleInputs()
+        {
+            if (_hasInputsLocked) return;
+            AxisInputs();
+            JumpInput();
+            ClimbInput();
+            DropFromPlatformInput();
         }
 
         protected async void LockInputs(bool value, float? afterSec = null)
@@ -105,29 +116,23 @@ namespace Other
             if (afterSec.HasValue) await ToSignal(GetTree().CreateTimer(afterSec.Value), "timeout");
             _hasInputsLocked = value;
             _inputAxis = Vector2.Zero;
-            _desiredMoveSpeed = 0;
-            _desiredJumpSpeedX = 0;
         }
 
-        protected void SetRecoil(bool value, Vector2? hitNormal = null)
+        protected void SetRecoil(Vector2? hitNormal = null)
         {
-            _hasRecoiled = value;
-            if (!_hasRecoiled) return;
+            _hasRecoiled = true;
             AnimSprite.Play("idle");
             Vector2 recoilDir = hitNormal ?? new Vector2(-Direction, 0);
             _recoilVelocity.x = Mathf.Clamp(Mathf.Abs(recoilDir.x), 0.7f, 1f) * Mathf.Sign(recoilDir.x);
             _recoilVelocity.y = Mathf.Clamp(Mathf.Abs(recoilDir.y), 0.2f, 1f) * Mathf.Sign(recoilDir.y);
-            float recoilSpeedY = recoilDir.y < 0 ? RecoilSpeed * 1.5f : RecoilSpeed / 2f;
-            float recoilSpeedX = RecoilSpeed * 0.85f;
-            _recoilVelocity = new Vector2(_recoilVelocity.x * recoilSpeedX, _recoilVelocity.y * recoilSpeedY);
+            _recoilVelocity.x *= _recoilImpulse * 0.85f;
+            _recoilVelocity.y *= recoilDir.y < 0 ? _recoilImpulse * 1.5f : _recoilImpulse / 2f;
         }
 
         private void AxisInputs()
         {
             _inputAxis.x = Input.GetActionStrength("move_right") - Input.GetActionStrength("move_left");
             _inputAxis.y = Input.GetActionStrength("move_down") - Input.GetActionStrength("move_up");
-            _desiredMoveSpeed = _moveSpeed * _inputAxis.x;
-            _desiredJumpSpeedX = JumpSpeedX * _inputAxis.x;
         }
 
         private void DropFromPlatformInput()
@@ -137,6 +142,7 @@ namespace Other
 
         private void ClimbInput()
         {
+            if (!EdgeHangActive) return;
             if (_isHangingOnEdge && Input.IsActionJustPressed("move_up")) _hasClimbInput = true;
             if (_isHangingOnEdge && Input.IsActionJustPressed("move_down"))
             {
@@ -147,6 +153,8 @@ namespace Other
 
         private void JumpInput()
         {
+            if (!JumpActive) return;
+            
             if (_canJump && Input.IsActionJustPressed("jump"))
             {
                 HasGroundRayDisabled = true;
@@ -169,29 +177,34 @@ namespace Other
             _jumpTimer.Stop();
         }
 
-        private Vector2 CalculateSnapVelocity()
+        private Vector2 CalculateSnapVelocity(float delta)
         {
-            if (_hasSnapDisabled) return Vector2.Zero;
-
+            if (!SnapActive) return Vector2.Zero;
+             GD.Print(IsOnFloor());
+    
             // Snap while the player moves on the ground.
             if (IsOnGround)
             {
-                float dif = GroundHitPos.y - GlobalPosition.y;
-                if (Mathf.Abs(dif) > 0.001f) return Mathf.Sign(dif) * Vector2.Down * _snapSpeed;
-                return Vector2.Zero;
+                Vector2 difVec = new Vector2(
+                    GroundHitPos.x - GlobalPosition.x,
+                    GroundHitPos.y - 1f - GlobalPosition.y);
+                float length = difVec.Length();
+                float speed = length / delta;
+                if (length < 0f) return Vector2.Zero;
+                return difVec.Normalized() * speed;
             }
 
             // Snap while the player hangs on the edge.
             if (_isHangingOnEdge)
             {
                 Vector2 difVec = new Vector2(
-                    _edgeHitPos.x - (GlobalPosition.x + Direction * ShapeExtents.x),
-                    _edgeHitPos.y - (GlobalPosition.y - ShapeSizes.y)
+                    _edgeHitPos.x - (GlobalPosition.x + Direction * (ExtentsHalf.x + 1f)),
+                    _edgeHitPos.y - (GlobalPosition.y - Extents.y)
                 );
-                if (difVec.Length() > 0.001f) return difVec.Normalized() * _snapSpeed;
-                return Vector2.Zero;
+                if (difVec.Length() < 0f) return Vector2.Zero;
+                return difVec.Normalized() * _snapSpeed;
             }
-
+            
             return Vector2.Zero;
         }
 
@@ -207,7 +220,7 @@ namespace Other
                 if (_hasClimbInput)
                 {
                     velocity.y = -ClimbSpeedY;
-                    _hasSnapDisabled = true;
+                    SnapActive = false;
                     return velocity;
                 }
 
@@ -219,8 +232,8 @@ namespace Other
             if (_hasClimbInput)
             {
                 _hasClimbInput = false;
-                _hasSnapDisabled = false;
-                velocity.x = Direction * ClimbSpeedX;
+                SnapActive = true;
+                velocity.x = Direction * ClimbImpulseX;
                 return velocity;
             }
 
@@ -236,8 +249,8 @@ namespace Other
                     _canJump = false;
                     _hasJumpEnded = false;
                     IsOnGround = false;
-                    velocity.x = _desiredJumpSpeedX;
-                    velocity.y = -JumpInitialSpeedY;
+                    velocity.x = DesiredJumpSpeedX;
+                    velocity.y = -JumpImpulseY;
                     return velocity;
                 }
 
@@ -246,7 +259,7 @@ namespace Other
                 {
                     IsOnGround = false;
                     SetCollisionMaskBit(2, false); // Layer 3 = false
-                    GroundCollisionMask -= (uint) Mathf.Pow(2, 3 - 1); // Layer 3 = false;
+                    GroundCollisionMask -= PlatformCollisionMask;
                     return velocity;
                 }
 
@@ -260,7 +273,7 @@ namespace Other
                 }
 
                 // While the player is walking on the ground.
-                velocity.x = Mathf.MoveToward(velocity.x, _desiredMoveSpeed, _moveAcceleration * delta);
+                velocity.x = Mathf.MoveToward(velocity.x, DesiredMoveSpeed, _moveAcceleration * delta);
                 velocity.y = 0f;
                 return velocity;
             }
@@ -284,8 +297,8 @@ namespace Other
                     _canJump = false;
                     _hasJumpEnded = false;
                     IsOnGround = false;
-                    velocity.x = _desiredJumpSpeedX;
-                    velocity.y = -JumpInitialSpeedY;
+                    velocity.x = DesiredJumpSpeedX;
+                    velocity.y = -JumpImpulseY;
                     return velocity;
                 }
             }
@@ -308,8 +321,9 @@ namespace Other
                     velocity.y -= JumpAccelerationY * delta;
             }
 
-            velocity.x = Mathf.MoveToward(velocity.x, _desiredJumpSpeedX, _jumpAccelerationX * delta);
-            velocity.y += _gravity * delta; // Adds gravity force increasingly.
+            velocity.x = Mathf.MoveToward(velocity.x, DesiredJumpSpeedX, _jumpAccelerationX * delta);
+            if (velocity.y < _gravitySpeedMax)
+                velocity.y += _gravity * delta; // Adds gravity acceleration increasingly.
             return velocity;
         }
 
@@ -348,7 +362,7 @@ namespace Other
         {
             if (GroundRay.Count <= 0
                 || !IsGroundAngleEnough(CalculateGroundAngle((Vector2) GroundRay["normal"]), 5f)
-                || GroundHitPos.DistanceTo(GlobalPosition) >= _isOnGroundDetectionLength)
+                || GroundHitPos.DistanceTo(GlobalPosition) > _isOnGroundDetectionLength)
             {
                 IsOnGround = false;
                 return;
@@ -364,21 +378,22 @@ namespace Other
                 _isOnPlatform = false;
                 return;
             }
-
-            foreach (int id in ground.GetShapeOwners()) _isOnPlatform = ground.IsShapeOwnerOneWayCollisionEnabled((uint) id);
+            foreach (int id in ground.GetShapeOwners()) 
+                _isOnPlatform = ground.IsShapeOwnerOneWayCollisionEnabled((uint) id);
         }
 
         private void CheckEdge()
         {
+            if (!EdgeHangActive) return;
             if (IsOnGround) return;
             if (_hasJumpInput) return;
 
-            float rayPosX = ShapeExtents.x + _edgeAxisXRayLength;
-            float rayPosY = -ShapeSizes.y - _edgeAxisYRayLength;
+            float rayPosX = ExtentsHalf.x + _edgeRayWidth;
+            float rayPosY = -Extents.y - _edgeRayHeight;
             // Checks whether there are inner collisions.
             _edgeRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(Direction * ShapeExtents.x, -ShapeSizes.y),
-                GlobalPosition + new Vector2(Direction * ShapeExtents.x, -ShapeSizes.y + 2f),
+                GlobalPosition + new Vector2(Direction * ExtentsHalf.x, -Extents.y),
+                GlobalPosition + new Vector2(Direction * ExtentsHalf.x, -Extents.y + 2f),
                 new Array {this},
                 GroundCollisionMask
             );
@@ -387,7 +402,7 @@ namespace Other
 
             // Checks whether there is a wall in front of the player.
             _edgeRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(Direction * ShapeExtents.x, rayPosY),
+                GlobalPosition + new Vector2(Direction * ExtentsHalf.x, rayPosY),
                 GlobalPosition + new Vector2(Direction * rayPosX, rayPosY),
                 new Array {this},
                 GroundCollisionMask
@@ -398,7 +413,7 @@ namespace Other
             // Checks whether there is an edge.
             _edgeRay = SpaceState.IntersectRay(
                 GlobalPosition + new Vector2(Direction * rayPosX, rayPosY),
-                GlobalPosition + new Vector2(Direction * rayPosX, -ShapeSizes.y),
+                GlobalPosition + new Vector2(Direction * rayPosX, -Extents.y),
                 new Array {this},
                 GroundCollisionMask
             );
@@ -414,7 +429,7 @@ namespace Other
 
             // Checks the wall from the player`s feet while the player hangs on the edge.
             _edgeRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(Direction * ShapeExtents.x, 0f),
+                GlobalPosition + new Vector2(Direction * ExtentsHalf.x, 0f),
                 GlobalPosition + new Vector2(Direction * rayPosX, 0f),
                 new Array {this},
                 GroundCollisionMask
@@ -444,16 +459,13 @@ namespace Other
                 AnimSprite.Play("jump");
         }
 
-        private void OnPlatformEntered(Node body) => HasGroundRayDisabled = true;
-
         private void OnPlatformExited(Node body)
         {
-            HasGroundRayDisabled = false;
             if (!_hasDropFromPlatformInput) return;
 
             _hasDropFromPlatformInput = false;
             SetCollisionMaskBit(2, true); // Layer 3 = true
-            GroundCollisionMask += (uint) Mathf.Pow(2, 3 - 1); // Layer 3 = true
+            GroundCollisionMask += PlatformCollisionMask;
         }
 
         // public override void _Draw()

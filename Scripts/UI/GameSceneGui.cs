@@ -37,7 +37,7 @@ namespace UI
             
             _pausePanel.Visible = false;
             
-            Events.Singleton.Connect("CoinCountChanged", this, nameof(OnCoinCountChanged));
+            Events.Singleton.Connect("PlayerCoinCountChanged", this, nameof(OnCoinCountChanged));
             Events.Singleton.Connect("PlayerHealthChanged", this, nameof(OnHealthChanged));
             Events.Singleton.Connect("PlayerDied", this, nameof(OnPlayerDied));
         }
@@ -53,11 +53,11 @@ namespace UI
             GameManager.Singleton.GuiDisableInput(false);
         }
         
-        private void OnCoinCountChanged(int newCount)
+        private void OnCoinCountChanged(int coinCount)
         {
             if (GameManager.Singleton.UiState == GameManager.GameState.Pause) return;
             
-            _coinCountLabel.Text = newCount.ToString();
+            _coinCountLabel.Text = coinCount.ToString();
         }
 
         private void OnHealthChanged(int newHealth, int maxHealth, NavBody2D attacker)
@@ -88,7 +88,7 @@ namespace UI
             _healthProgress.Value = to;
         }
         
-        private async Task FadeControlAlpha(Control control, float from, float to, float duration)
+        private async Task FadeControlAlpha(CanvasItem control, float from, float to, float duration)
         {
             control.Visible = true;
             float count = 0f;
