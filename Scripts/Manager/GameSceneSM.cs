@@ -10,7 +10,8 @@ namespace Manager
         {
             base._Ready();
 
-            if (GetTree().GetNodesInGroup("Player")?[0] is Player player)
+            if (!GetTree().HasGroup("Player")) return;
+            if (GetTree().GetNodesInGroup("Player")?[0] is Other.Player player)
             {
                 foreach (Enemy enemy in GetTree().GetNodesInGroup("Enemy"))
                 {

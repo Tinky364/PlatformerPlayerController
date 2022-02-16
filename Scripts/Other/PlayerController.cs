@@ -180,17 +180,14 @@ namespace Other
         private Vector2 CalculateSnapVelocity(float delta)
         {
             if (!SnapActive) return Vector2.Zero;
-             GD.Print(IsOnFloor());
-    
+            
             // Snap while the player moves on the ground.
             if (IsOnGround)
             {
-                Vector2 difVec = new Vector2(
-                    GroundHitPos.x - GlobalPosition.x,
-                    GroundHitPos.y - 1f - GlobalPosition.y);
+                Vector2 difVec = GroundHitPos - GlobalPosition;
                 float length = difVec.Length();
                 float speed = length / delta;
-                if (length < 0f) return Vector2.Zero;
+                if (length < 0.1f) return Vector2.Zero;
                 return difVec.Normalized() * speed;
             }
 
@@ -198,10 +195,10 @@ namespace Other
             if (_isHangingOnEdge)
             {
                 Vector2 difVec = new Vector2(
-                    _edgeHitPos.x - (GlobalPosition.x + Direction * (ExtentsHalf.x + 1f)),
+                    _edgeHitPos.x - (GlobalPosition.x + Direction * ExtentsHalf.x),
                     _edgeHitPos.y - (GlobalPosition.y - Extents.y)
                 );
-                if (difVec.Length() < 0f) return Vector2.Zero;
+                if (difVec.Length() < 0.1f) return Vector2.Zero;
                 return difVec.Normalized() * _snapSpeed;
             }
             
@@ -361,8 +358,8 @@ namespace Other
         private void CheckGround()
         {
             if (GroundRay.Count <= 0
-                || !IsGroundAngleEnough(CalculateGroundAngle((Vector2) GroundRay["normal"]), 5f)
-                || GroundHitPos.DistanceTo(GlobalPosition) > _isOnGroundDetectionLength)
+                || GroundHitPos.DistanceTo(GlobalPosition) > _isOnGroundDetectionLength
+                || GroundHitPos.DirectionTo(GlobalPosition).y > 0)
             {
                 IsOnGround = false;
                 return;
@@ -439,8 +436,7 @@ namespace Other
 
         private void AnimationController()
         {
-            if (_inputAxis.x > 0)
-                Direction = 1;
+            if (_inputAxis.x > 0) Direction = 1;
             else if (_inputAxis.x < 0) Direction = -1;
 
             switch (Direction)

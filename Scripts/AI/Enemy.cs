@@ -46,7 +46,8 @@ namespace AI
         public override void _PhysicsProcess(float delta)
         {
             base._PhysicsProcess(delta);
-            CheckGround();
+            //CheckGround();
+            Body.IsOnGround = Body.IsOnFloor();
             Fsm._PhysicsProcess(delta);
             if (!Body.IsOnGround) Body.Velocity.y += Gravity * delta; // Adds gravity force increasingly.
             Body.Velocity = Body.MoveAndSlideInArea(Body.Velocity, delta, Vector2.Up);
@@ -67,7 +68,7 @@ namespace AI
 
         protected abstract void StateController();
         
-        private void CheckGround() => Body.IsOnGround = Body.GroundRay?.Count > 0;
+        //private void CheckGround() => Body.IsOnGround = Body.GroundRay?.Count > 0;
 
         private void AnimationController()
         {

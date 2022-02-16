@@ -14,18 +14,18 @@ namespace Other
         public override void _Ready()
         {
             _player = GetNode<Player>(_playerPath);
-            SetCamPosition(_player.Position);
+            SetCamPosition(_player.GlobalPosition);
         }
 
         public override void _PhysicsProcess(float delta)
         {
-            SetCamPosition(_player.Position);
+            SetCamPosition(_player.GlobalPosition);
             SetCamOffset(delta);
         }
 
         private void SetCamPosition(Vector2 targetPos)
         {
-            Position = targetPos;
+            GlobalPosition = targetPos;
         }
 
         private void SetCamOffset(float delta)

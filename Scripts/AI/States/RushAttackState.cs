@@ -35,7 +35,7 @@ namespace AI.States
 
         public override void Enter()
         {
-            if (_enemy.Body.DebugEnabled) GD.Print($"{_enemy.Name}: {nameof(RushAttackState)}");
+            if (_enemy.Body.DebugEnabled) GD.Print($"{_enemy.Name}: {Key}");
 
             _enemy.AnimatedSprite.Play("idle");
             _enemy.Body.Velocity.x = 0;

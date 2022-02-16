@@ -1,0 +1,69 @@
+[gd_scene load_steps=12 format=2]
+
+[ext_resource path="res://Scripts/PlayerStateMachine/Player.cs" type="Script" id=1]
+[ext_resource path="res://Scripts/PlayerStateMachine/FallState.cs" type="Script" id=2]
+[ext_resource path="res://Scripts/PlayerStateMachine/MoveState.cs" type="Script" id=3]
+[ext_resource path="res://Scripts/PlayerStateMachine/JumpState.cs" type="Script" id=4]
+[ext_resource path="res://Sprites/Player/tile_0045.png" type="Texture" id=5]
+[ext_resource path="res://Sprites/Player/tile_0046.png" type="Texture" id=6]
+
+[sub_resource type="Resource" id=2]
+script = ExtResource( 3 )
+_moveAccelerationX = 400.0
+_moveSpeedX = 70.0
+
+[sub_resource type="Resource" id=3]
+script = ExtResource( 2 )
+_airAccelerationX = 600.0
+_airSpeedX = 70.0
+
+[sub_resource type="Resource" id=4]
+script = ExtResource( 4 )
+_jumpHeightMin = 9.0
+_jumpHeightMax = 28.0
+_jumpWidthMax = 48.0
+_jumpAccelerationX = 600.0
+
+[sub_resource type="SpriteFrames" id=5]
+animations = [ {
+"frames": [ ExtResource( 5 ) ],
+"loop": true,
+"name": "idle",
+"speed": 5.0
+}, {
+"frames": [ ExtResource( 5 ), ExtResource( 6 ) ],
+"loop": true,
+"name": "run",
+"speed": 10.0
+}, {
+"frames": [ ExtResource( 6 ) ],
+"loop": true,
+"name": "jump",
+"speed": 5.0
+} ]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 4, 5.5 )
+
+[node name="Player" type="KinematicBody2D"]
+collision_mask = 14
+script = ExtResource( 1 )
+_moveState = SubResource( 2 )
+_fallState = SubResource( 3 )
+_jumpState = SubResource( 4 )
+
+[node name="AnimatedSprite" type="AnimatedSprite" parent="."]
+position = Vector2( -8, -16 )
+frames = SubResource( 5 )
+animation = "idle"
+centered = false
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( 0, -5.5 )
+shape = SubResource( 1 )
+
+[node name="JumpTimer" type="Timer" parent="."]
+process_mode = 0

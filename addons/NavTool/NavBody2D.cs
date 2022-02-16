@@ -219,7 +219,7 @@ namespace NavTool
         private void CastGroundRay()
         {
             if (HasGroundRayDisabled) return;
-
+            GD.Print("a");
             // Raycast from the left bottom corner.
             GroundRay = SpaceState.IntersectRay(
                 GlobalPosition + new Vector2(-ExtentsHalf.x, -5f),
