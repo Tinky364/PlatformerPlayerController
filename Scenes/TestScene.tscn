@@ -23,46 +23,46 @@
 [ext_resource path="res://Scripts/AI/States/JumpAttackState.cs" type="Script" id=21]
 [ext_resource path="res://Scripts/PlayerStateMachine/DeadState.cs" type="Script" id=22]
 
-[sub_resource type="PhysicsMaterial" id=9]
+[sub_resource type="PhysicsMaterial" id=1]
 
 [sub_resource type="RectangleShape2D" id=2]
 extents = Vector2( 24, 4 )
 
-[sub_resource type="SegmentShape2D" id=6]
+[sub_resource type="SegmentShape2D" id=3]
 b = Vector2( 16, -5.34058e-05 )
 
-[sub_resource type="RectangleShape2D" id=3]
+[sub_resource type="RectangleShape2D" id=4]
 extents = Vector2( 16, 4 )
 
-[sub_resource type="RectangleShape2D" id=4]
+[sub_resource type="RectangleShape2D" id=5]
 extents = Vector2( 24, 4 )
 
-[sub_resource type="SegmentShape2D" id=5]
+[sub_resource type="SegmentShape2D" id=6]
 b = Vector2( -16, -5.72205e-05 )
 
-[sub_resource type="RectangleShape2D" id=38]
+[sub_resource type="RectangleShape2D" id=7]
 resource_local_to_scene = true
 extents = Vector2( 12.5, 2 )
 
-[sub_resource type="RectangleShape2D" id=25]
+[sub_resource type="RectangleShape2D" id=8]
 resource_local_to_scene = true
 extents = Vector2( 10, 3 )
 
-[sub_resource type="Resource" id=33]
+[sub_resource type="Resource" id=9]
 script = ExtResource( 22 )
 
-[sub_resource type="Resource" id=34]
+[sub_resource type="Resource" id=10]
 resource_local_to_scene = true
 script = ExtResource( 20 )
 _secondPosDist = 20.0
 
-[sub_resource type="Resource" id=35]
+[sub_resource type="Resource" id=11]
 resource_local_to_scene = true
 script = ExtResource( 18 )
 StopDist = 30.0
 _chaseSpeed = 30.0
 
-[sub_resource type="Resource" id=36]
+[sub_resource type="Resource" id=12]
 resource_local_to_scene = true
 script = ExtResource( 21 )
 _waitBeforeAttackDur = 1.0
@@ -77,22 +77,22 @@ _waitAfterCollisionDur = 2.0
 _collisionBackWidth = 24.0
 _collisionBackDur = 1.0
 
-[sub_resource type="RectangleShape2D" id=37]
+[sub_resource type="RectangleShape2D" id=13]
 resource_local_to_scene = true
 extents = Vector2( 48, 8 )
 
-[sub_resource type="Resource" id=26]
+[sub_resource type="Resource" id=14]
 resource_local_to_scene = true
 script = ExtResource( 20 )
 _secondPosDist = 30.0
 
-[sub_resource type="Resource" id=27]
+[sub_resource type="Resource" id=15]
 resource_local_to_scene = true
 script = ExtResource( 18 )
 StopDist = 30.0
 _chaseSpeed = 30.0
 
-[sub_resource type="Resource" id=28]
+[sub_resource type="Resource" id=16]
 resource_local_to_scene = true
 script = ExtResource( 21 )
 _waitBeforeAttackDur = 1.0
@@ -107,16 +107,16 @@ _waitAfterCollisionDur = 2.0
 _collisionBackWidth = 24.0
 _collisionBackDur = 1.0
 
-[sub_resource type="RectangleShape2D" id=29]
+[sub_resource type="RectangleShape2D" id=17]
 resource_local_to_scene = true
 extents = Vector2( 24, 8 )
 
-[sub_resource type="Resource" id=30]
+[sub_resource type="Resource" id=18]
 resource_local_to_scene = true
 script = ExtResource( 20 )
 _secondPosDist = 10.0
 
-[sub_resource type="Resource" id=31]
+[sub_resource type="Resource" id=19]
 resource_local_to_scene = true
 script = ExtResource( 19 )
 _waitBeforeRushDur = 1.0
@@ -126,11 +126,11 @@ _collisionBackWidth = 24.0
 _collisionBackDur = 1.0
 _waitAfterCollisionDur = 2.0
 
-[sub_resource type="RectangleShape2D" id=32]
+[sub_resource type="RectangleShape2D" id=20]
 resource_local_to_scene = true
 extents = Vector2( 68, 8 )
 
-[sub_resource type="AtlasTexture" id=13]
+[sub_resource type="AtlasTexture" id=21]
 atlas = ExtResource( 16 )
 region = Rect2( 0, 0, 16, 16 )
 
@@ -156,7 +156,7 @@ tile_data = PoolIntArray( 393228, 2, 0, 393229, 2, 0, 393230, 2, 0, 393231, 2, 0
 [node name="StaticBody2D" type="StaticBody2D" parent="World/PlatformTileMap" index="0"]
 collision_layer = 4
 collision_mask = 0
-physics_material_override = SubResource( 9 )
+physics_material_override = SubResource( 1 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="World/PlatformTileMap/StaticBody2D" index="0"]
 position = Vector2( 56, 116 )
@@ -166,40 +166,40 @@ one_way_collision = true
 [node name="CollisionShape2D7" type="CollisionShape2D" parent="World/PlatformTileMap/StaticBody2D" index="1"]
 position = Vector2( 144, 48 )
 rotation = 1.5708
-shape = SubResource( 6 )
+shape = SubResource( 3 )
 one_way_collision = true
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="World/PlatformTileMap/StaticBody2D" index="2"]
 position = Vector2( 80, 84 )
-shape = SubResource( 3 )
+shape = SubResource( 4 )
 one_way_collision = true
 
 [node name="CollisionShape2D3" type="CollisionShape2D" parent="World/PlatformTileMap/StaticBody2D" index="3"]
 position = Vector2( 120, 52 )
-shape = SubResource( 4 )
+shape = SubResource( 5 )
 one_way_collision = true
 
 [node name="CollisionShape2D4" type="CollisionShape2D" parent="World/PlatformTileMap/StaticBody2D" index="4"]
 position = Vector2( 96, 48 )
 rotation = -1.5708
-shape = SubResource( 5 )
+shape = SubResource( 6 )
 
 [node name="CollisionShape2D5" type="CollisionShape2D" parent="World/PlatformTileMap/StaticBody2D" index="5"]
 position = Vector2( 64, 80 )
 rotation = -1.5708
-shape = SubResource( 5 )
+shape = SubResource( 6 )
 one_way_collision = true
 
 [node name="CollisionShape2D8" type="CollisionShape2D" parent="World/PlatformTileMap/StaticBody2D" index="6"]
 position = Vector2( 32, 112 )
 rotation = -1.5708
-shape = SubResource( 5 )
+shape = SubResource( 6 )
 one_way_collision = true
 
 [node name="CollisionShape2D6" type="CollisionShape2D" parent="World/PlatformTileMap/StaticBody2D" index="7"]
 position = Vector2( 80, 112 )
 rotation = 1.5708
-shape = SubResource( 6 )
+shape = SubResource( 3 )
 one_way_collision = true
 
 [node name="GroundTileMap" type="TileMap" parent="World" index="2"]
@@ -233,7 +233,7 @@ points = PoolVector2Array( -1, -13, -1, 11 )
 
 [node name="CollisionShape2D" parent="World/MovingPlatform2/StaticBody2D" index="1"]
 position = Vector2( -2.5, 8 )
-shape = SubResource( 38 )
+shape = SubResource( 7 )
 
 [node name="MovingPlatform" parent="World" index="5" instance=ExtResource( 8 )]
 position = Vector2( 171, 48 )
@@ -242,7 +242,7 @@ position = Vector2( 171, 48 )
 points = PoolVector2Array( -16, 0, 41, 46 )
 
 [node name="CollisionShape2D" parent="World/MovingPlatform/StaticBody2D" index="1"]
-shape = SubResource( 25 )
+shape = SubResource( 8 )
 
 [node name="Door" parent="World" index="6" instance=ExtResource( 7 )]
 position = Vector2( 2, 144 )
@@ -252,42 +252,41 @@ position = Vector2( 7, -4 )
 
 [node name="Player" parent="World" index="7" instance=ExtResource( 17 )]
 position = Vector2( 268, 94 )
-_deadState = SubResource( 33 )
+_deadState = SubResource( 9 )
 
 [node name="JumperEnemy2" parent="World" index="8" instance=ExtResource( 12 )]
 position = Vector2( 325, 96 )
-_idleState = SubResource( 34 )
-_chaseState = SubResource( 35 )
-_attackState = SubResource( 36 )
+_idleState = SubResource( 10 )
+_chaseState = SubResource( 11 )
+_attackState = SubResource( 12 )
 
 [node name="CollisionShape2D" parent="World/JumperEnemy2/NavArea2D" index="1"]
 position = Vector2( -21, 0 )
-shape = SubResource( 37 )
+shape = SubResource( 13 )
 
 [node name="JumperEnemy" parent="World" index="9" instance=ExtResource( 12 )]
 position = Vector2( 102, 48 )
-_idleState = SubResource( 26 )
-_chaseState = SubResource( 27 )
-_attackState = SubResource( 28 )
+_idleState = SubResource( 14 )
+_chaseState = SubResource( 15 )
+_attackState = SubResource( 16 )
 
 [node name="CollisionShape2D" parent="World/JumperEnemy/NavArea2D" index="1"]
 position = Vector2( 18, 0 )
-shape = SubResource( 29 )
+shape = SubResource( 17 )
 
 [node name="RusherEnemy" parent="World" index="10" instance=ExtResource( 15 )]
 position = Vector2( 89, 144 )
-_idleState = SubResource( 30 )
-_attackState = SubResource( 31 )
+_idleState = SubResource( 18 )
+_attackState = SubResource( 19 )
 
 [node name="CollisionShape2D" parent="World/RusherEnemy/NavArea2D" index="1"]
 position = Vector2( 51, 0 )
-shape = SubResource( 32 )
+shape = SubResource( 20 )
 
 [node name="NavAgent2D" parent="World/RusherEnemy" index="1"]
 DebugEnabled = true
 
 [node name="Camera2D" type="Camera2D" parent="World" index="11"]
-position = Vector2( 167, 161 )
 current = true
 process_mode = 0
 limit_left = -156
@@ -303,9 +302,10 @@ drag_margin_bottom = 0.4
 editor_draw_limits = true
 editor_draw_drag_margin = true
 script = ExtResource( 11 )
+__meta__ = {
+"_editor_description_": ""
+}
 _playerPath = NodePath("../Player")
-_offsetAcceleration = 1.0
-_smoothingDur = 0.3
 
 [node name="Gui" parent="." index="1"]
 script = ExtResource( 13 )
@@ -364,7 +364,7 @@ margin_left = 240.0
 margin_right = 256.0
 margin_bottom = 16.0
 size_flags_vertical = 4
-texture = SubResource( 13 )
+texture = SubResource( 21 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
