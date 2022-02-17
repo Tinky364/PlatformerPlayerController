@@ -11,20 +11,34 @@ namespace PlayerStateMachine
         private float _airAccelerationX = 600f;
         [Export(PropertyHint.Range, "1,200,or_greater")]
         private float _airSpeedX = 70f;
+        [Export(PropertyHint.Range, "0.01,5,0.05,or_greater")]
+        private float _jumpAbleDur = 0.1f;
         
         private float _desiredAirSpeedX;
+        private bool _jumpAble;
 
         public override void Enter()
         {
-            GD.Print($"{P.Name}: {Key}");
+            if (P.DebugEnabled) GD.Print($"{P.Name}: {Key}");
+            P.AnimSprite.Play("jump");
+            if (P.Fsm.PreviousState?.Key != Player.PlayerStates.Jump)
+                StartJumpAbleDuration();
         }
 
         public override void Process(float delta) { }
 
         public override void PhysicsProcess(float delta)
         {
-            P.AxisInputs();
-            _desiredAirSpeedX = _airSpeedX * P.InputAxis.x;
+            _desiredAirSpeedX = _airSpeedX * P.AxisInputs().x;
+
+            if (_jumpAble || P.GroundRay.Count > 0)
+            {
+                if (Input.IsActionJustPressed("jump"))
+                {
+                    P.Fsm.SetCurrentState(Player.PlayerStates.Jump);
+                    return;
+                }
+            }
             
             P.Velocity.x = Mathf.MoveToward(P.Velocity.x, _desiredAirSpeedX, _airAccelerationX * delta);
             if (P.Velocity.y < P.GravitySpeedMax)
@@ -35,9 +49,13 @@ namespace PlayerStateMachine
                 P.Fsm.SetCurrentState(Player.PlayerStates.Move);
         }
 
-        public override void Exit()
+        public override void Exit() { }
+        
+        private async void StartJumpAbleDuration()
         {
-            _desiredAirSpeedX = 0;
+            _jumpAble = true;
+            await ToSignal(P.GetTree().CreateTimer(_jumpAbleDur), "timeout");
+            _jumpAble = false;
         }
         
         public void Initialize(Player player)

@@ -6,6 +6,7 @@ namespace AI
     public class StateMachine<T> : Reference
     {
         private readonly Dictionary<T, State<T>> _states;
+        public State<T> PreviousState { get; private set; }
         public State<T> CurrentState { get; private set; }
         public bool IsStateLocked { get; private set; }
         
@@ -28,6 +29,7 @@ namespace AI
             if (IsStateLocked || !_states.ContainsKey(stateKey)) return;
             if (CurrentState == _states[stateKey]) return;
             CurrentState?.Exit();
+            PreviousState = CurrentState;
             IsStateLocked = isStateLocked;
             CurrentState = _states[stateKey];
             CurrentState?.Enter();

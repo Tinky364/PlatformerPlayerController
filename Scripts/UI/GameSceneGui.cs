@@ -50,6 +50,7 @@ namespace UI
             await ToSignal(GetTree().CreateTimer(1f), "timeout");
             await FadeControlAlpha(_hud, 1f, 0f, 1f);
             await FadeControlAlpha(_pausePanel, 0f, 1f, _pausePanelOpenDur);
+            GameManager.Singleton.SetGameState(GameManager.GameState.Pause, GameManager.GameState.Play);
             GameManager.Singleton.GuiDisableInput(false);
         }
         

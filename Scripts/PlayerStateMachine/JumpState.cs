@@ -23,12 +23,12 @@ namespace PlayerStateMachine
         private float JumpSpeedX => _jumpWidthMax / (JumpDur + FallDur); // v=w/t
         
         private float _desiredJumpSpeedX;
-
         private bool _isFirstFrame;
 
         public override void Enter()
         {
-            GD.Print($"{P.Name}: {Key}");
+            if (P.DebugEnabled) GD.Print($"{P.Name}: {Key}");
+            P.AnimSprite.Play("jump");
             P.JumpTimer.Start(JumpDur);
             _isFirstFrame = true;
         }
@@ -37,11 +37,11 @@ namespace PlayerStateMachine
 
         public override void PhysicsProcess(float delta)
         {
-            P.AxisInputs();
-            _desiredJumpSpeedX = JumpSpeedX * P.InputAxis.x;
+            _desiredJumpSpeedX = JumpSpeedX * P.AxisInputs().x;
 
             if (_isFirstFrame)
             {
+                _isFirstFrame = false;
                 P.Velocity.x = _desiredJumpSpeedX;
                 P.Velocity.y = -JumpImpulseY;
             }
@@ -65,17 +65,12 @@ namespace PlayerStateMachine
             }            
            
             P.Velocity = P.MoveAndSlideWithSnap(P.Velocity, Vector2.Zero, Vector2.Up);
-            _isFirstFrame = false;
         }
 
-        public override void Exit()
-        {
-            _desiredJumpSpeedX = 0;
-        }
+        public override void Exit() { }
 
-        public void OnJumpEnd()
+        private void OnJumpEnd()
         {
-            GD.Print("stopped");
             P.JumpTimer.Stop();
             P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
         }

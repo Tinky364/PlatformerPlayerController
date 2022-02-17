@@ -7,7 +7,7 @@ namespace AI.States
 {
     public class JumpAttackState : State<Enemy.EnemyStates>
     {
-        private Enemy _enemy;
+        private Enemy E { get; set; }
 
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeAttackDur = 1f;
@@ -38,47 +38,49 @@ namespace AI.States
         public void Initialize(Enemy enemy)
         {
             Initialize(Enemy.EnemyStates.Attack);
-            _enemy = enemy;
-            _enemy.Fsm.AddState(this);
+            E = enemy;
+            E.Fsm.AddState(this);
             Events.Singleton.Connect("Damaged", this, nameof(OnTargetHit));
         }
 
         public override void Enter()
         {
-            if (_enemy.Body.DebugEnabled) GD.Print($"{_enemy.Name}: {Key}");
+            if (E.Agent.DebugEnabled) GD.Print($"{E.Name}: {Key}");
             
-            _enemy.AnimatedSprite.Play("idle");
-            _enemy.Body.Velocity.x = 0;
+            E.AnimatedSprite.Play("idle");
+            E.Agent.Velocity.x = 0;
             
-            Vector2 dirToTarget = _enemy.Body.DirectionToTarget();
-            _enemy.Body.Direction = dirToTarget.x >= 0 ? 1 : -1;
+            Vector2 dirToTarget = E.Agent.DirectionToTarget();
+            E.Agent.Direction.x = dirToTarget.x;
             
             _cancellationTokenSource = new CancellationTokenSource();
-            Attack(dirToTarget, _enemy.Body.TargetNavBody.NavPos, _cancellationTokenSource.Token);
+            Attack(dirToTarget, E.Agent.TargetNavBody.NavPos, _cancellationTokenSource.Token);
         }
         
         private async void Attack(Vector2 dirToTarget, Vector2 targetPos, CancellationToken token)
         {
             float backMoveDist = Mathf.Clamp(
-                _backMoveDistMax - _enemy.Body.DistanceTo(targetPos), _backMoveDistMin, _backMoveDistMax
+                _backMoveDistMax - E.Agent.DistanceTo(targetPos), _backMoveDistMin, _backMoveDistMax
             );
-            await ToSignal(_enemy.GetTree().CreateTimer(_waitBeforeAttackDur), "timeout");
-            _enemy.Body.NavTween.MoveToward(
+            await ToSignal(E.GetTree().CreateTimer(_waitBeforeAttackDur), "timeout");
+            E.Agent.NavTween.MoveToward(
                 NavTween.TweenMode.X,
                 null,
-                _enemy.Body.NavPos - dirToTarget * backMoveDist,
-                _enemy.MoveSpeed,
+                E.Agent.NavPos - dirToTarget * backMoveDist,
+                E.MoveSpeed,
                 Tween.TransitionType.Quad
             );
-            await ToSignal(_enemy.Body.NavTween, "MoveCompleted");
-            _enemy.AnimatedSprite.Play("run");
+            await ToSignal(E.Agent.NavTween, "MoveCompleted");
+            E.AnimatedSprite.Play("run");
+            E.Agent.SnapDisabled = true;
             _isJumping = true;
-            _enemy.Body.Velocity.y = -_enemy.Gravity * _jumpDur / 2f;
-            _enemy.Body.NavTween.MoveLerp(NavTween.TweenMode.X, null, targetPos, _jumpDur);
-            await ToSignal(_enemy.Body.NavTween, "MoveCompleted");
+            E.Agent.Velocity.y = -E.Gravity * _jumpDur / 2f;
+            E.Agent.NavTween.MoveLerp(NavTween.TweenMode.X, null, targetPos, _jumpDur);
+            await ToSignal(E.Agent.NavTween, "MoveCompleted");
             if (token.IsCancellationRequested) return;
+            E.Agent.SnapDisabled = false;
             _isJumping = false;
-            _enemy.Body.NavTween.MoveLerp(
+            E.Agent.NavTween.MoveLerp(
                 NavTween.TweenMode.X,
                 null,
                 targetPos + dirToTarget * _landingMoveDist,
@@ -86,36 +88,35 @@ namespace AI.States
                 Tween.TransitionType.Quad,
                 Tween.EaseType.Out
             );
-            await ToSignal(_enemy.Body.NavTween, "MoveCompleted");
-            _enemy.AnimatedSprite.Play("idle");
-            await ToSignal(_enemy.GetTree().CreateTimer(_waitAfterAttackDur), "timeout");
-            _enemy.Fsm.StopCurrentState();
+            await ToSignal(E.Agent.NavTween, "MoveCompleted");
+            E.AnimatedSprite.Play("idle");
+            await ToSignal(E.GetTree().CreateTimer(_waitAfterAttackDur), "timeout");
+            E.Fsm.StopCurrentState();
         }
         
         private async void Collision(Vector2 hitNormal)
         {
-            _enemy.Body.NavTween.MoveLerp(
+            E.Agent.NavTween.MoveLerp(
                 NavTween.TweenMode.X,
                 null,
-                _enemy.Body.NavPos - hitNormal * _collisionBackWidth,
+                E.Agent.NavPos - hitNormal * _collisionBackWidth,
                 _collisionBackDur,
                 Tween.TransitionType.Cubic,
                 Tween.EaseType.Out
             );
-            await ToSignal(_enemy.Body.NavTween, "MoveCompleted");
-            await ToSignal(_enemy.GetTree().CreateTimer(_waitAfterCollisionDur), "timeout");
-            _enemy.Fsm.StopCurrentState();
+            await ToSignal(E.Agent.NavTween, "MoveCompleted");
+            await ToSignal(E.GetTree().CreateTimer(_waitAfterCollisionDur), "timeout");
+            E.Fsm.StopCurrentState();
         }
         
         private void OnTargetHit(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
         {
-            if (attacker != _enemy.Body || target != _enemy.Body.TargetNavBody) return;
-            if (_enemy.Fsm.CurrentState != this) return;
-            if (!_isJumping) return;
-            
+            if (attacker != E.Agent || target != E.Agent.TargetNavBody) return;
+            if (E.Fsm.CurrentState != this || !_isJumping) return;
             _isJumping = false;
+            E.Agent.SnapDisabled = false;
             _cancellationTokenSource?.Cancel();
-            _enemy.Body.NavTween.StopMove();
+            E.Agent.NavTween.StopMove();
             Collision(hitNormal);
         }
         
@@ -125,6 +126,7 @@ namespace AI.States
 
         public override void PhysicsProcess(float delta)
         {
+           
         }
         
         public override void Exit()

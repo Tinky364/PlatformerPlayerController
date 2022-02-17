@@ -7,7 +7,7 @@ namespace AI.States
 {
     public class RushAttackState : State<Enemy.EnemyStates>
     {
-        private Enemy _enemy;
+        private Enemy E { get; set; }
         
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeRushDur = 1f;
@@ -28,17 +28,17 @@ namespace AI.States
         public void Initialize(Enemy enemy)
         {
             Initialize(Enemy.EnemyStates.Attack);
-            _enemy = enemy;
-            _enemy.Fsm.AddState(this);
+            E = enemy;
+            E.Fsm.AddState(this);
             Events.Singleton.Connect("Damaged", this, nameof(OnTargetHit));
         }
 
         public override void Enter()
         {
-            if (_enemy.Body.DebugEnabled) GD.Print($"{_enemy.Name}: {Key}");
+            if (E.Agent.DebugEnabled) GD.Print($"{E.Name}: {Key}");
 
-            _enemy.AnimatedSprite.Play("idle");
-            _enemy.Body.Velocity.x = 0;
+            E.AnimatedSprite.Play("idle");
+            E.Agent.Velocity.x = 0;
 
             _attackCancel = new CancellationTokenSource();
             Attack(_attackCancel.Token);
@@ -47,61 +47,60 @@ namespace AI.States
         private async void Attack(CancellationToken cancellationToken)
         {
             // Waits before calculating the target position.
-            await ToSignal(_enemy.GetTree().CreateTimer(_waitBeforeRushDur / 2f), "timeout");
+            await ToSignal(E.GetTree().CreateTimer(_waitBeforeRushDur / 2f), "timeout");
             // Calculates the target position and sets its own direction.
-            Vector2 targetPos = new Vector2(0, _enemy.Body.NavPos.y);
-            if (_enemy.Body.DirectionToTarget().x >= 0)
+            Vector2 targetPos = new Vector2(0, E.Agent.NavPos.y);
+            if (E.Agent.DirectionToTarget().x >= 0)
             {
-                _enemy.Body.Direction = 1;
-                targetPos.x = _enemy.Body.NavArea.AreaRect.End.x - 12f;
+                E.Agent.Direction.x = 1;
+                targetPos.x = E.Agent.NavArea.AreaRect.End.x - 12f;
             }
             else
             {
-                _enemy.Body.Direction = -1;
-                targetPos.x = _enemy.Body.NavArea.AreaRect.Position.x + 12f;
+                E.Agent.Direction.x = -1;
+                targetPos.x = E.Agent.NavArea.AreaRect.Position.x + 12f;
             }
             // Waits before rushing to the target position.
-            await ToSignal(_enemy.GetTree().CreateTimer(_waitBeforeRushDur / 2f), "timeout");
-            _enemy.AnimatedSprite.Play("run");
+            await ToSignal(E.GetTree().CreateTimer(_waitBeforeRushDur / 2f), "timeout");
+            E.AnimatedSprite.Play("run");
             // Starts rushing to the target position.
-            _enemy.Body.NavTween.MoveToward(
+            E.Agent.NavTween.MoveToward(
                 NavTween.TweenMode.X, null, targetPos, _rushSpeed, Tween.TransitionType.Cubic
             );
             _isRushing = true;
             // Waits until rushing ends.
-            await ToSignal(_enemy.Body.NavTween, "MoveCompleted");
+            await ToSignal(E.Agent.NavTween, "MoveCompleted");
             // When rushing ends before its duration
             if (cancellationToken.IsCancellationRequested) return;
             _isRushing = false;
-            _enemy.AnimatedSprite.Play("idle");
+            E.AnimatedSprite.Play("idle");
             // Waits before changing state.
-            await ToSignal(_enemy.GetTree().CreateTimer(_waitAfterRushDur), "timeout");
-            _enemy.Fsm.StopCurrentState();
+            await ToSignal(E.GetTree().CreateTimer(_waitAfterRushDur), "timeout");
+            E.Fsm.StopCurrentState();
         }
         
         private async void Collision(Vector2 hitNormal)
         {
-            _enemy.Body.NavTween.MoveLerp(
+            E.Agent.NavTween.MoveLerp(
                 NavTween.TweenMode.X,
                 null,
-                _enemy.GlobalPosition - hitNormal * _collisionBackWidth,
+                E.Agent.NavPos - hitNormal * _collisionBackWidth,
                 _collisionBackDur,
                 Tween.TransitionType.Cubic,
                 Tween.EaseType.Out
             );
-            await ToSignal(_enemy.Body.NavTween, "MoveCompleted");
-            await ToSignal(_enemy.GetTree().CreateTimer(_waitAfterCollisionDur), "timeout");
-            _enemy.Fsm.StopCurrentState();
+            await ToSignal(E.Agent.NavTween, "MoveCompleted");
+            await ToSignal(E.GetTree().CreateTimer(_waitAfterCollisionDur), "timeout");
+            E.Fsm.StopCurrentState();
         }
 
         private void OnTargetHit(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
         {
-            if (attacker != _enemy.Body || target != _enemy.Body.TargetNavBody) return;
-            if (_enemy.Fsm.CurrentState != this || !_isRushing) return;
-            
+            if (attacker != E.Agent || target != E.Agent.TargetNavBody) return;
+            if (E.Fsm.CurrentState != this || !_isRushing) return;
             _isRushing = false;
             _attackCancel?.Cancel();
-            _enemy.Body.NavTween.StopMove();
+            E.Agent.NavTween.StopMove();
             Collision(hitNormal);
         }
         

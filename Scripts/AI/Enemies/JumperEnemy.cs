@@ -25,13 +25,15 @@ namespace AI.Enemies
         {
             if (Fsm.IsStateLocked) return;
             
-            if (Body.TargetNavBody.IsInactive || !Body.NavArea.IsTargetReachable)
+            if (Agent.TargetNavBody.IsDead ||
+                Agent.TargetNavBody.IsInactive ||
+                !Agent.NavArea.IsTargetReachable)
             {
                 Fsm.SetCurrentState(EnemyStates.Idle);
                 return;
             }
 
-            float distToTarget = Body.DistanceToTarget();
+            float distToTarget = Agent.DistanceToTarget();
             
             if (distToTarget < _chaseState.StopDist + 1f)
             {
@@ -41,9 +43,9 @@ namespace AI.Enemies
 
             if (distToTarget > _chaseState.StopDist)
             {
-                Vector2 movePos = Body.TargetNavBody.NavPos + -Body.DirectionToTarget() * _chaseState.StopDist;
+                Vector2 movePos = Agent.TargetNavBody.NavPos + -Agent.DirectionToTarget() * _chaseState.StopDist;
 
-                if (!Body.NavArea.IsPositionInArea(movePos)) return;
+                if (!Agent.NavArea.IsPositionInArea(movePos)) return;
 
                 _chaseState.TargetPos = movePos;
                 Fsm.SetCurrentState(EnemyStates.Chase);

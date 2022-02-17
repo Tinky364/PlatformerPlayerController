@@ -7,7 +7,7 @@ namespace AI
     public abstract class Enemy : Node2D
     {
         public StateMachine<EnemyStates> Fsm { get; } = new StateMachine<EnemyStates>();
-        public NavBody2D Body { get; private set; }
+        public NavAgent2D Agent { get; private set; }
         public AnimatedSprite AnimatedSprite;
 
         [Export(PropertyHint.Range, "10,2000,or_greater")]
@@ -30,9 +30,9 @@ namespace AI
         public override void _Ready()
         {
             base._Ready();
-            Body = GetNode<NavBody2D>("NavBody2D");
-            AnimatedSprite = GetNode<AnimatedSprite>("NavBody2D/AnimatedSprite");
-            Body.Connect("BodyColliding", this, nameof(OnBodyColliding));
+            Agent = GetNode<NavAgent2D>("NavAgent2D");
+            AnimatedSprite = GetNode<AnimatedSprite>("NavAgent2D/AnimatedSprite");
+            Agent.Connect("BodyColliding", this, nameof(OnBodyColliding));
         }
 
         public override void _Process(float delta)
@@ -40,17 +40,16 @@ namespace AI
             base._Process(delta);
             StateController();
             Fsm._Process(delta);
-            AnimationController();
+            DirectionControl();
         }
         
         public override void _PhysicsProcess(float delta)
         {
             base._PhysicsProcess(delta);
-            //CheckGround();
-            Body.IsOnGround = Body.IsOnFloor();
             Fsm._PhysicsProcess(delta);
-            if (!Body.IsOnGround) Body.Velocity.y += Gravity * delta; // Adds gravity force increasingly.
-            Body.Velocity = Body.MoveAndSlideInArea(Body.Velocity, delta, Vector2.Up);
+            if (!Agent.IsOnFloor()) Agent.Velocity.y += Gravity * delta; // Adds gravity force increasingly.
+            else if (!Agent.SnapDisabled) Agent.Velocity.y = Gravity * delta;
+            Agent.Velocity = Agent.MoveInArea(Agent.Velocity, delta, Vector2.Up);
         }
 
         private void OnBodyColliding(Node body)
@@ -61,18 +60,16 @@ namespace AI
                 "Damaged",
                 targetNavBody,
                 _damageValue,
-                this,
-                Body.GlobalPosition.DirectionTo(targetNavBody.GlobalPosition)
+                Agent,
+                Agent.GlobalPosition.DirectionTo(targetNavBody.GlobalPosition)
             );
         }
 
         protected abstract void StateController();
         
-        //private void CheckGround() => Body.IsOnGround = Body.GroundRay?.Count > 0;
-
-        private void AnimationController()
+        private void DirectionControl()
         {
-            switch (Body.Direction)
+            switch (Agent.Direction.x)
             {
                 case 1:
                     AnimatedSprite.FlipH = false;

@@ -4,7 +4,7 @@ namespace AI.States
 {
     public class IdleState : State<Enemy.EnemyStates>
     {
-        private Enemy _enemy;
+        private Enemy E { get; set; }
 
         [Export]
         private float _secondPosDist = 40f;
@@ -16,15 +16,15 @@ namespace AI.States
         public void Initialize(Enemy enemy)
         {
             Initialize(Enemy.EnemyStates.Idle);
-            _enemy = enemy;
-            _enemy.Fsm.AddState(this);
+            E = enemy;
+            E.Fsm.AddState(this);
             
-            _pos1 = _enemy.Body.NavPos;
+            _pos1 = E.Agent.NavPos;
             _pos2 = _pos1 + new Vector2(_secondPosDist, 0f);
-            if (!_enemy.Body.NavArea.IsPositionInArea(_pos2))
+            if (!E.Agent.NavArea.IsPositionInArea(_pos2))
             {
                 _pos2 = _pos1 - new Vector2(_secondPosDist, 0f);
-                if (!_enemy.Body.NavArea.IsPositionInArea(_pos2))
+                if (!E.Agent.NavArea.IsPositionInArea(_pos2))
                 {
                     GD.PrintErr("Not enough space for the enemy idle motion!");
                     return;
@@ -35,8 +35,8 @@ namespace AI.States
         
         public override void Enter()
         {
-            if (_enemy.Body.DebugEnabled) GD.Print($"{_enemy.Name}: {Key}");
-            _enemy.AnimatedSprite.Play("idle");
+            if (E.Agent.DebugEnabled) GD.Print($"{E.Name}: {Key}");
+            E.AnimatedSprite.Play("idle");
         }
 
         public override void Process(float delta)
@@ -45,14 +45,14 @@ namespace AI.States
 
         public override void PhysicsProcess(float delta)
         {
-            Vector2 dirToTarget = _targetPos - _enemy.Body.NavPos;
+            Vector2 dirToTarget = _targetPos - E.Agent.NavPos;
             if (Mathf.Abs(dirToTarget.x) > 1f)
             {
-                _enemy.AnimatedSprite.Play("run");
-                _enemy.Body.Direction = (int) dirToTarget.Normalized().x;
-                _enemy.Body.Velocity.x = Mathf.MoveToward(
-                    _enemy.Body.Velocity.x, _enemy.Body.Direction * _enemy.MoveSpeed,
-                    _enemy.MoveAcceleration * delta
+                E.AnimatedSprite.Play("run");
+                E.Agent.Direction.x = dirToTarget.Normalized().x;
+                E.Agent.Velocity.x = Mathf.MoveToward(
+                    E.Agent.Velocity.x, E.Agent.Direction.x * E.MoveSpeed,
+                    E.MoveAcceleration * delta
                 );
             }
             else

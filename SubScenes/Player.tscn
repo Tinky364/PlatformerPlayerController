@@ -1,50 +1,76 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=16 format=2]
 
-[ext_resource path="res://Sprites/Player/tile_0045.png" type="Texture" id=1]
-[ext_resource path="res://Scripts/Other/Player.cs" type="Script" id=2]
-[ext_resource path="res://Sprites/Player/tile_0046.png" type="Texture" id=3]
+[ext_resource path="res://Scripts/PlayerStateMachine/Player.cs" type="Script" id=1]
+[ext_resource path="res://Scripts/PlayerStateMachine/FallState.cs" type="Script" id=2]
+[ext_resource path="res://Scripts/PlayerStateMachine/MoveState.cs" type="Script" id=3]
+[ext_resource path="res://Scripts/PlayerStateMachine/JumpState.cs" type="Script" id=4]
+[ext_resource path="res://Sprites/Player/tile_0045.png" type="Texture" id=5]
+[ext_resource path="res://Sprites/Player/tile_0046.png" type="Texture" id=6]
+[ext_resource path="res://Scripts/PlayerStateMachine/RecoilState.cs" type="Script" id=7]
 
-[sub_resource type="SpriteFrames" id=2]
+[sub_resource type="Resource" id=2]
+script = ExtResource( 3 )
+_moveAccelerationX = 400.0
+_moveSpeedX = 70.0
+
+[sub_resource type="Resource" id=3]
+script = ExtResource( 2 )
+_airAccelerationX = 600.0
+_airSpeedX = 70.0
+_jumpAbleDur = 0.1
+
+[sub_resource type="Resource" id=4]
+script = ExtResource( 4 )
+_jumpHeightMin = 9.0
+_jumpHeightMax = 36.0
+_jumpWidthMax = 48.0
+_jumpAccelerationX = 600.0
+
+[sub_resource type="Resource" id=8]
+script = ExtResource( 7 )
+_recoilImpulse = 175.0
+_unhurtableDur = 1.0
+_recoilDur = 0.5
+
+[sub_resource type="SpriteFrames" id=5]
 animations = [ {
-"frames": [ ExtResource( 1 ) ],
+"frames": [ ExtResource( 5 ) ],
 "loop": true,
 "name": "idle",
 "speed": 5.0
 }, {
-"frames": [ ExtResource( 1 ), ExtResource( 3 ) ],
+"frames": [ ExtResource( 5 ), ExtResource( 6 ) ],
 "loop": true,
 "name": "run",
 "speed": 10.0
 }, {
-"frames": [ ExtResource( 3 ) ],
+"frames": [ ExtResource( 6 ) ],
 "loop": true,
 "name": "jump",
 "speed": 5.0
 } ]
 
-[sub_resource type="RectangleShape2D" id=4]
-extents = Vector2( 4, 3.5 )
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 4, 4 )
 
-[sub_resource type="CircleShape2D" id=5]
-radius = 4.03113
+[sub_resource type="CircleShape2D" id=7]
+radius = 4.0
 
-[sub_resource type="RectangleShape2D" id=3]
-extents = Vector2( 4, 0.5 )
+[sub_resource type="RectangleShape2D" id=6]
+extents = Vector2( 4, 1 )
 
 [node name="Player" type="KinematicBody2D"]
-collision_mask = 14
-collision/safe_margin = 0.1
-script = ExtResource( 2 )
-__meta__ = {
-"_edit_group_": true
-}
-Extents = Vector2( 8, 11 )
-GroundRayLength = 5.0
-_isOnGroundDetectionLength = 2.0
+collision_mask = 6
+script = ExtResource( 1 )
+Extents = Vector2( 8, 12 )
+_moveState = SubResource( 2 )
+_fallState = SubResource( 3 )
+_jumpState = SubResource( 4 )
+_recoilState = SubResource( 8 )
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 position = Vector2( -8, -16 )
-frames = SubResource( 2 )
+frames = SubResource( 5 )
 animation = "idle"
 centered = false
 __meta__ = {
@@ -52,18 +78,12 @@ __meta__ = {
 }
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2( 0, -3.5 )
-shape = SubResource( 4 )
-__meta__ = {
-"_edit_lock_": true
-}
+position = Vector2( 0, -4 )
+shape = SubResource( 1 )
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="."]
-position = Vector2( 0, -7 )
-shape = SubResource( 5 )
-__meta__ = {
-"_edit_lock_": true
-}
+position = Vector2( 0, -8 )
+shape = SubResource( 7 )
 
 [node name="PlatformCheckArea" type="Area2D" parent="."]
 collision_layer = 0
@@ -73,7 +93,8 @@ __meta__ = {
 }
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformCheckArea"]
-position = Vector2( 0, -0.5 )
-shape = SubResource( 3 )
+position = Vector2( 0, -1 )
+shape = SubResource( 6 )
 
 [node name="JumpTimer" type="Timer" parent="."]
+process_mode = 0

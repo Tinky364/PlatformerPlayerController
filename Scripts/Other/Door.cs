@@ -1,5 +1,6 @@
 using Godot;
 using NavTool;
+using PlayerStateMachine;
 
 namespace Other
 {
