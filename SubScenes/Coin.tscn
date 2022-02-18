@@ -3,7 +3,6 @@
 [ext_resource path="res://Sprites/Coin/Coin.png" type="Texture" id=1]
 [ext_resource path="res://Scripts/Other/Coin.cs" type="Script" id=5]
 
-
 [sub_resource type="Animation" id=6]
 length = 0.001
 tracks/0/type = "value"

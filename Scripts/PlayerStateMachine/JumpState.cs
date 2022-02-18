@@ -20,7 +20,7 @@ namespace PlayerStateMachine
         private float JumpAccelerationY => P.Gravity - Mathf.Pow(JumpImpulseY, 2) / (2 * _jumpHeightMax); // a=g-(v^2/2*h)
         private float JumpDur => JumpImpulseY / (P.Gravity - JumpAccelerationY); // t=V/(g-a)
         private float FallDur => Mathf.Sqrt(2f * _jumpHeightMax / P.Gravity); // t=sqrt{(2*h)/g}
-        private float JumpSpeedX => _jumpWidthMax / (JumpDur + FallDur); // v=w/t
+        public float JumpSpeedX => _jumpWidthMax / (JumpDur + FallDur); // v=w/t
         
         private float _desiredJumpSpeedX;
         private bool _isFirstFrame;
@@ -28,7 +28,8 @@ namespace PlayerStateMachine
         public override void Enter()
         {
             if (P.DebugEnabled) GD.Print($"{P.Name}: {Key}");
-            P.AnimSprite.Play("jump");
+            P.AnimPlayer.GetAnimation("jump").Length = JumpDur;
+            P.AnimPlayer.Play("jump");
             P.JumpTimer.Start(JumpDur);
             _isFirstFrame = true;
         }
@@ -80,6 +81,7 @@ namespace PlayerStateMachine
             Initialize(Player.PlayerStates.Jump);
             P = player;
             P.Fsm.AddState(this);
+            P.AnimPlayer.GetAnimation("fall").Length = FallDur;
         }
     }
 }

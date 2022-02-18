@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/AtlasTexture.png-c0fbab1478d3addf53912a410ec4b6bb.stex"
+path="res://.import/CharacterIdle-Sheet.png-efac1d18350e78fbf765ad8289162e5d.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/AtlasTexture.png"
-dest_files=[ "res://.import/AtlasTexture.png-c0fbab1478d3addf53912a410ec4b6bb.stex" ]
+source_file="res://Sprites/Player/CharacterIdle-Sheet.png"
+dest_files=[ "res://.import/CharacterIdle-Sheet.png-efac1d18350e78fbf765ad8289162e5d.stex" ]
 
 [params]
 

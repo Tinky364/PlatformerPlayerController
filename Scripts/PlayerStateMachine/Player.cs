@@ -12,7 +12,8 @@ namespace PlayerStateMachine
         public StateMachine<PlayerStates> Fsm { get; } = new StateMachine<PlayerStates>();
         public enum PlayerStates { Move, Fall, Jump, Recoil, Dead }
         
-        public AnimatedSprite AnimSprite { get; private set; }
+        public Sprite Sprite { get; private set; }
+        public AnimationPlayer AnimPlayer { get; private set; }
         public Area2D PlatformCheckArea { get; private set; }
         public Timer JumpTimer { get; private set; }
 
@@ -25,24 +26,27 @@ namespace PlayerStateMachine
         [Export(PropertyHint.Range, "0.1,20,0.05,or_greater")] 
         protected float GroundRayLength { get; private set; } = 5f;
         [Export(PropertyHint.Layers2dPhysics)]
-        public uint PlatformMask = 4;
+        public uint PlatformMask { get; private set; } = 4;
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private int _maxHealth = 6;
+        private int MaxHealth { get; set; } = 6;
+        [Export]
+        public Color SpriteColor { get; private set; }
+        
+        [Export]
+        public MoveState MoveState { get; private set; }
+        [Export]
+        public FallState FallState { get; private set; }
+        [Export]
+        public JumpState JumpState { get; private set; }
+        [Export]
+        public RecoilState RecoilState { get; private set; }
+        [Export]
+        public DeadState DeadState { get; private set; }
        
-        [Export]
-        private MoveState _moveState;
-        [Export]
-        private FallState _fallState;
-        [Export]
-        private JumpState _jumpState;
-        [Export]
-        private RecoilState _recoilState;
-        [Export]
-        private DeadState _deadState;
-    
         public Dictionary GroundRay { get; private set; }
         public Vector2 GroundHitPos { get; private set; }
         private Vector2 _inputAxis;
+        public int CoinCount { get; private set; } = 0;
         private int _health;
         public int Health
         {
@@ -51,13 +55,12 @@ namespace PlayerStateMachine
             {
                 if (value < 0)
                     _health = 0;
-                else if (value > _maxHealth)
-                    _health = _maxHealth;
+                else if (value > MaxHealth)
+                    _health = MaxHealth;
                 else
                     _health = value;
             }
         }
-        public int CoinCount { get; private set; } = 0;
 
         public override void _EnterTree()
         {
@@ -68,17 +71,19 @@ namespace PlayerStateMachine
         public override void _Ready()
         {
             base._Ready();
-            AnimSprite = GetNode<AnimatedSprite>("AnimatedSprite");
+            Sprite = GetNode<Sprite>("Sprite");
+            AnimPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
             PlatformCheckArea = GetNode<Area2D>("PlatformCheckArea");
             JumpTimer = GetNode<Timer>("JumpTimer");
-            _moveState.Initialize(this);
-            _fallState.Initialize(this);
-            _jumpState.Initialize(this);
-            _recoilState.Initialize(this);
-            _deadState.Initialize(this);
-            PlatformCheckArea.Connect("body_exited", _moveState, "OnPlatformExited");
-            JumpTimer.Connect("timeout", _jumpState, "OnJumpEnd");
-            Health = _maxHealth;
+            MoveState.Initialize(this);
+            FallState.Initialize(this);
+            JumpState.Initialize(this);
+            RecoilState.Initialize(this);
+            DeadState.Initialize(this);
+            PlatformCheckArea.Connect("body_exited", MoveState, "OnPlatformExited");
+            JumpTimer.Connect("timeout", JumpState, "OnJumpEnd");
+            Health = MaxHealth;
+            Sprite.SelfModulate = SpriteColor;
             Events.Singleton.Connect("Damaged", this, nameof(OnDamaged));
             Events.Singleton.Connect("CoinCollected", this, nameof(AddCoin));
             Fsm.SetCurrentState(PlayerStates.Fall);
@@ -103,17 +108,17 @@ namespace PlayerStateMachine
             if (IsDead || target != this || IsUnhurtable) return;
             
             Health -= damageValue;
-            Events.Singleton.EmitSignal("PlayerHealthChanged", Health, _maxHealth, attacker);
+            Events.Singleton.EmitSignal("PlayerHealthChanged", Health, MaxHealth, attacker);
             if (Health == 0)
             {
                 IsDead = true;
-                _recoilState.HitNormal = hitNormal;
+                RecoilState.HitNormal = hitNormal;
                 Fsm.SetCurrentState(PlayerStates.Recoil);
                 Events.Singleton.EmitSignal("PlayerDied");
             }
             else
             {
-                _recoilState.HitNormal = hitNormal;
+                RecoilState.HitNormal = hitNormal;
                 Fsm.SetCurrentState(PlayerStates.Recoil);
             }
         }
@@ -140,10 +145,10 @@ namespace PlayerStateMachine
             switch (Direction.x)
             {
                 case 1:
-                    AnimSprite.FlipH = false;
+                    Sprite.FlipH = false;
                     break;
                 case -1:
-                    AnimSprite.FlipH = true;
+                    Sprite.FlipH = true;
                     break;
             }
         }

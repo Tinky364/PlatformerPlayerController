@@ -9,8 +9,6 @@ namespace PlayerStateMachine
 
         [Export(PropertyHint.Range, "1,2000,or_greater")]
         private float _airAccelerationX = 600f;
-        [Export(PropertyHint.Range, "1,200,or_greater")]
-        private float _airSpeedX = 70f;
         [Export(PropertyHint.Range, "0.01,5,0.05,or_greater")]
         private float _jumpAbleDur = 0.1f;
         
@@ -20,7 +18,7 @@ namespace PlayerStateMachine
         public override void Enter()
         {
             if (P.DebugEnabled) GD.Print($"{P.Name}: {Key}");
-            P.AnimSprite.Play("jump");
+            P.AnimPlayer.Play("fall");
             if (P.Fsm.PreviousState?.Key != Player.PlayerStates.Jump)
                 StartJumpAbleDuration();
         }
@@ -29,7 +27,7 @@ namespace PlayerStateMachine
 
         public override void PhysicsProcess(float delta)
         {
-            _desiredAirSpeedX = _airSpeedX * P.AxisInputs().x;
+            _desiredAirSpeedX = P.JumpState.JumpSpeedX * P.AxisInputs().x;
 
             if (_jumpAble || P.GroundRay.Count > 0)
             {

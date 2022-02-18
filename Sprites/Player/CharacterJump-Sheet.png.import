@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/tile_0046.png-f185cccbe642bdfb13e8b2d15681a50c.stex"
+path="res://.import/CharacterJump-Sheet.png-f23d28545f7e8a3d6610251872d254dd.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Player/tile_0046.png"
-dest_files=[ "res://.import/tile_0046.png-f185cccbe642bdfb13e8b2d15681a50c.stex" ]
+source_file="res://Sprites/Player/CharacterJump-Sheet.png"
+dest_files=[ "res://.import/CharacterJump-Sheet.png-f23d28545f7e8a3d6610251872d254dd.stex" ]
 
 [params]
 

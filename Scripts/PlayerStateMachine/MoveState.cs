@@ -18,11 +18,20 @@ namespace PlayerStateMachine
         public override void Enter()
         {
             if (P.DebugEnabled) GD.Print($"{P.Name}: {Key}");
+            P.AnimPlayer.GetAnimation("hit_ground").Length = 0.075f;
+            P.AnimPlayer.Play("hit_ground");
         }
 
         public override void Process(float delta)
         {
-            P.AnimSprite.Play(P.Velocity.x == 0 ? "idle" : "run");
+            if (!P.AnimPlayer.CurrentAnimation.Equals("hit_ground"))
+            {
+                P.AnimPlayer.Play(P.Velocity.x == 0 ? "idle" : "run");
+
+                P.AnimPlayer.PlaybackSpeed = P.AnimPlayer.CurrentAnimation.Equals("run")
+                    ? Mathf.Clamp(Mathf.Abs(P.Velocity.x) / _moveSpeedX, 0.5f, 1f)
+                    : 1f;
+            }
         }
 
         public override void PhysicsProcess(float delta)
@@ -50,7 +59,10 @@ namespace PlayerStateMachine
                 P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
         }
 
-        public override void Exit() { }
+        public override void Exit()
+        {
+            P.AnimPlayer.PlaybackSpeed = 1f;
+        }
 
         private bool DropFromPlatform()
         {

@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/PrototypePlatformer.png-b43e77058a6d38f209f93658a90164cc.stex"
+path="res://.import/CharacterRun-Sheet.png-d13fece69aa725211443920f3cfd55b8.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/PrototypePlatformer.png"
-dest_files=[ "res://.import/PrototypePlatformer.png-b43e77058a6d38f209f93658a90164cc.stex" ]
+source_file="res://Sprites/Player/CharacterRun-Sheet.png"
+dest_files=[ "res://.import/CharacterRun-Sheet.png-d13fece69aa725211443920f3cfd55b8.stex" ]
 
 [params]
 

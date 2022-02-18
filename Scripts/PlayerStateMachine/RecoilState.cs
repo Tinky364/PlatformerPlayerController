@@ -24,7 +24,7 @@ namespace PlayerStateMachine
             if (P.DebugEnabled) GD.Print($"{P.Name}: {Key}");
             
             _count = 0;
-            P.AnimSprite.Play("jump");
+            P.AnimPlayer.Play("jump");
 
             P.Velocity = CalculateRecoilVelocity();
             
@@ -84,15 +84,15 @@ namespace PlayerStateMachine
             float count = 0f;
             while (count < _unhurtableDur)
             {
-                P.AnimSprite.SelfModulate = 
-                    P.AnimSprite.SelfModulate == Colors.Red ? Colors.White : Colors.Red;
+                P.Sprite.SelfModulate = 
+                    P.Sprite.SelfModulate == Colors.White ? P.SpriteColor : Colors.White;
                 float t = count / _unhurtableDur;
                 t = 1 - Mathf.Pow(1 - t, 5);
                 float waitTime = Mathf.Lerp(0.01f, 0.2f, t);
                 count += waitTime;
                 await ToSignal(P.GetTree().CreateTimer(waitTime), "timeout");
             }
-            P.AnimSprite.SelfModulate = Colors.White;
+            P.Sprite.SelfModulate = P.SpriteColor;
         }
         
         public void Initialize(Player player)
