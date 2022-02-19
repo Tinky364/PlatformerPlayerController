@@ -1,4 +1,5 @@
 using Godot;
+using Manager;
 using NavTool;
 
 namespace Other
@@ -21,7 +22,7 @@ namespace Other
     
         public override async void _Ready()
         {
-            await ToSignal(GetTree().CreateTimer(2f), "timeout");
+            await TreeTimer.S.Wait(2f);
             if (_navAreaPath != null) 
                 NavArea = GetNodeOrNull<NavArea2D>(_navAreaPath);
             if (NavArea != null && !NavArea.IsPositionInArea(GlobalPosition))

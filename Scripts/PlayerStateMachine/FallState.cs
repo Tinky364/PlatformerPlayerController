@@ -1,5 +1,6 @@
 using Godot;
 using AI;
+using Manager;
 
 namespace PlayerStateMachine
 {
@@ -52,7 +53,7 @@ namespace PlayerStateMachine
         private async void StartJumpAbleDuration()
         {
             _jumpAble = true;
-            await ToSignal(P.GetTree().CreateTimer(_jumpAbleDur), "timeout");
+            await TreeTimer.S.Wait(_jumpAbleDur);
             _jumpAble = false;
         }
         

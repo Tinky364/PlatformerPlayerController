@@ -30,7 +30,7 @@ namespace AI.States
             Initialize(Enemy.EnemyStates.Attack);
             E = enemy;
             E.Fsm.AddState(this);
-            Events.Singleton.Connect("Damaged", this, nameof(OnTargetHit));
+            Events.S.Connect("Damaged", this, nameof(OnTargetHit));
         }
 
         public override void Enter()
@@ -47,7 +47,7 @@ namespace AI.States
         private async void Attack(CancellationToken cancellationToken)
         {
             // Waits before calculating the target position.
-            await ToSignal(E.GetTree().CreateTimer(_waitBeforeRushDur / 2f), "timeout");
+            await TreeTimer.S.Wait(_waitBeforeRushDur / 2f);
             // Calculates the target position and sets its own direction.
             Vector2 targetPos = new Vector2(0, E.Agent.NavPos.y);
             if (E.Agent.DirectionToTarget().x >= 0)
@@ -61,7 +61,7 @@ namespace AI.States
                 targetPos.x = E.Agent.NavArea.AreaRect.Position.x + 12f;
             }
             // Waits before rushing to the target position.
-            await ToSignal(E.GetTree().CreateTimer(_waitBeforeRushDur / 2f), "timeout");
+            await TreeTimer.S.Wait(_waitBeforeRushDur / 2f);
             E.AnimatedSprite.Play("run");
             // Starts rushing to the target position.
             E.Agent.NavTween.MoveToward(
@@ -75,7 +75,7 @@ namespace AI.States
             _isRushing = false;
             E.AnimatedSprite.Play("idle");
             // Waits before changing state.
-            await ToSignal(E.GetTree().CreateTimer(_waitAfterRushDur), "timeout");
+            await TreeTimer.S.Wait(_waitAfterRushDur);
             E.Fsm.StopCurrentState();
         }
         
@@ -90,7 +90,7 @@ namespace AI.States
                 Tween.EaseType.Out
             );
             await ToSignal(E.Agent.NavTween, "MoveCompleted");
-            await ToSignal(E.GetTree().CreateTimer(_waitAfterCollisionDur), "timeout");
+            await TreeTimer.S.Wait(_waitAfterCollisionDur);
             E.Fsm.StopCurrentState();
         }
 

@@ -1,4 +1,5 @@
 using Godot;
+using Manager;
 
 namespace NavTool
 {
@@ -53,7 +54,7 @@ namespace NavTool
                              TransitionType transitionType = TransitionType.Linear,
                              EaseType easeType = EaseType.InOut, float delay = 0f)
         {
-            await ToSignal(GetTree().CreateTimer(delay), "timeout");
+            if (delay > 0) await TreeTimer.S.Wait(delay);
             if (IsPlaying)
             {
                 GD.Print("Already lerping wait until finish or call StopMove method!");
@@ -78,7 +79,7 @@ namespace NavTool
                                TransitionType transitionType = TransitionType.Linear,
                                EaseType easeType = EaseType.InOut, float delay = 0f)
         {
-            if (delay != 0) await ToSignal(GetTree().CreateTimer(delay), "timeout");
+            if (delay != 0) await TreeTimer.S.Wait(delay);
             if (IsPlaying)
             {
                 GD.Print("Already lerping wait until finish or call StopMove method!");

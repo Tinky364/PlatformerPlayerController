@@ -22,6 +22,7 @@ run/main_scene="res://Scenes/TestScene.tscn"
 
 Events="*res://Scripts/Manager/Events.cs"
 GameManager="*res://Scripts/Manager/GameManager.cs"
+TreeTimer="*res://Scripts/Manager/TreeTimer.cs"
 
 [display]
 

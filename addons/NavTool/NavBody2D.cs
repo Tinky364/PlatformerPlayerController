@@ -35,23 +35,7 @@ namespace NavTool
         public Vector2 Velocity;
         public Vector2 Direction = new Vector2(1, 0);
         private bool _isColliding;
-        private bool _isInactive;
-        public bool IsInactive
-        {
-            get => _isInactive;
-            set
-            {
-                _isInactive = value;
-                SetProcess(!value);
-                SetPhysicsProcess(!value);
-                Visible = !value;
-                foreach (Node child in GetChildren())
-                {
-                    child.SetProcess(!value);
-                    child.SetPhysicsProcess(!value);
-                }
-            }
-        }
+        public bool IsInactive => !Visible;
         public bool IsUnhurtable { get; set; }
         public bool IsDead { get; set; }
 

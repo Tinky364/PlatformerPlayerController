@@ -24,7 +24,7 @@ namespace Other
 
         private void OnBodyEntered(Node body)
         {
-            Events.Singleton.EmitSignal("CoinCollected", body, this);
+            Events.S.EmitSignal("CoinCollected", body, this);
             _animationPlayer.Stop();
             _animationPlayer.Play("collect");
             _shape.SetDeferred("disabled", true);

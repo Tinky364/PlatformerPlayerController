@@ -56,7 +56,7 @@ namespace AI
         {
             if (!(body is NavBody2D targetNavBody)) return;
             if (targetNavBody.IsUnhurtable) return;
-            Events.Singleton.EmitSignal(
+            Events.S.EmitSignal(
                 "Damaged",
                 targetNavBody,
                 _damageValue,

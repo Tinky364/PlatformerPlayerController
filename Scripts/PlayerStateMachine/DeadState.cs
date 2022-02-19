@@ -1,5 +1,6 @@
 using Godot;
 using AI;
+using Manager;
 
 namespace PlayerStateMachine
 {
@@ -12,8 +13,8 @@ namespace PlayerStateMachine
             if (P.DebugEnabled) GD.Print($"{P.Name}: {Key}");
         
             P.IsUnhurtable = true;
-            await ToSignal(P.GetTree().CreateTimer(2f), "timeout");
-            P.IsInactive = true;
+            await TreeTimer.S.Wait(2f);
+            GameManager.S.SetNodeActive(P, false);
         }
 
         public override void Process(float delta) { }

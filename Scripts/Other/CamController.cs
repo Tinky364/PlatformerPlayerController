@@ -6,7 +6,7 @@ namespace Other
     public class CamController : Camera2D
     {
         [Export]
-        private NodePath _playerPath;
+        private NodePath _playerPath = default;
         [Export(PropertyHint.Range, "0")]
         private float _offsetAcceleration = 2f;
         [Export]

@@ -3,11 +3,8 @@ using Godot;
 
 namespace Manager
 {
-    public class GameManager : Node
+    public class GameManager : Singleton<GameManager>
     {
-        private static GameManager _singleton;
-        public static GameManager Singleton => _singleton;
-
         private SceneTree Tree => GetTree();
         private Viewport Root => Tree.Root;
         public SceneManager CurrentScene { get; private set; }
@@ -21,14 +18,13 @@ namespace Manager
 
         public override void _EnterTree()
         {
-            if (_singleton == null) _singleton = this;
-            else GD.Print($"Multiple instances of singleton class named {Name}!");
+            SetSingleton();
         }
 
         public override void _Ready()
         {
             PauseMode = PauseModeEnum.Process;
-            Events.Singleton.PauseMode = PauseModeEnum.Process;
+            Events.S.PauseMode = PauseModeEnum.Process;
 
             if (Root.GetChild(Root.GetChildCount() - 1) is SceneManager scene) SetCurrentScene(scene);
             else GD.PushWarning("First scene is not a SceneManager node!");
@@ -124,6 +120,26 @@ namespace Manager
         {
             CurrentScene = scene;
             if (!CurrentScene.IsInsideTree()) Root.AddChild(CurrentScene);
+        }
+        
+        public void SetNodeActive(Node node, bool value)
+        {
+            node.SetProcess(value);
+            node.SetPhysicsProcess(value);
+            node.SetProcessInput(value);
+            switch (node)
+            {
+                case CollisionShape2D collisionShape2D:
+                    collisionShape2D.SetDeferred("disabled", !value);
+                    collisionShape2D.Visible = value;
+                    break;
+                case CanvasItem canvasItem: canvasItem.Visible = value;
+                    break;
+            }
+            foreach (Node child in node.GetChildren())
+            {
+                SetNodeActive(child, value);
+            }
         }
     }
 }

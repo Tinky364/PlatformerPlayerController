@@ -12,8 +12,6 @@ namespace AI.States
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeAttackDur = 1f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _backMoveDur = 0.4f;
-        [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _jumpDur = 0.6f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _landingMoveDur = 0.2f;
@@ -40,7 +38,7 @@ namespace AI.States
             Initialize(Enemy.EnemyStates.Attack);
             E = enemy;
             E.Fsm.AddState(this);
-            Events.Singleton.Connect("Damaged", this, nameof(OnTargetHit));
+            Events.S.Connect("Damaged", this, nameof(OnTargetHit));
         }
 
         public override void Enter()
@@ -62,7 +60,7 @@ namespace AI.States
             float backMoveDist = Mathf.Clamp(
                 _backMoveDistMax - E.Agent.DistanceTo(targetPos), _backMoveDistMin, _backMoveDistMax
             );
-            await ToSignal(E.GetTree().CreateTimer(_waitBeforeAttackDur), "timeout");
+            await TreeTimer.S.Wait(_waitBeforeAttackDur);
             E.Agent.NavTween.MoveToward(
                 NavTween.TweenMode.X,
                 null,
@@ -90,7 +88,7 @@ namespace AI.States
             );
             await ToSignal(E.Agent.NavTween, "MoveCompleted");
             E.AnimatedSprite.Play("idle");
-            await ToSignal(E.GetTree().CreateTimer(_waitAfterAttackDur), "timeout");
+            await TreeTimer.S.Wait(_waitAfterAttackDur);
             E.Fsm.StopCurrentState();
         }
         
@@ -105,7 +103,7 @@ namespace AI.States
                 Tween.EaseType.Out
             );
             await ToSignal(E.Agent.NavTween, "MoveCompleted");
-            await ToSignal(E.GetTree().CreateTimer(_waitAfterCollisionDur), "timeout");
+            await TreeTimer.S.Wait(_waitAfterCollisionDur);
             E.Fsm.StopCurrentState();
         }
         

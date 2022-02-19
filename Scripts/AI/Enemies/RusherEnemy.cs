@@ -6,9 +6,9 @@ namespace AI.Enemies
     public class RusherEnemy : Enemy
     {
         [Export]
-        private IdleState _idleState;
+        private IdleState _idleState = default;
         [Export]
-        private RushAttackState _attackState;
+        private RushAttackState _attackState = default;
 
         public override void _Ready()
         {

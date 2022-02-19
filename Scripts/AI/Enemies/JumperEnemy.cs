@@ -6,11 +6,11 @@ namespace AI.Enemies
     public class JumperEnemy : Enemy
     {
         [Export]
-        private IdleState _idleState;
+        private IdleState _idleState = default;
         [Export]
-        private ChaseState _chaseState;
+        private ChaseState _chaseState = default;
         [Export]
-        private JumpAttackState _attackState;
+        private JumpAttackState _attackState = default;
 
         public override void _Ready()
         {

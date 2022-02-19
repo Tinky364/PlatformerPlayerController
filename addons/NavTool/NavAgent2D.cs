@@ -1,4 +1,5 @@
 using Godot;
+using Manager;
 
 namespace NavTool
 {
@@ -70,8 +71,8 @@ namespace NavTool
             return (TargetNavBody.NavPos - NavPos).Length();
         }
         
-        protected void OnScreenEnter() => IsInactive = false;
+        protected void OnScreenEnter() => GameManager.S.SetNodeActive(this, true);
         
-        protected void OnScreenExit() => IsInactive = true;
+        protected void OnScreenExit() => GameManager.S.SetNodeActive(this, false);
     }
 }

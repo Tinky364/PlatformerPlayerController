@@ -21,10 +21,10 @@ namespace UI
             switch (ButtonType)
             {
                 case ButtonTypes.ChangeSceneButton: 
-                    GameManager.Singleton.LoadScene(LoadScenePath);
+                    GameManager.S.LoadScene(LoadScenePath);
                     break;
                 case ButtonTypes.QuitGameButton:
-                    GameManager.Singleton.QuitGame();
+                    GameManager.S.QuitGame();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

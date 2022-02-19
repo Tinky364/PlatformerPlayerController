@@ -84,8 +84,8 @@ namespace PlayerStateMachine
             JumpTimer.Connect("timeout", JumpState, "OnJumpEnd");
             Health = MaxHealth;
             Sprite.SelfModulate = SpriteColor;
-            Events.Singleton.Connect("Damaged", this, nameof(OnDamaged));
-            Events.Singleton.Connect("CoinCollected", this, nameof(AddCoin));
+            Events.S.Connect("Damaged", this, nameof(OnDamaged));
+            Events.S.Connect("CoinCollected", this, nameof(AddCoin));
             Fsm.SetCurrentState(PlayerStates.Fall);
         }
 
@@ -108,13 +108,13 @@ namespace PlayerStateMachine
             if (IsDead || target != this || IsUnhurtable) return;
             
             Health -= damageValue;
-            Events.Singleton.EmitSignal("PlayerHealthChanged", Health, MaxHealth, attacker);
+            Events.S.EmitSignal("PlayerHealthChanged", Health, MaxHealth, attacker);
             if (Health == 0)
             {
                 IsDead = true;
                 RecoilState.HitNormal = hitNormal;
                 Fsm.SetCurrentState(PlayerStates.Recoil);
-                Events.Singleton.EmitSignal("PlayerDied");
+                Events.S.EmitSignal("PlayerDied");
             }
             else
             {
@@ -127,7 +127,7 @@ namespace PlayerStateMachine
         {
             if (collector != this) return;
             CoinCount += coin.Value;
-            Events.Singleton.EmitSignal("PlayerCoinCountChanged", CoinCount);
+            Events.S.EmitSignal("PlayerCoinCountChanged", CoinCount);
         }
 
         public Vector2 AxisInputs()

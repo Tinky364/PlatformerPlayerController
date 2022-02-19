@@ -1,13 +1,12 @@
 using Godot;
 using System;
 using AI;
+using Object = Godot.Object;
 
 namespace PlayerStateMachine
 {
     public class HangState : State<Player.PlayerStates>
     {
-        private Player _player;
-
         public void Initialize(Player player)
         {
         }

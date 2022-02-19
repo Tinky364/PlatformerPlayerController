@@ -47,7 +47,6 @@ _chaseSpeed = 30.0
 resource_local_to_scene = true
 script = ExtResource( 21 )
 _waitBeforeAttackDur = 1.0
-_backMoveDur = 0.4
 _jumpDur = 0.5
 _landingMoveDur = 0.2
 _waitAfterAttackDur = 1.0
@@ -114,18 +113,18 @@ collision_mask = 0
 physics_material_override = SubResource( 1 )
 
 [node name="CollisionShape2D7" type="CollisionShape2D" parent="World/PlatformTileMap/StaticBody2D" index="0"]
-position = Vector2( 67, 32 )
+position = Vector2( 128, 32 )
 rotation = 1.5708
 shape = SubResource( 3 )
 one_way_collision = true
 
 [node name="CollisionShape2D3" type="CollisionShape2D" parent="World/PlatformTileMap/StaticBody2D" index="1"]
-position = Vector2( 43, 36 )
+position = Vector2( 104, 36 )
 shape = SubResource( 5 )
 one_way_collision = true
 
 [node name="CollisionShape2D4" type="CollisionShape2D" parent="World/PlatformTileMap/StaticBody2D" index="2"]
-position = Vector2( 19, 32 )
+position = Vector2( 80, 32 )
 rotation = -1.5708
 shape = SubResource( 6 )
 
@@ -140,6 +139,7 @@ tile_data = PoolIntArray( -65538, 0, 0, -65537, 0, 1, -131072, 0, 1, -131071, 0,
 
 [node name="MovingPlatform" parent="World" index="4" instance=ExtResource( 8 )]
 position = Vector2( 264, 80 )
+_idleDur = 4.0
 
 [node name="Line2D" parent="World/MovingPlatform" index="0"]
 points = PoolVector2Array( 0, 0, 0, 80 )
@@ -151,7 +151,8 @@ position = Vector2( 0, -2 )
 position = Vector2( 136, 88 )
 
 [node name="Player" parent="World" index="6" instance=ExtResource( 17 )]
-position = Vector2( 268, 94 )
+position = Vector2( 229, 167 )
+MaxHealth = 1
 
 [node name="JumperEnemy" parent="World" index="7" instance=ExtResource( 12 )]
 position = Vector2( 201, 112 )

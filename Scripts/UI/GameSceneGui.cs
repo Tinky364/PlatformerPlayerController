@@ -37,33 +37,33 @@ namespace UI
             
             _pausePanel.Visible = false;
             
-            Events.Singleton.Connect("PlayerCoinCountChanged", this, nameof(OnCoinCountChanged));
-            Events.Singleton.Connect("PlayerHealthChanged", this, nameof(OnHealthChanged));
-            Events.Singleton.Connect("PlayerDied", this, nameof(OnPlayerDied));
+            Events.S.Connect("PlayerCoinCountChanged", this, nameof(OnCoinCountChanged));
+            Events.S.Connect("PlayerHealthChanged", this, nameof(OnHealthChanged));
+            Events.S.Connect("PlayerDied", this, nameof(OnPlayerDied));
         }
 
         private async void OnPlayerDied()
         {
-            if (GameManager.Singleton.UiState == GameManager.GameState.Pause) return;
+            if (GameManager.S.UiState == GameManager.GameState.Pause) return;
 
-            GameManager.Singleton.GuiDisableInput(true);
-            await ToSignal(GetTree().CreateTimer(1f), "timeout");
+            GameManager.S.GuiDisableInput(true);
+            await TreeTimer.S.Wait(1f);
             await FadeControlAlpha(_hud, 1f, 0f, 1f);
             await FadeControlAlpha(_pausePanel, 0f, 1f, _pausePanelOpenDur);
-            GameManager.Singleton.SetGameState(GameManager.GameState.Pause, GameManager.GameState.Play);
-            GameManager.Singleton.GuiDisableInput(false);
+            GameManager.S.SetGameState(GameManager.GameState.Pause, GameManager.GameState.Play);
+            GameManager.S.GuiDisableInput(false);
         }
         
         private void OnCoinCountChanged(int coinCount)
         {
-            if (GameManager.Singleton.UiState == GameManager.GameState.Pause) return;
+            if (GameManager.S.UiState == GameManager.GameState.Pause) return;
             
             _coinCountLabel.Text = coinCount.ToString();
         }
 
         private void OnHealthChanged(int newHealth, int maxHealth, NavBody2D attacker)
         {
-            if (GameManager.Singleton.UiState == GameManager.GameState.Pause) return;
+            if (GameManager.S.UiState == GameManager.GameState.Pause) return;
 
             int targetHealth = (int)_healthProgress.MaxValue * newHealth / maxHealth;
 

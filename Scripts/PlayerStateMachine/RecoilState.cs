@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Threading.Tasks;
 using AI;
+using Manager;
 
 namespace PlayerStateMachine
 {
@@ -90,7 +91,7 @@ namespace PlayerStateMachine
                 t = 1 - Mathf.Pow(1 - t, 5);
                 float waitTime = Mathf.Lerp(0.01f, 0.2f, t);
                 count += waitTime;
-                await ToSignal(P.GetTree().CreateTimer(waitTime), "timeout");
+                await TreeTimer.S.Wait(waitTime);
             }
             P.Sprite.SelfModulate = P.SpriteColor;
         }

@@ -4,11 +4,8 @@ using Other;
 
 namespace Manager
 {
-    public class Events : Node
+    public class Events : Singleton<Events>
     {
-        private static Events _singleton;
-        public static Events Singleton => _singleton;
-
         [Signal]
         private delegate void Damaged(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal);
 
@@ -26,10 +23,7 @@ namespace Manager
 
         public override void _EnterTree()
         {
-            if (_singleton == null)
-                _singleton = this;
-            else
-                GD.Print($"Multiple instances of singleton class named {Name}!");
+            SetSingleton();
         }
     }
 }
