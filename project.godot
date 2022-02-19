@@ -16,7 +16,7 @@ ClassPrefix=""
 [application]
 
 config/name="PlatformerPlayerController"
-run/main_scene="res://Scenes/TestScene.tscn"
+run/main_scene="res://Scenes/TopDownScene.tscn"
 
 [autoload]
 

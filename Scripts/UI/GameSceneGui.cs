@@ -79,12 +79,13 @@ namespace UI
             float count = 0f;
             while (count < _healthProgressDur)
             {
+                if (!IsInstanceValid(this)) return;
                 if (token.IsCancellationRequested) return;
                 float t = count / _healthProgressDur;
                 t = 1 - Mathf.Pow(1 - t, 3);
                 _healthProgress.Value = Mathf.Lerp(from, to, t);
                 count += GetProcessDeltaTime();
-                await ToSignal(GetTree(), "idle_frame");
+                await TreeTimer.S.Wait(GetProcessDeltaTime());
             }
             _healthProgress.Value = to;
         }
@@ -95,12 +96,13 @@ namespace UI
             float count = 0f;
             while (count < duration)
             {
+                if (!IsInstanceValid(this)) return;
                 float alpha = Mathf.Lerp(from, to, count / duration);
                 control.Modulate = new Color(
                     control.Modulate.r, control.Modulate.g, control.Modulate.b, alpha
                 );
                 count += GetProcessDeltaTime();
-                await ToSignal(GetTree(), "idle_frame");
+                await TreeTimer.S.Wait(GetProcessDeltaTime());
             }
             control.Modulate = new Color(control.Modulate.r, control.Modulate.g, control.Modulate.b, to);
             if (to == 0) control.Visible = false;

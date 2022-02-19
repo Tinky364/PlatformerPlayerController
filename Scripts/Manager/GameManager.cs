@@ -87,15 +87,9 @@ namespace Manager
             }
         }
 
-        public void GuiDisableInput(bool value)
-        {
-            Root.GuiDisableInput = value;
-        }
+        public void GuiDisableInput(bool value) => Root.GuiDisableInput = value;
 
-        public void QuitGame()
-        {
-            Tree.Quit();
-        }
+        public void QuitGame() => Tree.Quit();
 
         public async Task<T> LoadAsync<T>(string path) where T : Resource
         {

@@ -25,7 +25,7 @@ namespace Other
             _navTween.ConnectTween(_body, "constant_linear_velocity");
             Loop(0, 1);
         }
-
+        
         private async void Loop(int point, int add)
         {
             while (true)
@@ -39,7 +39,7 @@ namespace Other
                 );
                 await ToSignal(_navTween, "MoveCompleted");
                 await TreeTimer.S.Wait(_idleDur);
-                if (!IsInstanceValid(this)) break;
+                if (!IsInstanceValid(this)) return;
                 point += add;
             }
         }

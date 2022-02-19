@@ -20,22 +20,30 @@ namespace Other
             NavTween.ConnectTween(this);
         }
     
-        public override async void _Ready()
+        public override void _Ready()
         {
-            await TreeTimer.S.Wait(2f);
             if (_navAreaPath != null) 
                 NavArea = GetNodeOrNull<NavArea2D>(_navAreaPath);
             if (NavArea != null && !NavArea.IsPositionInArea(GlobalPosition))
                 GlobalPosition = NavArea.GlobalPosition;
         }
-    
+
         public override void _PhysicsProcess(float delta)
+        {
+            MoveMouseClickPos();
+        
+            if (NavTween.IsPlaying)
+            {
+                GlobalPosition = NavTween.EqualizePosition(GlobalPosition);
+            }
+        }
+        
+        private void MoveMouseClickPos()
         {
             if (Input.IsActionJustPressed("mouse_left_click"))
             {
-                GD.Print("left clicked");
                 Vector2 targetPos = GetTree().Root.GetMousePosition();
-                if (!NavArea.IsPositionInArea(targetPos)) return;
+                if (NavArea != null && !NavArea.IsPositionInArea(targetPos)) return;
                 GD.Print("TargetPos: " + targetPos);
                 if (NavTween.IsPlaying)
                 {
@@ -56,14 +64,8 @@ namespace Other
         
             if (Input.IsActionJustPressed("mouse_right_click"))
             {
-                GD.Print("right clicked");
                 if (NavTween.IsPlaying)
                     NavTween.StopMove();
-            }
-        
-            if (NavTween.IsPlaying)
-            {
-                GlobalPosition = NavTween.EqualizePosition(GlobalPosition);
             }
         }
     }
