@@ -1,4 +1,4 @@
-using AI;
+using Godot;
 using PlayerStateMachine;
 
 namespace Manager
@@ -12,11 +12,12 @@ namespace Manager
             if (!GetTree().HasGroup("Player")) return;
             if (GetTree().GetNodesInGroup("Player")[0] is Player player)
             {
-                foreach (Enemy enemy in GetTree().GetNodesInGroup("Enemy"))
-                {
-                    if (enemy.Agent.TargetNavBody != null) break;
-                    enemy.Agent.TargetNavBody = player;
-                }
+                GetTree().CallGroupFlags(
+                    (int) SceneTree.GroupCallFlags.Realtime,
+                    "Enemy",
+                    "SetTarget",
+                    player
+                );
             }
         }
     }

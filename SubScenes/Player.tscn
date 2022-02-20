@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=2]
+[gd_scene load_steps=26 format=2]
 
 [ext_resource path="res://Scripts/PlayerStateMachine/Player.cs" type="Script" id=1]
 [ext_resource path="res://Scripts/PlayerStateMachine/FallState.cs" type="Script" id=2]
@@ -9,6 +9,7 @@
 [ext_resource path="res://Scripts/PlayerStateMachine/RecoilState.cs" type="Script" id=7]
 [ext_resource path="res://Sprites/Player/CharacterJump-Sheet.png" type="Texture" id=8]
 [ext_resource path="res://Scripts/PlayerStateMachine/DeadState.cs" type="Script" id=9]
+[ext_resource path="res://Scripts/PlayerStateMachine/PlatformState.cs" type="Script" id=10]
 
 [sub_resource type="Resource" id=16]
 script = ExtResource( 3 )
@@ -18,7 +19,8 @@ _moveSpeedX = 75.0
 [sub_resource type="Resource" id=17]
 script = ExtResource( 2 )
 _airAccelerationX = 500.0
-_jumpAbleDur = 0.1
+_afterLeavingGroundJumpAbleDur = 0.1
+_beforeHitGroundJumpAbleRayLength = 5.0
 
 [sub_resource type="Resource" id=18]
 script = ExtResource( 4 )
@@ -35,6 +37,10 @@ _recoilDur = 0.5
 
 [sub_resource type="Resource" id=20]
 script = ExtResource( 9 )
+
+[sub_resource type="Resource" id=22]
+script = ExtResource( 10 )
+_speedY = 100.0
 
 [sub_resource type="RectangleShape2D" id=6]
 extents = Vector2( 3, 0.5 )
@@ -379,13 +385,13 @@ script = ExtResource( 1 )
 Extents = Vector2( 6, 8 )
 Gravity = 900.0
 GravitySpeedMax = 150.0
-GroundRayLength = 4.0
 SpriteColor = Color( 1, 0.290196, 0.356863, 1 )
 MoveState = SubResource( 16 )
 FallState = SubResource( 17 )
 JumpState = SubResource( 18 )
 RecoilState = SubResource( 19 )
 DeadState = SubResource( 20 )
+PlatformState = SubResource( 22 )
 
 [node name="PlatformCheckArea" type="Area2D" parent="."]
 collision_layer = 0
@@ -398,14 +404,14 @@ __meta__ = {
 position = Vector2( 0, -0.5 )
 shape = SubResource( 6 )
 
-[node name="CollisionShape2D2" type="CollisionShape2D" parent="."]
+[node name="CollisionShapeCircle" type="CollisionShape2D" parent="."]
 position = Vector2( 0, -5 )
 shape = SubResource( 7 )
 __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShapeRectangle" type="CollisionShape2D" parent="."]
 position = Vector2( 0, -2.5 )
 shape = SubResource( 21 )
 

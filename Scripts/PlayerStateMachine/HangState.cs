@@ -1,7 +1,6 @@
 using Godot;
 using System;
 using AI;
-using Object = Godot.Object;
 
 namespace PlayerStateMachine
 {

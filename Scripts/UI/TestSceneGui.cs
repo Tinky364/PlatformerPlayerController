@@ -6,7 +6,7 @@ using NavTool;
 
 namespace UI
 {
-    public class GameSceneGui : CanvasLayer
+    public class TestSceneGui : CanvasLayer
     {
         private Label _coinCountLabel;
         private TextureProgress _healthProgress;
@@ -44,26 +44,26 @@ namespace UI
 
         private async void OnPlayerDied()
         {
-            if (GameManager.S.UiState == GameManager.GameState.Pause) return;
+            if (GM.S.UiState == GM.GameState.Pause) return;
 
-            GameManager.S.GuiDisableInput(true);
+            GM.S.GuiDisableInput(true);
             await TreeTimer.S.Wait(1f);
             await FadeControlAlpha(_hud, 1f, 0f, 1f);
             await FadeControlAlpha(_pausePanel, 0f, 1f, _pausePanelOpenDur);
-            GameManager.S.SetGameState(GameManager.GameState.Pause, GameManager.GameState.Play);
-            GameManager.S.GuiDisableInput(false);
+            GM.S.SetGameState(GM.GameState.Pause, GM.GameState.Play);
+            GM.S.GuiDisableInput(false);
         }
         
         private void OnCoinCountChanged(int coinCount)
         {
-            if (GameManager.S.UiState == GameManager.GameState.Pause) return;
+            if (GM.S.UiState == GM.GameState.Pause) return;
             
             _coinCountLabel.Text = coinCount.ToString();
         }
 
         private void OnHealthChanged(int newHealth, int maxHealth, NavBody2D attacker)
         {
-            if (GameManager.S.UiState == GameManager.GameState.Pause) return;
+            if (GM.S.UiState == GM.GameState.Pause) return;
 
             int targetHealth = (int)_healthProgress.MaxValue * newHealth / maxHealth;
 
@@ -104,7 +104,13 @@ namespace UI
                 count += GetProcessDeltaTime();
                 await TreeTimer.S.Wait(GetProcessDeltaTime());
             }
-            control.Modulate = new Color(control.Modulate.r, control.Modulate.g, control.Modulate.b, to);
+
+            control.Modulate = new Color(
+                control.Modulate.r,
+                control.Modulate.g,
+                control.Modulate.b,
+                to
+            );
             if (to == 0) control.Visible = false;
         }
     }

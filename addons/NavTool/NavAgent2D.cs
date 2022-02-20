@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Manager;
 
@@ -7,13 +8,18 @@ namespace NavTool
     {
         public NavArea2D NavArea { get; private set; }
         public NavBody2D TargetNavBody { get; set; }
-        private Vector2 _snapVector = Vector2.Down * 2f;
 
         [Export]
         public bool DebugEnabled { get; private set; }
         [Export]
         private NodePath TargetNavBodyPath { get; set; }
 
+        [Signal]
+        public delegate void ScreenEntered();
+        [Signal]
+        public delegate void ScreenExited();
+
+        private Vector2 SnapVector => SnapDisabled ? Vector2.Zero : Vector2.Down * 2f;
         public bool SnapDisabled;
         
         public override void _Ready()
@@ -32,8 +38,6 @@ namespace NavTool
         public override void _PhysicsProcess(float delta)
         {
             base._PhysicsProcess(delta);
-            if (SnapDisabled) _snapVector = Vector2.Zero;
-            else _snapVector = Vector2.Down * 2f; 
             NavArea?.CheckTargetInArea(TargetNavBody);
         }
 
@@ -45,18 +49,21 @@ namespace NavTool
             switch (CurNavBodyType)
             {
                 case NavBodyType.Platformer:
-                    if (nextFramePos.x < NavArea.AreaRect.Position.x && velocity.x < 0 || nextFramePos.x > NavArea.AreaRect.End.x && velocity.x > 0)
+                    if (nextFramePos.x < NavArea.AreaRect.Position.x && velocity.x < 0 ||
+                        nextFramePos.x > NavArea.AreaRect.End.x && velocity.x > 0)
                         velocity.x = 0;
                     break;
                 case NavBodyType.TopDown:
-                    if (nextFramePos.x < NavArea.AreaRect.Position.x && velocity.x < 0 || nextFramePos.x > NavArea.AreaRect.End.x && velocity.x > 0)
+                    if (nextFramePos.x < NavArea.AreaRect.Position.x && velocity.x < 0 ||
+                        nextFramePos.x > NavArea.AreaRect.End.x && velocity.x > 0)
                         velocity.x = 0;
-                    if (nextFramePos.y < NavArea.AreaRect.Position.y && velocity.y < 0 || nextFramePos.y > NavArea.AreaRect.End.y && velocity.y > 0)
+                    if (nextFramePos.y < NavArea.AreaRect.Position.y && velocity.y < 0 ||
+                        nextFramePos.y > NavArea.AreaRect.End.y && velocity.y > 0)
                         velocity.y = 0;
                     break;
             }
             
-            return MoveAndSlideWithSnap(velocity, _snapVector, upDirection);
+            return MoveAndSlideWithSnap(velocity, SnapVector, upDirection);
         }
         
         public Vector2 DirectionToTarget()
@@ -71,8 +78,8 @@ namespace NavTool
             return (TargetNavBody.NavPos - NavPos).Length();
         }
         
-        protected void OnScreenEnter() => GameManager.S.SetNodeActive(this, true);
+        protected void OnScreenEnter() => EmitSignal(nameof(ScreenEntered));
         
-        protected void OnScreenExit() => GameManager.S.SetNodeActive(this, false);
+        protected void OnScreenExit() => EmitSignal(nameof(ScreenExited));
     }
 }

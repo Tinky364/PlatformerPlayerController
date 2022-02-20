@@ -3,7 +3,7 @@ using Godot;
 
 namespace Manager
 {
-    public class GameManager : Singleton<GameManager>
+    public class GM : Singleton<GM>
     {
         private SceneTree Tree => GetTree();
         private Viewport Root => Tree.Root;
@@ -134,6 +134,12 @@ namespace Manager
             {
                 SetNodeActive(child, value);
             }
+        }
+
+        public static void Print(bool debug, params object[] what)
+        {
+            if (!debug) return;
+            GD.Print(what);
         }
     }
 }

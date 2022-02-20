@@ -22,13 +22,11 @@ namespace PlayerStateMachine
 
         public override async void Enter()
         {
-            if (P.DebugEnabled) GD.Print($"{P.Name}: {Key}");
-            
+            GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             _count = 0;
+            P.SnapDisabled = false;
             P.AnimPlayer.Play("jump");
-
-            P.Velocity = CalculateRecoilVelocity();
-            
+            P.Velocity = CalculateRecoilImpulse();
             P.IsUnhurtable = true;
             await WhileUnhurtable();
             if (P.IsDead) return;
@@ -39,25 +37,19 @@ namespace PlayerStateMachine
 
         public override void PhysicsProcess(float delta)
         {
+            P.Velocity = P.MoveAndSlideWithSnap(P.Velocity, P.SnapVector, Vector2.Up);
+
             if (_count > _recoilDur)
             {
-                if (P.IsDead)
-                    P.Fsm.SetCurrentState(Player.PlayerStates.Dead);
-                else if (P.IsOnFloor()) 
-                    P.Fsm.SetCurrentState(Player.PlayerStates.Move);
-                else 
-                    P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
+                if (P.IsDead) P.Fsm.SetCurrentState(Player.PlayerStates.Dead);
+                else if (P.IsOnFloor()) P.Fsm.SetCurrentState(Player.PlayerStates.Move);
+                else P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
                 return;
             }
 
-            P.Velocity.x = Mathf.MoveToward(P.Velocity.x, 0, 400 * delta);
+            P.Velocity.x = Mathf.MoveToward(P.Velocity.x, 0, _recoilDur / delta);
             if (P.IsOnFloor()) P.Velocity.y = P.Gravity * delta;
-            else
-            { 
-                if (P.Velocity.y < P.GravitySpeedMax) 
-                    P.Velocity.y += P.Gravity * delta;
-            }
-            P.Velocity = P.MoveAndSlideWithSnap(P.Velocity, Vector2.Down * 2f, Vector2.Up);
+            else if (P.Velocity.y < P.GravitySpeedMax) P.Velocity.y += P.Gravity * delta;
             
             _count += delta;
         }
@@ -67,7 +59,7 @@ namespace PlayerStateMachine
             HitNormal = null;
         }
 
-        private Vector2 CalculateRecoilVelocity()
+        private Vector2 CalculateRecoilImpulse()
         {
             Vector2 recoilDir = HitNormal ?? -P.Direction;
             Vector2 recoilVelocity = new Vector2
@@ -85,6 +77,7 @@ namespace PlayerStateMachine
             float count = 0f;
             while (count < _unhurtableDur)
             {
+                if (!IsInstanceValid(P)) return;
                 P.Sprite.SelfModulate = 
                     P.Sprite.SelfModulate == Colors.White ? P.SpriteColor : Colors.White;
                 float t = count / _unhurtableDur;

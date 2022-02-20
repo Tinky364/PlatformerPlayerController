@@ -7,7 +7,6 @@ namespace NavTool
     {
         public NavTween NavTween { get; private set; }
         private Area2D _interactionArea;
-        protected PhysicsBody2D CollidingBody;
 
         [Export]
         public NavBodyType CurNavBodyType { get; private set; } = NavBodyType.Platformer;
@@ -16,9 +15,9 @@ namespace NavTool
         [Export(PropertyHint.Range, "0,500,1,or_greater")]
         public Vector2 Extents { get; private set; }
         [Export(PropertyHint.Range, "0.1,200,or_greater")] 
-        private float NavPosRayLength { get; set; } = 35f;
+        private float GroundRayLength { get; set; } = 35f;
         [Export(PropertyHint.Layers2dPhysics)]
-        public uint GroundMask = 6;
+        public uint GroundLayer { get; set; } = 6;
         
         [Signal]
         protected delegate void BodyEntered(Node body);
@@ -28,16 +27,20 @@ namespace NavTool
         protected delegate void BodyExited(Node body);
 
         public enum NavBodyType { Platformer, TopDown }
-        protected Physics2DDirectSpaceState SpaceState;
-        private Dictionary _navPosRay;
+        protected PhysicsBody2D CollidingBody { get; private set; }
+        public Node Ground { get; private set; }
+        protected Physics2DDirectSpaceState SpaceState { get; private set; }
+        private Dictionary _groundRay;
         public Vector2 NavPos { get; private set; }
         public Vector2 ExtentsHalf => Extents / 2f;
         public Vector2 Velocity;
         public Vector2 Direction = new Vector2(1, 0);
+        public uint CurGroundLayer { get; private set; }
         private bool _isColliding;
         public bool IsInactive => !Visible;
         public bool IsUnhurtable { get; set; }
-        public bool IsDead { get; set; }
+        public bool IsDead { get; protected set; }
+        public bool IsGroundRayHit { get; private set; }
 
         public override void _EnterTree()
         {
@@ -77,7 +80,7 @@ namespace NavTool
             switch (CurNavBodyType)
             {
                 case NavBodyType.Platformer:
-                    NavPos = CastNavPosRay();
+                    NavPos = CastGroundRay();
                     break;
                 case NavBodyType.TopDown:
                     NavPos = GlobalPosition;
@@ -85,54 +88,81 @@ namespace NavTool
             }
         }
 
-        private Vector2 CastNavPosRay()
+        private Vector2 CastGroundRay()
         {
-            Vector2 rightHitPos;
-            // Cast left ray.
-            _navPosRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(-ExtentsHalf.x, 0f),
-                GlobalPosition + new Vector2(-ExtentsHalf.x, NavPosRayLength),
+            Vector2 leftHitPos = new Vector2();
+            Vector2 rightHitPos = new Vector2();
+            bool isLeftHit = false;
+            bool isRightHit = false;
+            // Raycast from the left bottom corner.
+            _groundRay = SpaceState.IntersectRay(
+                GlobalPosition + new Vector2(-ExtentsHalf.x, -5f),
+                GlobalPosition + new Vector2(-ExtentsHalf.x, GroundRayLength + 5f),
                 new Array {this},
-                GroundMask
+                GroundLayer
             );
-            // When left ray hits.
-            if (_navPosRay.Count > 0) 
+            if (_groundRay.Count > 0)
             {
-                Vector2 leftHitPos = (Vector2) _navPosRay["position"]; // Left ray hit position.
-                // Cast right ray.
-                _navPosRay = SpaceState.IntersectRay(
-                    GlobalPosition + new Vector2(ExtentsHalf.x, 0f),
-                    GlobalPosition + new Vector2(ExtentsHalf.x, NavPosRayLength),
-                    new Array {this},
-                    GroundMask
-                );
-                // When both rays hit.
-                if (_navPosRay.Count > 0) 
+                IsGroundRayHit = true;
+                isLeftHit = true;
+                leftHitPos = (Vector2) _groundRay["position"] + new Vector2(ExtentsHalf.x, 0f);
+                Ground = _groundRay["collider"] as Node;
+                switch (Ground)
                 {
-                    rightHitPos = (Vector2) _navPosRay["position"]; // Right ray hit position.
-                    // Decides position according to the close hit position.
-                    if (rightHitPos.DistanceTo(GlobalPosition) > leftHitPos.DistanceTo(GlobalPosition))
-                        return leftHitPos + new Vector2(ExtentsHalf.x, 0);
-                    return rightHitPos + new Vector2(-ExtentsHalf.x, 0);
+                    case CollisionObject2D collision: CurGroundLayer = collision.CollisionLayer;
+                        break;
+                    case TileMap tile: CurGroundLayer = tile.CollisionLayer;
+                        break;
                 }
-                // When only left ray hits.
-                return leftHitPos + new Vector2(ExtentsHalf.x, 0);
             }
-            // When left ray does not hit.
-            // Cast right ray.
-            _navPosRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(ExtentsHalf.x, 0f),
-                GlobalPosition + new Vector2(ExtentsHalf.x, NavPosRayLength),
+            // If the first raycast does not hit the ground.
+            // Raycast from the right bottom corner.
+            _groundRay = SpaceState.IntersectRay(
+                GlobalPosition + new Vector2(ExtentsHalf.x, -5f),
+                GlobalPosition + new Vector2(ExtentsHalf.x, GroundRayLength + 5f),
                 new Array {this},
-                GroundMask
+                GroundLayer
             );
-            // When only right ray hits. 
-            if (_navPosRay.Count > 0) 
+            if (_groundRay.Count > 0)
             {
-                rightHitPos = (Vector2) _navPosRay["position"]; // Right ray hit position.
-                return rightHitPos + new Vector2(-ExtentsHalf.x, 0);
+                IsGroundRayHit = true;
+                isRightHit = true;
+                rightHitPos = (Vector2) _groundRay["position"] + new Vector2(-ExtentsHalf.x, 0f);
             }
-            // When any rays do not hit.
+
+            if (isLeftHit && isRightHit)
+            {
+                if (leftHitPos == rightHitPos) return leftHitPos;
+                if (leftHitPos.DistanceSquaredTo(GlobalPosition) <
+                    rightHitPos.DistanceSquaredTo(GlobalPosition)) return leftHitPos;
+                
+                Ground = _groundRay["collider"] as Node;
+                switch (Ground)
+                {
+                    case CollisionObject2D collision: CurGroundLayer = collision.CollisionLayer;
+                        break;
+                    case TileMap tile: CurGroundLayer = tile.CollisionLayer;
+                        break;
+                }
+                return rightHitPos;
+            }
+            if (isLeftHit) return leftHitPos;
+            if (isRightHit)
+            {
+                Ground = _groundRay["collider"] as Node;
+                switch (Ground)
+                {
+                    case CollisionObject2D collision: CurGroundLayer = collision.CollisionLayer;
+                        break;
+                    case TileMap tile: CurGroundLayer = tile.CollisionLayer;
+                        break;
+                }
+                return rightHitPos;
+            }
+
+            CurGroundLayer = 0;
+            IsGroundRayHit = false;
+            Ground = null;
             return GlobalPosition;
         }
         

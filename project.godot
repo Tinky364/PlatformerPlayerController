@@ -16,12 +16,12 @@ ClassPrefix=""
 [application]
 
 config/name="PlatformerPlayerController"
-run/main_scene="res://Scenes/TopDownScene.tscn"
+run/main_scene="res://Scenes/TestScene.tscn"
 
 [autoload]
 
 Events="*res://Scripts/Manager/Events.cs"
-GameManager="*res://Scripts/Manager/GameManager.cs"
+GameManager="*res://Scripts/Manager/GM.cs"
 TreeTimer="*res://Scripts/Manager/TreeTimer.cs"
 
 [display]

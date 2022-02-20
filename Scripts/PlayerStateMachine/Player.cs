@@ -1,6 +1,5 @@
 using Godot;
 using AI;
-using Godot.Collections;
 using Manager;
 using NavTool;
 using Other;
@@ -9,8 +8,8 @@ namespace PlayerStateMachine
 {
     public class Player : NavBody2D
     {
-        public StateMachine<PlayerStates> Fsm { get; } = new StateMachine<PlayerStates>();
-        public enum PlayerStates { Move, Fall, Jump, Recoil, Dead }
+        public StateMachine<PlayerStates> Fsm { get; private set; }
+        public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform }
         
         public Sprite Sprite { get; private set; }
         public AnimationPlayer AnimPlayer { get; private set; }
@@ -23,10 +22,8 @@ namespace PlayerStateMachine
         public float Gravity { get; private set; } = 1100f;
         [Export(PropertyHint.Range, "100,1000,or_greater,or_lesser")]
         public float GravitySpeedMax { get; private set; } = 225f;
-        [Export(PropertyHint.Range, "0.1,20,0.05,or_greater")] 
-        protected float GroundRayLength { get; private set; } = 5f;
         [Export(PropertyHint.Layers2dPhysics)]
-        public uint PlatformMask { get; private set; } = 4;
+        public uint PlatformLayer { get; private set; } = 4;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private int MaxHealth { get; set; } = 6;
         [Export]
@@ -42,16 +39,17 @@ namespace PlayerStateMachine
         public RecoilState RecoilState { get; private set; }
         [Export]
         public DeadState DeadState { get; private set; }
-       
-        public Dictionary GroundRay { get; private set; }
-        public Vector2 GroundHitPos { get; private set; }
+        [Export]
+        public PlatformState PlatformState { get; private set; }
+
+        public Vector2 SnapVector => SnapDisabled ? Vector2.Zero : Vector2.Down * 2f;
         private Vector2 _inputAxis;
-        public int CoinCount { get; private set; } = 0;
+        private int CoinCount { get; set; } = 0;
         private int _health;
-        public int Health
+        private int Health
         {
             get => _health;
-            private set
+            set
             {
                 if (value < 0)
                     _health = 0;
@@ -61,7 +59,10 @@ namespace PlayerStateMachine
                     _health = value;
             }
         }
-
+        public bool SnapDisabled { get; set; }
+        public bool IsCollidingWithPlatform { get; private set; }
+        public bool FallOffPlatformInput;
+        
         public override void _EnterTree()
         {
             base._EnterTree();
@@ -75,15 +76,19 @@ namespace PlayerStateMachine
             AnimPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
             PlatformCheckArea = GetNode<Area2D>("PlatformCheckArea");
             JumpTimer = GetNode<Timer>("JumpTimer");
+            Health = MaxHealth;
+            Sprite.SelfModulate = SpriteColor;
+            Fsm = new StateMachine<PlayerStates>();
             MoveState.Initialize(this);
             FallState.Initialize(this);
             JumpState.Initialize(this);
             RecoilState.Initialize(this);
             DeadState.Initialize(this);
+            PlatformState.Initialize(this);
+            PlatformCheckArea.Connect("body_entered", this, "OnPlatformEntered");
+            PlatformCheckArea.Connect("body_exited", this, "OnPlatformExited");
             PlatformCheckArea.Connect("body_exited", MoveState, "OnPlatformExited");
             JumpTimer.Connect("timeout", JumpState, "OnJumpEnd");
-            Health = MaxHealth;
-            Sprite.SelfModulate = SpriteColor;
             Events.S.Connect("Damaged", this, nameof(OnDamaged));
             Events.S.Connect("CoinCollected", this, nameof(AddCoin));
             Fsm.SetCurrentState(PlayerStates.Fall);
@@ -99,10 +104,9 @@ namespace PlayerStateMachine
         public override void _PhysicsProcess(float delta)
         {
             base._PhysicsProcess(delta);
-            if (CurNavBodyType == NavBodyType.Platformer) CastGroundRay();
             Fsm._PhysicsProcess(delta);
         }
-        
+
         public void OnDamaged(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
         {
             if (IsDead || target != this || IsUnhurtable) return;
@@ -123,6 +127,10 @@ namespace PlayerStateMachine
             }
         }
         
+        private void OnPlatformEntered(Node body) => IsCollidingWithPlatform = true;
+
+        private void OnPlatformExited(Node body) => IsCollidingWithPlatform = false;
+
         private void AddCoin(Node collector, Coin coin)
         {
             if (collector != this) return;
@@ -132,8 +140,10 @@ namespace PlayerStateMachine
 
         public Vector2 AxisInputs()
         {
-            _inputAxis.x = Input.GetActionStrength("move_right") - Input.GetActionStrength("move_left");
-            _inputAxis.y = Input.GetActionStrength("move_down") - Input.GetActionStrength("move_up");
+            _inputAxis.x =
+                Input.GetActionStrength("move_right") - Input.GetActionStrength("move_left");
+            _inputAxis.y = 
+                Input.GetActionStrength("move_down") - Input.GetActionStrength("move_up");
             return _inputAxis;
         }
         
@@ -141,7 +151,6 @@ namespace PlayerStateMachine
         {
             if (_inputAxis.x > 0) Direction.x = 1;
             else if (_inputAxis.x < 0) Direction.x = -1;
-
             switch (Direction.x)
             {
                 case 1:
@@ -150,35 +159,6 @@ namespace PlayerStateMachine
                 case -1:
                     Sprite.FlipH = true;
                     break;
-            }
-        }
-        
-        private void CastGroundRay()
-        {
-            // Raycast from the left bottom corner.
-            GroundRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(-ExtentsHalf.x, -5f),
-                GlobalPosition + new Vector2(-ExtentsHalf.x, GroundRayLength),
-                new Array {this},
-                GroundMask
-            );
-            if (GroundRay.Count > 0)
-            {
-                GroundHitPos = (Vector2) GroundRay["position"] + new Vector2(ExtentsHalf.x, 0);
-                return;
-            }
-
-            // If the first raycast does not hit the ground.
-            // Raycast from the right bottom corner.
-            GroundRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(ExtentsHalf.x, -5f),
-                GlobalPosition + new Vector2(ExtentsHalf.x, GroundRayLength),
-                new Array {this},
-                GroundMask
-            );
-            if (GroundRay.Count > 0)
-            {
-                GroundHitPos = (Vector2) GroundRay["position"] + new Vector2(-ExtentsHalf.x, 0);
             }
         }
     }

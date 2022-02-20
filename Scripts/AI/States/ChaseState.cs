@@ -1,4 +1,5 @@
 using Godot;
+using Manager;
 
 namespace AI.States
 {
@@ -22,7 +23,8 @@ namespace AI.States
 
         public override void Enter()
         {
-            if (E.Agent.DebugEnabled) GD.Print($"{E.Name}: {Key}");
+            GM.Print(E.Agent.DebugEnabled, $"{E.Name}: {Key}");
+
             E.Agent.Velocity.x = 0f;
             E.AnimatedSprite.Play("run");
         }

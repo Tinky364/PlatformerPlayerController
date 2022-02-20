@@ -10,11 +10,11 @@ namespace PlayerStateMachine
 
         public override async void Enter()
         {
-            if (P.DebugEnabled) GD.Print($"{P.Name}: {Key}");
+            GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
         
             P.IsUnhurtable = true;
             await TreeTimer.S.Wait(2f);
-            GameManager.S.SetNodeActive(P, false);
+            GM.S.SetNodeActive(P, false);
         }
 
         public override void Process(float delta) { }

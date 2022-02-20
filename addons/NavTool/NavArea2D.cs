@@ -71,21 +71,9 @@ namespace NavTool
             }
         }
         
-        private void OnScreenEnter()
-        {
-            SetProcess(true);
-            SetPhysicsProcess(true);
-            EmitSignal(nameof(ScreenEntered));
-            Visible = true;
-        }
+        private void OnScreenEnter() => EmitSignal(nameof(ScreenEntered));
 
-        private void OnScreenExit()
-        {
-            SetProcess(false);
-            SetPhysicsProcess(false);
-            EmitSignal(nameof(ScreenExited));
-            Visible = false;
-        }
+        private void OnScreenExit() => EmitSignal(nameof(ScreenExited));
 
         public override string _GetConfigurationWarning()
         {

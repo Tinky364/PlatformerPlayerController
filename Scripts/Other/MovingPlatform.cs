@@ -48,7 +48,10 @@ namespace Other
         {
             if (_navTween.IsPlaying)
             {
-                _body.ConstantLinearVelocity = _navTween.EqualizeVelocity(_body.ConstantLinearVelocity, delta);
+                _body.ConstantLinearVelocity = _navTween.EqualizeVelocity(
+                    _body.ConstantLinearVelocity,
+                    delta
+                );
                 _body.GlobalPosition = _navTween.EqualizePosition(_body.GlobalPosition);
             }
         }

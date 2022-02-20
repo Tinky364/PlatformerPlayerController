@@ -1,5 +1,6 @@
 using Godot;
 using AI;
+using Manager;
 
 namespace PlayerStateMachine
 {
@@ -27,7 +28,8 @@ namespace PlayerStateMachine
 
         public override void Enter()
         {
-            if (P.DebugEnabled) GD.Print($"{P.Name}: {Key}");
+            GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
+            P.SnapDisabled = true;
             P.AnimPlayer.GetAnimation("jump").Length = JumpDur;
             P.AnimPlayer.Play("jump");
             P.JumpTimer.Start(JumpDur);
@@ -38,43 +40,33 @@ namespace PlayerStateMachine
 
         public override void PhysicsProcess(float delta)
         {
-            _desiredJumpSpeedX = JumpSpeedX * P.AxisInputs().x;
+            P.Velocity = P.MoveAndSlideWithSnap(P.Velocity, P.SnapVector, Vector2.Up);
 
+            _desiredJumpSpeedX = JumpSpeedX * P.AxisInputs().x;
             if (_isFirstFrame)
             {
                 _isFirstFrame = false;
                 P.Velocity.x = _desiredJumpSpeedX;
                 P.Velocity.y = -JumpImpulseY;
+                return;
             }
-            else
+            if (Input.IsActionPressed("jump") && P.Velocity.y <= 0f)
             {
-                if (Input.IsActionPressed("jump"))
-                {
-                    P.Velocity.x = Mathf.MoveToward(P.Velocity.x, _desiredJumpSpeedX, _jumpAccelerationX * delta);
-                    if (P.Velocity.y > 0f)
-                    {
-                        OnJumpEnd();
-                        return;
-                    }
-                    P.Velocity.y += (P.Gravity - JumpAccelerationY) * delta;
-                }
-                else
-                {
-                    OnJumpEnd();
-                    return;
-                }
-            }            
-           
-            P.Velocity = P.MoveAndSlideWithSnap(P.Velocity, Vector2.Zero, Vector2.Up);
+                P.Velocity.x = Mathf.MoveToward(P.Velocity.x, _desiredJumpSpeedX, _jumpAccelerationX * delta);
+                P.Velocity.y += (P.Gravity - JumpAccelerationY) * delta;
+                return;
+            }
+            
+            OnJumpEnd();
         }
-
-        public override void Exit() { }
 
         private void OnJumpEnd()
         {
             P.JumpTimer.Stop();
             P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
         }
+
+        public override void Exit() { }
         
         public void Initialize(Player player)
         {

@@ -6,12 +6,12 @@ namespace AI
 {
     public abstract class Enemy : Node2D
     {
-        public StateMachine<EnemyStates> Fsm { get; } = new StateMachine<EnemyStates>();
+        public StateMachine<EnemyStates> Fsm { get; private set; }
         public NavAgent2D Agent { get; private set; }
-        public AnimatedSprite AnimatedSprite;
+        public AnimatedSprite AnimatedSprite { get; private set; }
 
         [Export(PropertyHint.Range, "10,2000,or_greater")]
-        public float Gravity = 600f;
+        public float Gravity { get; private set; } = 600f;
         [Export(PropertyHint.Range, "0,200,or_greater")]
         public float MoveSpeed { get; private set; } = 15f;
         [Export(PropertyHint.Range, "1,2000,or_greater")]
@@ -33,6 +33,9 @@ namespace AI
             Agent = GetNode<NavAgent2D>("NavAgent2D");
             AnimatedSprite = GetNode<AnimatedSprite>("NavAgent2D/AnimatedSprite");
             Agent.Connect("BodyColliding", this, nameof(OnBodyColliding));
+            Agent.Connect("ScreenEntered", this, nameof(OnScreenEnter));
+            Agent.Connect("ScreenExited", this, nameof(OnScreenExit));
+            Fsm = new StateMachine<EnemyStates>();
         }
 
         public override void _Process(float delta)
@@ -47,9 +50,10 @@ namespace AI
         {
             base._PhysicsProcess(delta);
             Fsm._PhysicsProcess(delta);
-            if (!Agent.IsOnFloor()) Agent.Velocity.y += Gravity * delta; // Adds gravity force increasingly.
-            else if (!Agent.SnapDisabled) Agent.Velocity.y = Gravity * delta;
+            
             Agent.Velocity = Agent.MoveInArea(Agent.Velocity, delta, Vector2.Up);
+            if (!Agent.IsOnFloor()) Agent.Velocity.y += Gravity * delta;
+            else if (!Agent.SnapDisabled) Agent.Velocity.y = Gravity * delta;
         }
 
         private void OnBodyColliding(Node body)
@@ -79,5 +83,15 @@ namespace AI
                     break;
             }
         }
+
+        private void SetTarget(NavBody2D target)
+        {
+            if (Agent.TargetNavBody != null) return;
+            Agent.TargetNavBody = target;
+        }
+        
+        protected void OnScreenEnter() => GM.S.SetNodeActive(this, true);
+        
+        protected void OnScreenExit() => GM.S.SetNodeActive(this, false);
     }
 }
