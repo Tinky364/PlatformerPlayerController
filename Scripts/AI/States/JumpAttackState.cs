@@ -7,8 +7,6 @@ namespace AI.States
 {
     public class JumpAttackState : State<Enemy.EnemyStates>
     {
-        private Enemy E { get; set; }
-
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeAttackDur = 1f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
@@ -29,6 +27,8 @@ namespace AI.States
         private float _collisionBackWidth = 24f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _collisionBackDur = 1f;
+        
+        private Enemy E { get; set; }
 
         private CancellationTokenSource _cancellationTokenSource;
         private bool _isJumping;
@@ -55,6 +55,12 @@ namespace AI.States
             Attack(dirToTarget, E.Agent.TargetNavBody.NavPos, _cancellationTokenSource.Token);
         }
         
+        public override void Process(float delta) { }
+
+        public override void PhysicsProcess(float delta) { }
+        
+        public override void Exit() { }
+        
         private async void Attack(Vector2 dirToTarget, Vector2 targetPos, CancellationToken token)
         {
             float backMoveDist = Mathf.Clamp(
@@ -62,11 +68,8 @@ namespace AI.States
             );
             await TreeTimer.S.Wait(_waitBeforeAttackDur);
             E.Agent.NavTween.MoveToward(
-                NavTween.TweenMode.X,
-                null,
-                E.Agent.NavPos - dirToTarget * backMoveDist,
-                E.MoveSpeed,
-                Tween.TransitionType.Quad
+                NavTween.TweenMode.X, null, E.Agent.NavPos - dirToTarget * backMoveDist,
+                E.MoveSpeed, Tween.TransitionType.Quad
             );
             await ToSignal(E.Agent.NavTween, "MoveCompleted");
             E.AnimatedSprite.Play("run");
@@ -79,12 +82,8 @@ namespace AI.States
             E.Agent.SnapDisabled = false;
             _isJumping = false;
             E.Agent.NavTween.MoveLerp(
-                NavTween.TweenMode.X,
-                null,
-                targetPos + dirToTarget * _landingMoveDist,
-                _landingMoveDur,
-                Tween.TransitionType.Quad,
-                Tween.EaseType.Out
+                NavTween.TweenMode.X, null, targetPos + dirToTarget * _landingMoveDist,
+                _landingMoveDur, Tween.TransitionType.Quad, Tween.EaseType.Out
             );
             await ToSignal(E.Agent.NavTween, "MoveCompleted");
             E.AnimatedSprite.Play("idle");
@@ -95,19 +94,16 @@ namespace AI.States
         private async void Collision(Vector2 hitNormal)
         {
             E.Agent.NavTween.MoveLerp(
-                NavTween.TweenMode.X,
-                null,
-                E.Agent.NavPos - hitNormal * _collisionBackWidth,
-                _collisionBackDur,
-                Tween.TransitionType.Cubic,
-                Tween.EaseType.Out
+                NavTween.TweenMode.X, null, E.Agent.NavPos - hitNormal * _collisionBackWidth,
+                _collisionBackDur, Tween.TransitionType.Cubic, Tween.EaseType.Out
             );
             await ToSignal(E.Agent.NavTween, "MoveCompleted");
             await TreeTimer.S.Wait(_waitAfterCollisionDur);
             E.Fsm.StopCurrentState();
         }
-        
-        private void OnTargetHit(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
+
+        private void OnTargetHit(
+            NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
         {
             if (attacker != E.Agent || target != E.Agent.TargetNavBody) return;
             if (E.Fsm.CurrentState != this || !_isJumping) return;
@@ -116,19 +112,6 @@ namespace AI.States
             _cancellationTokenSource?.Cancel();
             E.Agent.NavTween.StopMove();
             Collision(hitNormal);
-        }
-        
-        public override void Process(float delta)
-        {
-        }
-
-        public override void PhysicsProcess(float delta)
-        {
-           
-        }
-        
-        public override void Exit()
-        {
         }
     }
 }

@@ -11,9 +11,6 @@ public class Singleton<T> : Node where T : Singleton<T>
             GD.Print($"Multiple instances of singleton class named {typeof(T)}!");
             QueueFree();
         }
-        else
-        {
-            S = (T) this;
-        }
+        else S = (T)this;
     }
 }

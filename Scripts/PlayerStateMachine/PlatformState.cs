@@ -6,19 +6,24 @@ namespace PlayerStateMachine
 {
     public class PlatformState : State<Player.PlayerStates>
     {
-        private Player P { get; set; }
-        
         [Export(PropertyHint.Range, "1,200,or_greater")]
-        private float _speedY = 70f;
+        private float _speedInPlatformY = 70f;
 
+        private Player P { get; set; }
+
+        public void Initialize(Player player)
+        {
+            Initialize(Player.PlayerStates.Platform);
+            P = player;
+            P.Fsm.AddState(this);
+        }
+        
         public override void Enter()
         {
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             P.SnapDisabled = true;
             P.AnimPlayer.Play("jump");
         }
-
-        public override void Process(float delta) { }
 
         public override void PhysicsProcess(float delta)
         {
@@ -31,16 +36,11 @@ namespace PlayerStateMachine
                 return;
             }
             
-            P.Velocity.y = -_speedY;
+            P.Velocity.y = -_speedInPlatformY;
         }
 
+        public override void Process(float delta) { }
+
         public override void Exit() { }
-        
-        public void Initialize(Player player)
-        {
-            Initialize(Player.PlayerStates.Platform);
-            P = player;
-            P.Fsm.AddState(this);
-        }
     }
 }

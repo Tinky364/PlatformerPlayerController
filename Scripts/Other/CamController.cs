@@ -13,7 +13,6 @@ namespace Other
         private float _smoothingDur = 0.2f;
         
         private Player _player;
-
         private Vector2 _destPos;
         private Vector2 _curPos;
         
@@ -33,7 +32,12 @@ namespace Other
         private void PixelPerfectSmoothing(float delta)
         {
             _destPos = _player.GlobalPosition;
-            _curPos += new Vector2(_destPos.x - _curPos.x, _destPos.y - _curPos.y) / _smoothingDur * delta;
+            _curPos += new Vector2
+            {
+                x =  _destPos.x - _curPos.x,
+                y = _destPos.y - _curPos.y
+            };
+            _curPos /= _smoothingDur * delta;
             GlobalPosition = _curPos.Round();
         }
 

@@ -74,8 +74,8 @@ shape = SubResource( 21 )
 collision_layer = 16
 collision_mask = 6
 script = ExtResource( 4 )
-IsOnBodyCollidingActive = true
 Extents = Vector2( 20, 14 )
+_isOnBodyCollidingActive = true
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="NavAgent2D"]
 self_modulate = Color( 0, 1, 0.0392157, 1 )

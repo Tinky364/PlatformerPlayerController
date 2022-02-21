@@ -27,7 +27,9 @@ namespace Other
         {
             if (_navTween.IsPlaying)
             {
-                _body.ConstantLinearVelocity = _navTween.EqualizeVelocity(_body.ConstantLinearVelocity, delta);
+                _body.ConstantLinearVelocity = _navTween.EqualizeVelocity(
+                    _body.ConstantLinearVelocity, delta
+                );
                 _body.GlobalPosition = _navTween.EqualizePosition(_body.GlobalPosition);
             }
         }
@@ -39,10 +41,7 @@ namespace Other
             float targetPosY = _isOpen ? 16 : -16;
             _isOpen = !_isOpen;
             _navTween.MoveLerp(
-                NavTween.TweenMode.Y,
-                null,
-                _body.GlobalPosition + new Vector2(0, targetPosY),
-                2f,
+                NavTween.TweenMode.Y, null, _body.GlobalPosition + new Vector2(0, targetPosY), 2f,
                 Tween.TransitionType.Cubic
             );
         }

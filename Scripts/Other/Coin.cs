@@ -5,12 +5,12 @@ namespace Other
 {
     public class Coin : Area2D
     {
-        private AnimationPlayer _animationPlayer;
-        private CollisionShape2D _shape;
-
         [Export(PropertyHint.Range, "0,10,or_greater")]
         public int Value { get; private set; } = 1;
 
+        private AnimationPlayer _animationPlayer;
+        private CollisionShape2D _shape;
+        
         public override void _Ready()
         {
             _animationPlayer = GetNode<AnimationPlayer>("AnimationPlayer");

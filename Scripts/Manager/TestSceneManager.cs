@@ -13,10 +13,7 @@ namespace Manager
             if (GetTree().GetNodesInGroup("Player")[0] is Player player)
             {
                 GetTree().CallGroupFlags(
-                    (int) SceneTree.GroupCallFlags.Realtime,
-                    "Enemy",
-                    "SetTarget",
-                    player
+                    (int)SceneTree.GroupCallFlags.Realtime, "Enemy", "SetTarget", player
                 );
             }
         }

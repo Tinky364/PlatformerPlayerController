@@ -6,8 +6,6 @@ namespace PlayerStateMachine
 {
     public class FallState : State<Player.PlayerStates>
     {
-        private Player P { get; set; }
-
         [Export(PropertyHint.Range, "1,2000,or_greater")]
         private float _airAccelerationX = 600f;
         [Export(PropertyHint.Range, "0.01,5,0.05,or_greater")]
@@ -15,9 +13,18 @@ namespace PlayerStateMachine
         [Export(PropertyHint.Range, "0.1,20,0.05,or_greater")] 
         private float _beforeHitGroundJumpAbleRayLength = 5f;
         
+        private Player P { get; set; }
+
         private float _desiredAirSpeedX;
         private bool _isAfterLeavingGroundJumpAble;
 
+        public void Initialize(Player player)
+        {
+            Initialize(Player.PlayerStates.Fall);
+            P = player;
+            P.Fsm.AddState(this);
+        }
+        
         public override void Enter()
         {
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
@@ -27,19 +34,15 @@ namespace PlayerStateMachine
                 CalculateAfterLeavingGroundJumpAble();
         }
 
-        public override void Process(float delta) { }
-
         public override void PhysicsProcess(float delta)
         {
             P.Velocity = P.MoveAndSlideWithSnap(P.Velocity, P.SnapVector, Vector2.Up);
 
-            if (_isAfterLeavingGroundJumpAble || CalculateBeforeHitGroundJumpAble())
+            if ((_isAfterLeavingGroundJumpAble || CalculateBeforeHitGroundJumpAble()) &&
+                Input.IsActionJustPressed("jump"))
             {
-                if (Input.IsActionJustPressed("jump"))
-                {
-                    P.Fsm.SetCurrentState(Player.PlayerStates.Jump);
-                    return;
-                }
+                P.Fsm.SetCurrentState(Player.PlayerStates.Jump);
+                return;
             }
 
             if (P.IsCollidingWithPlatform && !P.FallOffPlatformInput)
@@ -56,12 +59,12 @@ namespace PlayerStateMachine
 
             _desiredAirSpeedX = P.JumpState.JumpSpeedX * P.AxisInputs().x;
             P.Velocity.x = Mathf.MoveToward(
-                P.Velocity.x,
-                _desiredAirSpeedX,
-                _airAccelerationX * delta
+                P.Velocity.x, _desiredAirSpeedX, _airAccelerationX * delta
             );
             if (P.Velocity.y < P.GravitySpeedMax) P.Velocity.y += P.Gravity * delta;
         }
+        
+        public override void Process(float delta) { }
 
         public override void Exit() { }
         
@@ -73,14 +76,7 @@ namespace PlayerStateMachine
         }
 
         private bool CalculateBeforeHitGroundJumpAble() =>
-            P.IsGroundRayHit && 
+            P.IsGroundRayHit &&
             P.NavPos.DistanceTo(P.GlobalPosition) <= _beforeHitGroundJumpAbleRayLength;
-
-        public void Initialize(Player player)
-        {
-            Initialize(Player.PlayerStates.Fall);
-            P = player;
-            P.Fsm.AddState(this);
-        }
     }
 }

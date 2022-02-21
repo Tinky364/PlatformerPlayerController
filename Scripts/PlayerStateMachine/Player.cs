@@ -8,14 +8,6 @@ namespace PlayerStateMachine
 {
     public class Player : NavBody2D
     {
-        public StateMachine<PlayerStates> Fsm { get; private set; }
-        public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform }
-        
-        public Sprite Sprite { get; private set; }
-        public AnimationPlayer AnimPlayer { get; private set; }
-        public Area2D PlatformCheckArea { get; private set; }
-        public Timer JumpTimer { get; private set; }
-
         [Export]
         public bool DebugEnabled { get; private set; }
         [Export(PropertyHint.Range, "10,2000,or_greater")]
@@ -24,11 +16,8 @@ namespace PlayerStateMachine
         public float GravitySpeedMax { get; private set; } = 225f;
         [Export(PropertyHint.Layers2dPhysics)]
         public uint PlatformLayer { get; private set; } = 4;
-        [Export(PropertyHint.Range, "0,10,or_greater")]
-        private int MaxHealth { get; set; } = 6;
         [Export]
         public Color SpriteColor { get; private set; }
-        
         [Export]
         public MoveState MoveState { get; private set; }
         [Export]
@@ -41,8 +30,20 @@ namespace PlayerStateMachine
         public DeadState DeadState { get; private set; }
         [Export]
         public PlatformState PlatformState { get; private set; }
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private int _maxHealth = 6;
+        
+        public Sprite Sprite { get; private set; }
+        public AnimationPlayer AnimPlayer { get; private set; }
+        public Area2D PlatformCheckArea { get; private set; }
 
+        public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform }
+        public StateMachine<PlayerStates> Fsm { get; private set; }
+        
         public Vector2 SnapVector => SnapDisabled ? Vector2.Zero : Vector2.Down * 2f;
+        public bool SnapDisabled { get; set; }
+        public bool IsCollidingWithPlatform { get; private set; }
+        public bool FallOffPlatformInput;
         private Vector2 _inputAxis;
         private int CoinCount { get; set; } = 0;
         private int _health;
@@ -53,15 +54,12 @@ namespace PlayerStateMachine
             {
                 if (value < 0)
                     _health = 0;
-                else if (value > MaxHealth)
-                    _health = MaxHealth;
+                else if (value > _maxHealth)
+                    _health = _maxHealth;
                 else
                     _health = value;
             }
         }
-        public bool SnapDisabled { get; set; }
-        public bool IsCollidingWithPlatform { get; private set; }
-        public bool FallOffPlatformInput;
         
         public override void _EnterTree()
         {
@@ -75,8 +73,7 @@ namespace PlayerStateMachine
             Sprite = GetNode<Sprite>("Sprite");
             AnimPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
             PlatformCheckArea = GetNode<Area2D>("PlatformCheckArea");
-            JumpTimer = GetNode<Timer>("JumpTimer");
-            Health = MaxHealth;
+            Health = _maxHealth;
             Sprite.SelfModulate = SpriteColor;
             Fsm = new StateMachine<PlayerStates>();
             MoveState.Initialize(this);
@@ -88,7 +85,6 @@ namespace PlayerStateMachine
             PlatformCheckArea.Connect("body_entered", this, "OnPlatformEntered");
             PlatformCheckArea.Connect("body_exited", this, "OnPlatformExited");
             PlatformCheckArea.Connect("body_exited", MoveState, "OnPlatformExited");
-            JumpTimer.Connect("timeout", JumpState, "OnJumpEnd");
             Events.S.Connect("Damaged", this, nameof(OnDamaged));
             Events.S.Connect("CoinCollected", this, nameof(AddCoin));
             Fsm.SetCurrentState(PlayerStates.Fall);
@@ -107,12 +103,12 @@ namespace PlayerStateMachine
             Fsm._PhysicsProcess(delta);
         }
 
-        public void OnDamaged(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
+        public void OnDamaged(
+            NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
         {
             if (IsDead || target != this || IsUnhurtable) return;
-            
             Health -= damageValue;
-            Events.S.EmitSignal("PlayerHealthChanged", Health, MaxHealth, attacker);
+            Events.S.EmitSignal("PlayerHealthChanged", Health, _maxHealth, attacker);
             if (Health == 0)
             {
                 IsDead = true;
@@ -127,6 +123,16 @@ namespace PlayerStateMachine
             }
         }
         
+        public Vector2 AxisInputs()
+        {
+            _inputAxis = new Vector2
+            {
+                x = Input.GetActionStrength("move_right") - Input.GetActionStrength("move_left"),
+                y = Input.GetActionStrength("move_down") - Input.GetActionStrength("move_up")
+            };
+            return _inputAxis;
+        }
+        
         private void OnPlatformEntered(Node body) => IsCollidingWithPlatform = true;
 
         private void OnPlatformExited(Node body) => IsCollidingWithPlatform = false;
@@ -136,15 +142,6 @@ namespace PlayerStateMachine
             if (collector != this) return;
             CoinCount += coin.Value;
             Events.S.EmitSignal("PlayerCoinCountChanged", CoinCount);
-        }
-
-        public Vector2 AxisInputs()
-        {
-            _inputAxis.x =
-                Input.GetActionStrength("move_right") - Input.GetActionStrength("move_left");
-            _inputAxis.y = 
-                Input.GetActionStrength("move_down") - Input.GetActionStrength("move_up");
-            return _inputAxis;
         }
         
         private void DirectionControl()

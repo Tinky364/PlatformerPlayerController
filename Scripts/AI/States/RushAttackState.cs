@@ -7,8 +7,6 @@ namespace AI.States
 {
     public class RushAttackState : State<Enemy.EnemyStates>
     {
-        private Enemy E { get; set; }
-        
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeRushDur = 1f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
@@ -21,6 +19,8 @@ namespace AI.States
         private float _collisionBackDur = 1f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitAfterCollisionDur = 2f;
+        
+        private Enemy E { get; set; }
 
         private CancellationTokenSource _attackCancel;
         private bool _isRushing;
@@ -43,6 +43,12 @@ namespace AI.States
             _attackCancel = new CancellationTokenSource();
             Attack(_attackCancel.Token);
         }
+        
+        public override void Process(float delta) { }
+
+        public override void PhysicsProcess(float delta) { }
+        
+        public override void Exit() { }
 
         private async void Attack(CancellationToken cancellationToken)
         {
@@ -82,12 +88,8 @@ namespace AI.States
         private async void Collision(Vector2 hitNormal)
         {
             E.Agent.NavTween.MoveLerp(
-                NavTween.TweenMode.X,
-                null,
-                E.Agent.NavPos - hitNormal * _collisionBackWidth,
-                _collisionBackDur,
-                Tween.TransitionType.Cubic,
-                Tween.EaseType.Out
+                NavTween.TweenMode.X, null, E.Agent.NavPos - hitNormal * _collisionBackWidth,
+                _collisionBackDur, Tween.TransitionType.Cubic, Tween.EaseType.Out
             );
             await ToSignal(E.Agent.NavTween, "MoveCompleted");
             await TreeTimer.S.Wait(_waitAfterCollisionDur);
@@ -102,18 +104,6 @@ namespace AI.States
             _attackCancel?.Cancel();
             E.Agent.NavTween.StopMove();
             Collision(hitNormal);
-        }
-        
-        public override void Process(float delta)
-        {
-        }
-
-        public override void PhysicsProcess(float delta)
-        {
-        }
-        
-        public override void Exit()
-        {
         }
     }
 }

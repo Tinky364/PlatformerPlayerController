@@ -8,11 +8,6 @@ namespace UI
 {
     public class TestSceneGui : CanvasLayer
     {
-        private Label _coinCountLabel;
-        private TextureProgress _healthProgress;
-        private Control _pausePanel;
-        private Control _hud;
-
         [Export]
         private NodePath _hudPath = default;
         [Export]
@@ -26,6 +21,11 @@ namespace UI
         [Export]
         private float _pausePanelOpenDur = 3f;
 
+        private Label _coinCountLabel;
+        private TextureProgress _healthProgress;
+        private Control _pausePanel;
+        private Control _hud;
+        
         private CancellationTokenSource _cancellationSource;
         
         public override void _Ready()
@@ -34,9 +34,7 @@ namespace UI
             _coinCountLabel = GetNode<Label>(_coinCountLabelPath);
             _healthProgress = GetNode<TextureProgress>(_healthProgressPath);
             _pausePanel = GetNode<Control>(_pausePanelPath);
-            
             _pausePanel.Visible = false;
-            
             Events.S.Connect("PlayerCoinCountChanged", this, nameof(OnCoinCountChanged));
             Events.S.Connect("PlayerHealthChanged", this, nameof(OnHealthChanged));
             Events.S.Connect("PlayerDied", this, nameof(OnPlayerDied));
@@ -45,7 +43,6 @@ namespace UI
         private async void OnPlayerDied()
         {
             if (GM.S.UiState == GM.GameState.Pause) return;
-
             GM.S.GuiDisableInput(true);
             await TreeTimer.S.Wait(1f);
             await FadeControlAlpha(_hud, 1f, 0f, 1f);
@@ -57,16 +54,13 @@ namespace UI
         private void OnCoinCountChanged(int coinCount)
         {
             if (GM.S.UiState == GM.GameState.Pause) return;
-            
             _coinCountLabel.Text = coinCount.ToString();
         }
 
         private void OnHealthChanged(int newHealth, int maxHealth, NavBody2D attacker)
         {
             if (GM.S.UiState == GM.GameState.Pause) return;
-
             int targetHealth = (int)_healthProgress.MaxValue * newHealth / maxHealth;
-
             _cancellationSource?.Cancel();
             _cancellationSource = new CancellationTokenSource();
             HealthLerp(targetHealth, _cancellationSource.Token);
@@ -89,8 +83,9 @@ namespace UI
             }
             _healthProgress.Value = to;
         }
-        
-        private async Task FadeControlAlpha(CanvasItem control, float from, float to, float duration)
+
+        private async Task FadeControlAlpha(
+            CanvasItem control, float from, float to, float duration)
         {
             control.Visible = true;
             float count = 0f;
@@ -104,12 +99,8 @@ namespace UI
                 count += GetProcessDeltaTime();
                 await TreeTimer.S.Wait(GetProcessDeltaTime());
             }
-
             control.Modulate = new Color(
-                control.Modulate.r,
-                control.Modulate.g,
-                control.Modulate.b,
-                to
+                control.Modulate.r, control.Modulate.g, control.Modulate.b, to
             );
             if (to == 0) control.Visible = false;
         }

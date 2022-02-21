@@ -1,14 +1,9 @@
-using System;
 using Godot;
-using Manager;
 
 namespace NavTool
 {
     public class NavAgent2D : NavBody2D
     {
-        public NavArea2D NavArea { get; private set; }
-        public NavBody2D TargetNavBody { get; set; }
-
         [Export]
         public bool DebugEnabled { get; private set; }
         [Export]
@@ -18,9 +13,12 @@ namespace NavTool
         public delegate void ScreenEntered();
         [Signal]
         public delegate void ScreenExited();
-
-        private Vector2 SnapVector => SnapDisabled ? Vector2.Zero : Vector2.Down * 2f;
+        
+        public NavArea2D NavArea { get; private set; }
+        public NavBody2D TargetNavBody { get; set; }
+        
         public bool SnapDisabled;
+        private Vector2 SnapVector => SnapDisabled ? Vector2.Zero : Vector2.Down * 2f;
         
         public override void _Ready()
         {
@@ -30,9 +28,8 @@ namespace NavTool
             
             NavArea.Connect("ScreenEntered", this, nameof(OnScreenEnter));
             NavArea.Connect("ScreenExited", this, nameof(OnScreenExit));
-            
-            if (!NavArea.IsPositionInArea(GlobalPosition))
-                GlobalPosition = NavArea.GlobalPosition;
+
+            if (!NavArea.IsPositionInArea(GlobalPosition)) GlobalPosition = NavArea.GlobalPosition;
         }
 
         public override void _PhysicsProcess(float delta)
@@ -65,19 +62,13 @@ namespace NavTool
             
             return MoveAndSlideWithSnap(velocity, SnapVector, upDirection);
         }
-        
-        public Vector2 DirectionToTarget()
-        {
-            if (TargetNavBody == null) return Vector2.Zero;
-            return (TargetNavBody.NavPos - NavPos).Normalized();
-        }
 
-        public float DistanceToTarget()
-        { 
-            if (TargetNavBody == null) return 0;
-            return (TargetNavBody.NavPos - NavPos).Length();
-        }
-        
+        public Vector2 DirectionToTarget() =>
+            TargetNavBody == null ? Vector2.Zero : (TargetNavBody.NavPos - NavPos).Normalized();
+
+        public float DistanceToTarget() =>
+            TargetNavBody == null ? 0 : (TargetNavBody.NavPos - NavPos).Length();
+
         protected void OnScreenEnter() => EmitSignal(nameof(ScreenEntered));
         
         protected void OnScreenExit() => EmitSignal(nameof(ScreenExited));

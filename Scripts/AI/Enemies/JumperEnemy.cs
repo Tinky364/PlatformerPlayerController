@@ -24,9 +24,8 @@ namespace AI.Enemies
         protected override void StateController()
         {
             if (Fsm.IsStateLocked) return;
-            
-            if (Agent.TargetNavBody.IsDead ||
-                Agent.TargetNavBody.IsInactive ||
+
+            if (Agent.TargetNavBody.IsDead || Agent.TargetNavBody.IsInactive ||
                 !Agent.NavArea.IsTargetReachable)
             {
                 Fsm.SetCurrentState(EnemyStates.Idle);
@@ -44,9 +43,7 @@ namespace AI.Enemies
             if (distToTarget > _chaseState.StopDist)
             {
                 Vector2 movePos = Agent.TargetNavBody.NavPos + -Agent.DirectionToTarget() * _chaseState.StopDist;
-
                 if (!Agent.NavArea.IsPositionInArea(movePos)) return;
-
                 _chaseState.TargetPos = movePos;
                 Fsm.SetCurrentState(EnemyStates.Chase);
             }

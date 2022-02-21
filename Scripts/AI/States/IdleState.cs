@@ -5,10 +5,10 @@ namespace AI.States
 {
     public class IdleState : State<Enemy.EnemyStates>
     {
-        private Enemy E { get; set; }
-
         [Export]
         private float _secondPosDist = 40f;
+
+        private Enemy E { get; set; }
 
         private Vector2 _pos1 = new Vector2();
         private Vector2 _pos2 = new Vector2();
@@ -40,10 +40,6 @@ namespace AI.States
             E.AnimatedSprite.Play("idle");
         }
 
-        public override void Process(float delta)
-        {
-        }
-
         public override void PhysicsProcess(float delta)
         {
             Vector2 dirToTarget = _targetPos - E.Agent.NavPos;
@@ -56,14 +52,11 @@ namespace AI.States
                     E.MoveAcceleration * delta
                 );
             }
-            else
-            {
-                _targetPos = _targetPos == _pos2 ? _pos1 : _pos2;
-            }
+            else _targetPos = _targetPos == _pos2 ? _pos1 : _pos2;
         }
 
-        public override void Exit()
-        {
-        }
+        public override void Process(float delta) { }
+
+        public override void Exit() { }
     }
 }

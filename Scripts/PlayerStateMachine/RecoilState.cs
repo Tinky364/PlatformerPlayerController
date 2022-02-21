@@ -1,5 +1,4 @@
 using Godot;
-using System;
 using System.Threading.Tasks;
 using AI;
 using Manager;
@@ -8,8 +7,6 @@ namespace PlayerStateMachine
 {
     public class RecoilState : State<Player.PlayerStates>
     {
-        private Player P { get; set; }
-        
         [Export(PropertyHint.Range, "0,1000,or_greater")]
         private float _recoilImpulse = 150f;
         [Export(PropertyHint.Range, "0,3,or_greater")]
@@ -17,9 +14,18 @@ namespace PlayerStateMachine
         [Export(PropertyHint.Range, "0,3,or_greater")]
         private float _recoilDur = 0.5f;
         
-        public Vector2? HitNormal;
+        private Player P { get; set; }
+
+        public Vector2? HitNormal { get; set; }
         private float _count;
 
+        public void Initialize(Player player)
+        {
+            Initialize(Player.PlayerStates.Recoil);
+            P = player;
+            P.Fsm.AddState(this);
+        }
+        
         public override async void Enter()
         {
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
@@ -32,8 +38,6 @@ namespace PlayerStateMachine
             if (P.IsDead) return;
             P.IsUnhurtable = false;
         }
-        
-        public override void Process(float delta) { }
 
         public override void PhysicsProcess(float delta)
         {
@@ -59,6 +63,8 @@ namespace PlayerStateMachine
             HitNormal = null;
         }
 
+        public override void Process(float delta) { }
+        
         private Vector2 CalculateRecoilImpulse()
         {
             Vector2 recoilDir = HitNormal ?? -P.Direction;
@@ -78,8 +84,9 @@ namespace PlayerStateMachine
             while (count < _unhurtableDur)
             {
                 if (!IsInstanceValid(P)) return;
-                P.Sprite.SelfModulate = 
-                    P.Sprite.SelfModulate == Colors.White ? P.SpriteColor : Colors.White;
+                P.Sprite.SelfModulate = P.Sprite.SelfModulate == Colors.White
+                    ? P.SpriteColor
+                    : Colors.White;
                 float t = count / _unhurtableDur;
                 t = 1 - Mathf.Pow(1 - t, 5);
                 float waitTime = Mathf.Lerp(0.01f, 0.2f, t);
@@ -87,13 +94,6 @@ namespace PlayerStateMachine
                 await TreeTimer.S.Wait(waitTime);
             }
             P.Sprite.SelfModulate = P.SpriteColor;
-        }
-        
-        public void Initialize(Player player)
-        {
-            Initialize(Player.PlayerStates.Recoil);
-            P = player;
-            P.Fsm.AddState(this);
         }
     }
 }

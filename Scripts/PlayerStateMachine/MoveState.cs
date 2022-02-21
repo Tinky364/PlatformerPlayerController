@@ -6,16 +6,23 @@ namespace PlayerStateMachine
 {
     public class MoveState : State<Player.PlayerStates>
     {
-        private Player P { get; set; }
-
         [Export(PropertyHint.Range, "1,2000,or_greater")]
         private float _moveAccelerationX = 400f;
         [Export(PropertyHint.Range, "1,200,or_greater")]
         private float _moveSpeedX = 70f;
 
-        private float _desiredMoveSpeedX;
-        public bool IsOnPlatform => P.CurGroundLayer == P.PlatformLayer;
+        private Player P { get; set; }
 
+        private float _desiredMoveSpeedX;
+        private bool IsOnPlatform => P.CurGroundLayer == P.PlatformLayer;
+
+        public void Initialize(Player player)
+        {
+            Initialize(Player.PlayerStates.Move);
+            P = player;
+            P.Fsm.AddState(this);
+        }
+        
         public override void Enter()
         {
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
@@ -31,7 +38,7 @@ namespace PlayerStateMachine
             {
                 P.AnimPlayer.Play(P.Velocity.x == 0 ? "idle" : "run");
                 P.AnimPlayer.PlaybackSpeed = P.AnimPlayer.CurrentAnimation.Equals("run")
-                    ? Mathf.Clamp(Mathf.Abs(P.Velocity.x) / _moveSpeedX, 0.5f, 1f) 
+                    ? Mathf.Clamp(Mathf.Abs(P.Velocity.x) / _moveSpeedX, 0.5f, 1f)
                     : 1f;
             }
         }
@@ -54,7 +61,6 @@ namespace PlayerStateMachine
 
             if (!P.IsOnFloor())
             {
-                GD.Print("a");
                 P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
                 return;
             }
@@ -62,9 +68,7 @@ namespace PlayerStateMachine
             // While the player is walking on the ground.
             _desiredMoveSpeedX = _moveSpeedX * P.AxisInputs().x;
             P.Velocity.x = Mathf.MoveToward(
-                P.Velocity.x,
-                _desiredMoveSpeedX,
-                _moveAccelerationX * delta
+                P.Velocity.x, _desiredMoveSpeedX, _moveAccelerationX * delta
             );
             P.Velocity.y = P.Gravity * delta;
         }
@@ -77,7 +81,6 @@ namespace PlayerStateMachine
         private bool FallOffPlatformInput()
         {
             if (!IsOnPlatform || !Input.IsActionJustPressed("move_down")) return false;
-            
             P.FallOffPlatformInput = true;
             P.SetCollisionMaskBit(2, false);
             P.GroundLayer -= P.PlatformLayer;
@@ -90,13 +93,6 @@ namespace PlayerStateMachine
             P.FallOffPlatformInput = false;
             P.SetCollisionMaskBit(2, true);
             P.GroundLayer += P.PlatformLayer;
-        }
-        
-        public void Initialize(Player player)
-        {
-            Initialize(Player.PlayerStates.Move);
-            P = player;
-            P.Fsm.AddState(this);
         }
     }
 }

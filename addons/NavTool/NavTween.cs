@@ -5,8 +5,6 @@ namespace NavTool
 {
     public class NavTween : Tween
     {
-        private Node2D _conNode;
-
         [Signal]
         private delegate void MoveStarted();
         [Signal]
@@ -19,7 +17,7 @@ namespace NavTool
         public bool IsPlaying { get; private set; }
         public bool IsTweenConnected { get; private set; }
         public bool IsVelocityConnected { get; private set; }
-        
+        private Node2D _conNode;
         private Vector2 _pos;
         private Vector2 _velocity;
         private string _velocityVar;
@@ -34,10 +32,7 @@ namespace NavTool
 
         public override void _PhysicsProcess(float delta)
         {
-            if (!IsTweenConnected)
-            {
-                GD.PushWarning("NavTween is not connected!");
-            }
+            if (!IsTweenConnected) GD.PushWarning("NavTween is not connected!");
         }
 
         public void ConnectTween(Node2D connectedNode, string velocityVariableName = "")
@@ -49,10 +44,11 @@ namespace NavTool
             _velocityVar = velocityVariableName;
             IsVelocityConnected = true;
         }
-        
-        public async void MoveLerp(TweenMode mode, Vector2? initialPos, Vector2 targetPos, float duration,
-                             TransitionType transitionType = TransitionType.Linear,
-                             EaseType easeType = EaseType.InOut, float delay = 0f)
+
+        public async void MoveLerp(
+            TweenMode mode, Vector2? initialPos, Vector2 targetPos, float duration,
+            TransitionType transitionType = TransitionType.Linear,
+            EaseType easeType = EaseType.InOut, float delay = 0f)
         {
             if (delay > 0) await TreeTimer.S.Wait(delay);
             if (IsPlaying)
@@ -75,9 +71,10 @@ namespace NavTool
             Start();
         }
         
-        public async void MoveToward(TweenMode mode, Vector2? initialPos, Vector2 targetPos, float speed, 
-                               TransitionType transitionType = TransitionType.Linear,
-                               EaseType easeType = EaseType.InOut, float delay = 0f)
+        public async void MoveToward(
+            TweenMode mode, Vector2? initialPos, Vector2 targetPos, float speed, 
+            TransitionType transitionType = TransitionType.Linear,
+            EaseType easeType = EaseType.InOut, float delay = 0f)
         {
             if (delay != 0) await TreeTimer.S.Wait(delay);
             if (IsPlaying)
@@ -101,11 +98,18 @@ namespace NavTool
             Start();
         }
         
+        public void StopMove()
+        {
+            Stop(this, "_pos");
+            OnMoveCompleted();
+            EmitSignal(nameof(MoveCompleted));
+        }
+        
         public Vector2 EqualizeVelocity(Vector2 velocity, float delta)
         {
             if (!IsPlaying || !IsVelocityConnected) return velocity;
-            _velocity = _conNode.GlobalPosition.DirectionTo(_pos)
-                * _conNode.GlobalPosition.DistanceTo(_pos) / delta;
+            _velocity = _conNode.GlobalPosition.DirectionTo(_pos) *
+                _conNode.GlobalPosition.DistanceTo(_pos) / delta;
             switch (CurTweenMode)
             {
                 case TweenMode.Vector2:
@@ -139,13 +143,6 @@ namespace NavTool
             return position;
         }
         
-        public void StopMove()
-        {
-            Stop(this, "_pos");
-            OnMoveCompleted();
-            EmitSignal(nameof(MoveCompleted));
-        }
-
         private void OnTweenStarted(Object obj, NodePath key)
         {
             OnMoveStarted();
@@ -156,12 +153,9 @@ namespace NavTool
             OnMoveCompleted();
             EmitSignal(nameof(MoveCompleted));
         }
-        
-        private void OnMoveStarted()
-        {
-            IsPlaying = true;
-        }
-        
+
+        private void OnMoveStarted() => IsPlaying = true;
+
         private void OnMoveCompleted()
         {
             RemoveAll();

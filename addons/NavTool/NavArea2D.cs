@@ -5,9 +5,6 @@ namespace NavTool
     [Tool]
     public class NavArea2D : Area2D
     {
-        private VisibilityNotifier2D _visibilityNotifier;
-        private CollisionShape2D _shape;
-        
         [Signal]
         public delegate void TargetEntered(NavBody2D navBody);
         [Signal]
@@ -16,9 +13,12 @@ namespace NavTool
         public delegate void ScreenEntered();
         [Signal]
         public delegate void ScreenExited();
+        
+        private VisibilityNotifier2D _visibilityNotifier;
+        private CollisionShape2D _shape;
        
-        public Vector2 AreaExtents { get; private set; }
         public Rect2 AreaRect => new Rect2(GlobalPosition - AreaExtents, AreaExtents * 2f);
+        public Vector2 AreaExtents { get; private set; }
         public bool IsTargetReachable { get; private set; }
 
         public override void _Ready()
@@ -36,21 +36,10 @@ namespace NavTool
 
         public bool IsPositionInArea(Vector2 position)
         {
-            return !(position.x > AreaRect.End.x) &&
-                   !(position.x < AreaRect.Position.x) &&
-                   !(position.y > AreaRect.End.y) &&
-                   !(position.y < AreaRect.Position.y);
+            return !(position.x > AreaRect.End.x) && !(position.x < AreaRect.Position.x) &&
+                   !(position.y > AreaRect.End.y) && !(position.y < AreaRect.Position.y);
         }
         
-        private void SetTransformsAccordingToShape()
-        {
-            GlobalPosition = _shape.GlobalPosition;
-            _shape.GlobalPosition = GlobalPosition;
-            _visibilityNotifier.Scale = Vector2.One;
-            _visibilityNotifier.Position = Vector2.Zero;
-            _visibilityNotifier.Rect = new Rect2(AreaRect.Position - GlobalPosition, AreaRect.Size);
-        }
-
         public void CheckTargetInArea(NavBody2D target)
         {
             if (target == null) return;
@@ -61,14 +50,20 @@ namespace NavTool
                 IsTargetReachable = true;
                 EmitSignal(nameof(TargetEntered), target);
             }
-            else
+            else if (IsTargetReachable)
             {
-                if (IsTargetReachable)
-                {
-                    IsTargetReachable = false;
-                    EmitSignal(nameof(TargetExited), target);
-                }
+                IsTargetReachable = false;
+                EmitSignal(nameof(TargetExited), target);
             }
+        }
+        
+        private void SetTransformsAccordingToShape()
+        {
+            GlobalPosition = _shape.GlobalPosition;
+            _shape.GlobalPosition = GlobalPosition;
+            _visibilityNotifier.Scale = Vector2.One;
+            _visibilityNotifier.Position = Vector2.Zero;
+            _visibilityNotifier.Rect = new Rect2(AreaRect.Position - GlobalPosition, AreaRect.Size);
         }
         
         private void OnScreenEnter() => EmitSignal(nameof(ScreenEntered));
@@ -78,13 +73,14 @@ namespace NavTool
         public override string _GetConfigurationWarning()
         {
             if (!Engine.EditorHint) return "";
+            
             for (int i = 0; i < GetChildCount(); i++)
             {
-                if (GetChild(i) is VisibilityNotifier2D)
-                    return "";
+                if (GetChild(i) is VisibilityNotifier2D) return "";
             }
+
             return "This node has no VisibilityNotifier2D. Consider adding a VisibilityNotifier2D" +
-                       " as a child.";
+                   " as a child.";
         }
     }
 }

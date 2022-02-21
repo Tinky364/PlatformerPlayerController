@@ -6,10 +6,6 @@ namespace AI
 {
     public abstract class Enemy : Node2D
     {
-        public StateMachine<EnemyStates> Fsm { get; private set; }
-        public NavAgent2D Agent { get; private set; }
-        public AnimatedSprite AnimatedSprite { get; private set; }
-
         [Export(PropertyHint.Range, "10,2000,or_greater")]
         public float Gravity { get; private set; } = 600f;
         [Export(PropertyHint.Range, "0,200,or_greater")]
@@ -19,8 +15,12 @@ namespace AI
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private int _damageValue = 1;
         
+        public NavAgent2D Agent { get; private set; }
+        public AnimatedSprite AnimatedSprite { get; private set; }
+        
         public enum EnemyStates { Idle, Chase, Attack }
-
+        public StateMachine<EnemyStates> Fsm { get; private set; }
+        
         public override void _EnterTree()
         {
             base._EnterTree();
@@ -50,26 +50,26 @@ namespace AI
         {
             base._PhysicsProcess(delta);
             Fsm._PhysicsProcess(delta);
-            
             Agent.Velocity = Agent.MoveInArea(Agent.Velocity, delta, Vector2.Up);
             if (!Agent.IsOnFloor()) Agent.Velocity.y += Gravity * delta;
             else if (!Agent.SnapDisabled) Agent.Velocity.y = Gravity * delta;
         }
+        
+        protected abstract void StateController();
+
+        protected void OnScreenEnter() => GM.SetNodeActive(this, true);
+        
+        protected void OnScreenExit() => GM.SetNodeActive(this, false);
 
         private void OnBodyColliding(Node body)
         {
             if (!(body is NavBody2D targetNavBody)) return;
             if (targetNavBody.IsUnhurtable) return;
             Events.S.EmitSignal(
-                "Damaged",
-                targetNavBody,
-                _damageValue,
-                Agent,
+                "Damaged", targetNavBody, _damageValue, Agent,
                 Agent.GlobalPosition.DirectionTo(targetNavBody.GlobalPosition)
             );
         }
-
-        protected abstract void StateController();
         
         private void DirectionControl()
         {
@@ -89,9 +89,5 @@ namespace AI
             if (Agent.TargetNavBody != null) return;
             Agent.TargetNavBody = target;
         }
-        
-        protected void OnScreenEnter() => GM.S.SetNodeActive(this, true);
-        
-        protected void OnScreenExit() => GM.S.SetNodeActive(this, false);
     }
 }

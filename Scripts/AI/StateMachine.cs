@@ -5,11 +5,11 @@ namespace AI
 {
     public class StateMachine<T> : Reference
     {
-        private readonly Dictionary<T, State<T>> _states;
         public State<T> PreviousState { get; private set; }
         public State<T> CurrentState { get; private set; }
         public bool IsStateLocked { get; private set; }
-        
+        private readonly Dictionary<T, State<T>> _states;
+
         public StateMachine()
         {
             _states = new Dictionary<T, State<T>>();
@@ -21,8 +21,9 @@ namespace AI
             if (_states.ContainsKey(state.Key)) return;
             _states.Add(state.Key, state);
         }
-        
-        public State<T> GetState(T stateKey) => _states.ContainsKey(stateKey) ? _states[stateKey] : null;
+
+        public State<T> GetState(T stateKey) => 
+            _states.ContainsKey(stateKey) ? _states[stateKey] : null;
         
         public void SetCurrentState(T stateKey, bool isStateLocked = false)
         {
@@ -42,14 +43,8 @@ namespace AI
             CurrentState = null;
         }
 
-        public void _Process(float delta)
-        {
-            CurrentState?.Process(delta);
-        }
+        public void _Process(float delta) => CurrentState?.Process(delta);
 
-        public void _PhysicsProcess(float delta)
-        {
-            CurrentState?.PhysicsProcess(delta);
-        }
+        public void _PhysicsProcess(float delta) => CurrentState?.PhysicsProcess(delta);
     }
 }

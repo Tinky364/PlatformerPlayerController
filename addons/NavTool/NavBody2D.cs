@@ -5,19 +5,16 @@ namespace NavTool
 {
     public class NavBody2D : KinematicBody2D
     {
-        public NavTween NavTween { get; private set; }
-        private Area2D _interactionArea;
-
         [Export]
         public NavBodyType CurNavBodyType { get; private set; } = NavBodyType.Platformer;
-        [Export]
-        private bool IsOnBodyCollidingActive { get; set; }
         [Export(PropertyHint.Range, "0,500,1,or_greater")]
         public Vector2 Extents { get; private set; }
-        [Export(PropertyHint.Range, "0.1,200,or_greater")] 
-        private float GroundRayLength { get; set; } = 35f;
         [Export(PropertyHint.Layers2dPhysics)]
         public uint GroundLayer { get; set; } = 6;
+        [Export]
+        private bool _isOnBodyCollidingActive;
+        [Export(PropertyHint.Range, "0.1,200,or_greater")] 
+        private float _groundRayLength = 35f;
         
         [Signal]
         protected delegate void BodyEntered(Node body);
@@ -26,21 +23,24 @@ namespace NavTool
         [Signal]
         protected delegate void BodyExited(Node body);
 
+        public NavTween NavTween { get; private set; }
+        private Area2D _interactionArea;
+        
         public enum NavBodyType { Platformer, TopDown }
-        protected PhysicsBody2D CollidingBody { get; private set; }
         public Node Ground { get; private set; }
-        protected Physics2DDirectSpaceState SpaceState { get; private set; }
-        private Dictionary _groundRay;
         public Vector2 NavPos { get; private set; }
         public Vector2 ExtentsHalf => Extents / 2f;
         public Vector2 Velocity;
         public Vector2 Direction = new Vector2(1, 0);
         public uint CurGroundLayer { get; private set; }
-        private bool _isColliding;
         public bool IsInactive => !Visible;
         public bool IsUnhurtable { get; set; }
         public bool IsDead { get; protected set; }
         public bool IsGroundRayHit { get; private set; }
+        protected PhysicsBody2D CollidingBody { get; private set; }
+        protected Physics2DDirectSpaceState SpaceState { get; private set; }
+        private Dictionary _groundRay;
+        private bool _isColliding;
 
         public override void _EnterTree()
         {
@@ -87,6 +87,30 @@ namespace NavTool
                     break;
             }
         }
+        
+        private void OnBodyEntered(Node node)
+        {
+            if (!(node is PhysicsBody2D body)) return;
+            _isColliding = true;
+            CollidingBody = body;
+            EmitSignal(nameof(BodyEntered), node);
+        }
+
+        private void OnBodyColliding(Node body)
+        {
+            if (!_isOnBodyCollidingActive) return;
+            if (!_isColliding) return;
+            EmitSignal(nameof(BodyColliding), body);
+        }
+
+        private void OnBodyExited(Node node)
+        {
+            if (!(node is PhysicsBody2D body)) return;
+            if (body != CollidingBody) return;
+            _isColliding = false;
+            CollidingBody = null;
+            EmitSignal(nameof(BodyExited), node);
+        }
 
         private Vector2 CastGroundRay()
         {
@@ -97,9 +121,8 @@ namespace NavTool
             // Raycast from the left bottom corner.
             _groundRay = SpaceState.IntersectRay(
                 GlobalPosition + new Vector2(-ExtentsHalf.x, -5f),
-                GlobalPosition + new Vector2(-ExtentsHalf.x, GroundRayLength + 5f),
-                new Array {this},
-                GroundLayer
+                GlobalPosition + new Vector2(-ExtentsHalf.x, _groundRayLength + 5f),
+                new Array {this}, GroundLayer
             );
             if (_groundRay.Count > 0)
             {
@@ -119,8 +142,7 @@ namespace NavTool
             // Raycast from the right bottom corner.
             _groundRay = SpaceState.IntersectRay(
                 GlobalPosition + new Vector2(ExtentsHalf.x, -5f),
-                GlobalPosition + new Vector2(ExtentsHalf.x, GroundRayLength + 5f),
-                new Array {this},
+                GlobalPosition + new Vector2(ExtentsHalf.x, _groundRayLength + 5f), new Array {this},
                 GroundLayer
             );
             if (_groundRay.Count > 0)
@@ -164,30 +186,6 @@ namespace NavTool
             IsGroundRayHit = false;
             Ground = null;
             return GlobalPosition;
-        }
-        
-        private void OnBodyEntered(Node node)
-        {
-            if (!(node is PhysicsBody2D body)) return;
-            _isColliding = true;
-            CollidingBody = body;
-            EmitSignal(nameof(BodyEntered), node);
-        }
-
-        private void OnBodyColliding(Node body)
-        {
-            if (!IsOnBodyCollidingActive) return;
-            if (!_isColliding) return;
-            EmitSignal(nameof(BodyColliding), body);
-        }
-
-        private void OnBodyExited(Node node)
-        {
-            if (!(node is PhysicsBody2D body)) return;
-            if (body != CollidingBody) return;
-            _isColliding = false;
-            CollidingBody = null;
-            EmitSignal(nameof(BodyExited), node);
         }
     }
 }

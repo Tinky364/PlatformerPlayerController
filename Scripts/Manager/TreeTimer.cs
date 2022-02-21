@@ -22,15 +22,12 @@ namespace Manager
             return ToSignal(timer, "timeout");
         }
         
+        public void Push(TimerX timer) => _timerPool.Enqueue(timer);
+
         private TimerX Pull()
         {
             if (_timerPool.Count <= 0) ExpandTimerPool();
             return _timerPool.Dequeue();
-        }
-        
-        public void Push(TimerX timer)
-        {
-            _timerPool.Enqueue(timer);
         }
 
         private void ExpandTimerPool()
@@ -42,4 +39,3 @@ namespace Manager
         }
     }
 }
-

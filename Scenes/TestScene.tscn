@@ -147,11 +147,10 @@ shape = SubResource( 29 )
 
 [node name="Player" parent="World" index="9" instance=ExtResource( 17 )]
 position = Vector2( 229, 167 )
-DebugEnabled = true
+_maxHealth = 1
 
 [node name="Camera2D" type="Camera2D" parent="World" index="10"]
 position = Vector2( 203, 88 )
-current = true
 process_mode = 0
 smoothing_enabled = true
 offset_v = -1.0
