@@ -1,4 +1,5 @@
 using Godot;
+using Manager;
 using NavTool;
 
 namespace Other
@@ -35,7 +36,7 @@ namespace Other
         
         private void MoveMouseClickPos()
         {
-            if (Input.IsActionJustPressed("mouse_left_click"))
+            if (InputManager.IsJustPressed("mouse_left_click"))
             {
                 Vector2 targetPos = GetTree().Root.GetMousePosition();
                 if (NavArea != null && !NavArea.IsPositionInArea(targetPos)) return;
@@ -57,7 +58,7 @@ namespace Other
                 }
             }
 
-            if (Input.IsActionJustPressed("mouse_right_click") && NavTween.IsPlaying)
+            if (InputManager.IsJustPressed("mouse_right_click") && NavTween.IsPlaying)
                 NavTween.StopMove();
         }
     }

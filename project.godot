@@ -23,6 +23,7 @@ run/main_scene="res://Scenes/TestScene.tscn"
 Events="*res://Scripts/Manager/Events.cs"
 GameManager="*res://Scripts/Manager/GM.cs"
 TreeTimer="*res://Scripts/Manager/TreeTimer.cs"
+InputManager="*res://Scripts/Manager/InputManager.cs"
 
 [display]
 
@@ -72,7 +73,12 @@ ui_accept={
 }
 ui_select={
 "deadzone": 0.5,
-"events": [ Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":0,"button_index":3,"pressure":0.0,"pressed":false,"script":null)
+"events": [  ]
+}
+ui_end={
+"deadzone": 0.5,
+"events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777230,"physical_scancode":0,"unicode":0,"echo":false,"script":null)
+, Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":0,"button_index":11,"pressure":0.0,"pressed":false,"script":null)
  ]
 }
 move_right={

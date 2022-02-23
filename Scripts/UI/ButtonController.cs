@@ -10,23 +10,10 @@ namespace UI
         public ButtonTypes ButtonType { get; set; }
         [Export(PropertyHint.File, "*.tscn")]
         public string LoadScenePath { get; set; }
-        [Export]
-        private bool _setFocus;
 
         public override void _Ready()
         {
             Connect("pressed", this, nameof(OnPressed));
-
-            if (_setFocus)
-            {
-                Events.S.Connect("PlayerDied", this, nameof(OnPlayerDied));
-                GrabFocus();
-            }
-        }
-
-        private void OnPlayerDied()
-        {
-            if (_setFocus) GrabFocus();
         }
 
         public void OnPressed()

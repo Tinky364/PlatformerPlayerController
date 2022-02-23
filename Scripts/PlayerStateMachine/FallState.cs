@@ -39,13 +39,13 @@ namespace PlayerStateMachine
             P.CastWallRay();
 
             if ((_isAfterLeavingGroundJumpAble || CalculateBeforeHitGroundJumpAble()) &&
-                Input.IsActionJustPressed("jump"))
+                InputManager.IsJustPressed("jump"))
             {
                 P.Fsm.SetCurrentState(Player.PlayerStates.Jump);
                 return;
             }
             
-            if (P.IsWallRayHit && Input.IsActionJustPressed("jump"))
+            if (P.IsWallRayHit && InputManager.IsJustPressed("jump"))
             {
                 P.Fsm.SetCurrentState(Player.PlayerStates.WallJump);
                 return;

@@ -38,7 +38,7 @@ namespace PlayerStateMachine
 
             P.CastWallRay();
 
-            if (P.IsWallRayHit && Input.IsActionJustPressed("jump"))
+            if (P.IsWallRayHit && InputManager.IsJustPressed("jump"))
             {
                 P.Fsm.SetCurrentState(Player.PlayerStates.WallJump);
                 return;

@@ -63,7 +63,7 @@ namespace PlayerStateMachine
                 return;
             }
             
-            if (Input.IsActionPressed("jump") && P.Velocity.y <= 0f)
+            if (InputManager.IsPressed("jump") && P.Velocity.y <= 0f)
             {
                 _desiredSpeedX = SpeedX * P.AxisInputs().x;
                 P.Velocity.x = Mathf.MoveToward(

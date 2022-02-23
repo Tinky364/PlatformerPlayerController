@@ -47,7 +47,7 @@ namespace PlayerStateMachine
         {
             P.Velocity = P.MoveAndSlideWithSnap(P.Velocity, P.SnapVector, Vector2.Up);
 
-            if (Input.IsActionJustPressed("jump"))
+            if (InputManager.IsJustPressed("jump"))
             {
                 P.Fsm.SetCurrentState(Player.PlayerStates.Jump);
                 return;
@@ -74,7 +74,7 @@ namespace PlayerStateMachine
 
         private bool FallOffPlatformInput()
         {
-            if (!IsOnPlatform || !Input.IsActionJustPressed("move_down")) return false;
+            if (!IsOnPlatform || !InputManager.IsJustPressed("move_down")) return false;
             P.FallOffPlatformInput = true;
             P.SetCollisionMaskBit(2, false);
             P.GroundLayer -= P.PlatformLayer;

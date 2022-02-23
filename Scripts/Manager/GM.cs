@@ -15,16 +15,15 @@ namespace Manager
         private GameState _worldState;
         private GameState _uiState;
 
-        public override void _EnterTree()
-        {
-            SetSingleton();
-        }
+        public override void _EnterTree() { SetSingleton(); }
 
         public override void _Ready()
         {
             PauseMode = PauseModeEnum.Process;
             Events.S.PauseMode = PauseModeEnum.Process;
-
+            TreeTimer.S.PauseMode = PauseModeEnum.Process;
+            InputManager.S.PauseMode = PauseModeEnum.Process;
+            
             if (Root.GetChild(Root.GetChildCount() - 1) is SceneManager scene)
                 SetCurrentScene(scene);
             else GD.PushWarning("First scene is not a SceneManager node!");
@@ -74,8 +73,7 @@ namespace Manager
             else Tree.Paused = false;
         }
 
-        public void GuiDisableInput(bool value) => Root.GuiDisableInput = value;
-
+        
         public void QuitGame() => Tree.Quit();
 
         public async Task<T> LoadAsync<T>(string path) where T : Resource

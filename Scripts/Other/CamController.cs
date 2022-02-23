@@ -19,12 +19,13 @@ namespace Other
         public override void _Ready()
         {
             _player = GetNode<Player>(_playerPath);
-            _curPos = GlobalPosition;
+            _curPos = _player.GlobalPosition;
         }
 
         public override void _PhysicsProcess(float delta)
         {
-            PixelPerfectSmoothing(delta);
+            //PixelPerfectSmoothing(delta);
+            GlobalPosition = _player.GlobalPosition;
             SetCamOffset(delta);
             ForceUpdateScroll();
         }

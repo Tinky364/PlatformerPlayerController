@@ -143,8 +143,8 @@ namespace PlayerStateMachine
         {
             _inputAxis = new Vector2
             {
-                x = Input.GetActionStrength("move_right") - Input.GetActionStrength("move_left"),
-                y = Input.GetActionStrength("move_down") - Input.GetActionStrength("move_up")
+                x = InputManager.GetStrength("move_right") - InputManager.GetStrength("move_left"),
+                y = InputManager.GetStrength("move_down") - InputManager.GetStrength("move_up")
             };
             return _inputAxis = new Vector2(Mathf.Sign(_inputAxis.x), Mathf.Sign(_inputAxis.y));
         }
