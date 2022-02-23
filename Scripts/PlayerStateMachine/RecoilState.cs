@@ -8,11 +8,11 @@ namespace PlayerStateMachine
     public class RecoilState : State<Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "0,1000,or_greater")]
-        private float _recoilImpulse = 150f;
-        [Export(PropertyHint.Range, "0,3,or_greater")]
-        private float _unhurtableDur = 1f;
+        private float _impulse = 150f;
         [Export(PropertyHint.Range, "0,3,or_greater")]
         private float _recoilDur = 0.5f;
+        [Export(PropertyHint.Range, "0,3,or_greater")]
+        private float _unhurtableDur = 1f;
         
         private Player P { get; set; }
 
@@ -73,8 +73,8 @@ namespace PlayerStateMachine
                 x = Mathf.Clamp(Mathf.Abs(recoilDir.x), 0.7f, 1f) * Mathf.Sign(recoilDir.x),
                 y = Mathf.Clamp(Mathf.Abs(recoilDir.y), 0.2f, 1f) * Mathf.Sign(recoilDir.y)
             };
-            recoilVelocity.x *= _recoilImpulse * 0.85f;
-            recoilVelocity.y *= recoilDir.y < 0 ? _recoilImpulse * 1.5f : _recoilImpulse / 2f;
+            recoilVelocity.x *= _impulse * 0.85f;
+            recoilVelocity.y *= recoilDir.y < 0 ? _impulse * 1.5f : _impulse / 2f;
             return recoilVelocity;
         }
         

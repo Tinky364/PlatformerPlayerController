@@ -1,20 +1,20 @@
-using Godot;
 using AI;
+using Godot;
 using Manager;
 
 namespace PlayerStateMachine
 {
-    public class JumpState : State<Player.PlayerStates>
+    public class WallJumpState : State<Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,100,or_greater")]
         private float _heightMin = 10f;
         [Export(PropertyHint.Range, "1,200,or_greater")]
-        private float _heightMax = 24f;
+        private float _heightMax = 20f;
         [Export(PropertyHint.Range, "0,400,or_greater")]
-        private float _widthMax = 42f;
-
+        private float _widthMax = 40f;
+        
         private Player P { get; set; }
-
+        
         public float SpeedX => _widthMax / (JumpDur + FallDur); // v=w/t
         private float ImpulseY => Mathf.Sqrt(2f * P.Gravity * _heightMin); // V=-sqrt{2*g*h}
         private float AccelerationY =>
@@ -26,23 +26,23 @@ namespace PlayerStateMachine
 
         public void Initialize(Player player)
         {
-            Initialize(Player.PlayerStates.Jump);
+            Initialize(Player.PlayerStates.WallJump);
             P = player;
             P.Fsm.AddState(this);
-            P.AnimPlayer.GetAnimation("fall").Length = FallDur;
         }
-        
+
         public override void Enter()
         {
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             _count = 0;
             P.SnapDisabled = true;
-            P.AnimPlayer.GetAnimation("jump").Length = JumpDur;
-            P.AnimPlayer.Play("jump");
-            _desiredSpeedX = SpeedX * P.AxisInputs().x;
-            P.Velocity.x = _desiredSpeedX;
+            P.AnimPlayer.GetAnimation("wall_jump").Length = JumpDur;
+            P.AnimPlayer.Play("wall_jump");
+            P.Velocity.x = SpeedX * -P.WallDirection.x;
             P.Velocity.y = -ImpulseY;
         }
+
+        public override void Process(float delta) { }
 
         public override void PhysicsProcess(float delta)
         {
@@ -65,7 +65,7 @@ namespace PlayerStateMachine
             
             if (Input.IsActionPressed("jump") && P.Velocity.y <= 0f)
             {
-                _desiredSpeedX = SpeedX * P.AxisInputs().x;
+                _desiredSpeedX = (SpeedX - 10f) * P.AxisInputs().x;
                 P.Velocity.x = Mathf.MoveToward(
                     P.Velocity.x, _desiredSpeedX, P.AirAccelerationX * delta
                 );
@@ -76,8 +76,6 @@ namespace PlayerStateMachine
             // Starts fall when there is no jump input.
             P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
         }
-
-        public override void Process(float delta) { }
 
         public override void Exit() { }
     }

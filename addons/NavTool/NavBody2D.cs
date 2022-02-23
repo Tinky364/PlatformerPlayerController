@@ -120,8 +120,8 @@ namespace NavTool
             bool isRightHit = false;
             // Raycast from the left bottom corner.
             _groundRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(-ExtentsHalf.x, -5f),
-                GlobalPosition + new Vector2(-ExtentsHalf.x, _groundRayLength + 5f),
+                GlobalPosition + new Vector2(-ExtentsHalf.x, -2f),
+                GlobalPosition + new Vector2(-ExtentsHalf.x, _groundRayLength),
                 new Array {this}, GroundLayer
             );
             if (_groundRay.Count > 0)
@@ -141,8 +141,8 @@ namespace NavTool
             // If the first raycast does not hit the ground.
             // Raycast from the right bottom corner.
             _groundRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(ExtentsHalf.x, -5f),
-                GlobalPosition + new Vector2(ExtentsHalf.x, _groundRayLength + 5f), new Array {this},
+                GlobalPosition + new Vector2(ExtentsHalf.x, -2f),
+                GlobalPosition + new Vector2(ExtentsHalf.x, _groundRayLength), new Array {this},
                 GroundLayer
             );
             if (_groundRay.Count > 0)

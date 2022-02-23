@@ -7,13 +7,13 @@ namespace PlayerStateMachine
     public class MoveState : State<Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,2000,or_greater")]
-        private float _moveAccelerationX = 400f;
+        private float _accelerationX = 400f;
         [Export(PropertyHint.Range, "1,200,or_greater")]
-        private float _moveSpeedX = 70f;
+        private float _speedX = 60f;
 
         private Player P { get; set; }
 
-        private float _desiredMoveSpeedX;
+        private float _desiredSpeedX;
         private bool IsOnPlatform => P.CurGroundLayer == P.PlatformLayer;
 
         public void Initialize(Player player)
@@ -38,7 +38,7 @@ namespace PlayerStateMachine
             {
                 P.AnimPlayer.Play(P.Velocity.x == 0 ? "idle" : "run");
                 P.AnimPlayer.PlaybackSpeed = P.AnimPlayer.CurrentAnimation.Equals("run")
-                    ? Mathf.Clamp(Mathf.Abs(P.Velocity.x) / _moveSpeedX, 0.5f, 1f)
+                    ? Mathf.Clamp(Mathf.Abs(P.Velocity.x) / _speedX, 0.5f, 1f)
                     : 1f;
             }
         }
@@ -53,22 +53,16 @@ namespace PlayerStateMachine
                 return;
             }
 
-            if (FallOffPlatformInput())
-            {
-                P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
-                return;
-            }
-
-            if (!P.IsOnFloor())
+            if (!P.IsOnFloor() || FallOffPlatformInput())
             {
                 P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
                 return;
             }
             
             // While the player is walking on the ground.
-            _desiredMoveSpeedX = _moveSpeedX * P.AxisInputs().x;
+            _desiredSpeedX = _speedX * P.AxisInputs().x;
             P.Velocity.x = Mathf.MoveToward(
-                P.Velocity.x, _desiredMoveSpeedX, _moveAccelerationX * delta
+                P.Velocity.x, _desiredSpeedX, _accelerationX * delta
             );
             P.Velocity.y = P.Gravity * delta;
         }

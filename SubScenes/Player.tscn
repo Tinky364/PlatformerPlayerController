@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=2]
+[gd_scene load_steps=34 format=2]
 
 [ext_resource path="res://Scripts/PlayerStateMachine/Player.cs" type="Script" id=1]
 [ext_resource path="res://Scripts/PlayerStateMachine/FallState.cs" type="Script" id=2]
@@ -10,40 +10,54 @@
 [ext_resource path="res://Sprites/Player/CharacterJump-Sheet.png" type="Texture" id=8]
 [ext_resource path="res://Scripts/PlayerStateMachine/DeadState.cs" type="Script" id=9]
 [ext_resource path="res://Scripts/PlayerStateMachine/PlatformState.cs" type="Script" id=10]
+[ext_resource path="res://Scripts/PlayerStateMachine/WallState.cs" type="Script" id=11]
+[ext_resource path="res://Scripts/PlayerStateMachine/WallJumpState.cs" type="Script" id=12]
+[ext_resource path="res://Sprites/Player/CharacterWall.png" type="Texture" id=13]
+[ext_resource path="res://Sprites/Player/CharacterWallJump.png" type="Texture" id=14]
 
 [sub_resource type="Resource" id=16]
 script = ExtResource( 3 )
-_moveAccelerationX = 375.0
-_moveSpeedX = 75.0
+_accelerationX = 400.0
+_speedX = 60.0
 
 [sub_resource type="Resource" id=17]
 script = ExtResource( 2 )
-_airAccelerationX = 500.0
 _afterLeavingGroundJumpAbleDur = 0.1
 _beforeHitGroundJumpAbleRayLength = 5.0
 
 [sub_resource type="Resource" id=18]
 script = ExtResource( 4 )
-_jumpHeightMin = 10.0
-_jumpHeightMax = 24.0
-_jumpWidthMax = 52.0
-_jumpAccelerationX = 500.0
+_heightMin = 10.0
+_heightMax = 24.0
+_widthMax = 42.0
 
 [sub_resource type="Resource" id=19]
 script = ExtResource( 7 )
-_recoilImpulse = 150.0
-_unhurtableDur = 1.0
+_impulse = 150.0
 _recoilDur = 0.5
+_unhurtableDur = 1.0
 
 [sub_resource type="Resource" id=20]
 script = ExtResource( 9 )
 
 [sub_resource type="Resource" id=22]
 script = ExtResource( 10 )
-_speedY = 100.0
+_speedInsidePlatformY = 70.0
+_accelerationX = 300.0
+
+[sub_resource type="Resource" id=23]
+script = ExtResource( 11 )
+_accelerationY = 75.0
+_speedMaxY = 100.0
+
+[sub_resource type="Resource" id=24]
+script = ExtResource( 12 )
+_heightMin = 10.0
+_heightMax = 20.0
+_widthMax = 40.0
 
 [sub_resource type="RectangleShape2D" id=6]
-extents = Vector2( 3, 0.5 )
+extents = Vector2( 3, 1 )
 
 [sub_resource type="CircleShape2D" id=7]
 radius = 3.0
@@ -112,6 +126,18 @@ tracks/4/keys = {
 "transitions": PoolRealArray( 1 ),
 "update": 0,
 "values": [ Vector2( -4, -10 ) ]
+}
+tracks/5/type = "value"
+tracks/5/path = NodePath("Sprite:frame_coords")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 0 ) ]
 }
 
 [sub_resource type="Animation" id=14]
@@ -379,6 +405,111 @@ tracks/3/keys = {
 "values": [ Vector2( -4, -9 ) ]
 }
 
+[sub_resource type="Animation" id=25]
+resource_name = "wall"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ ExtResource( 13 ), ExtResource( 13 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Sprite:hframes")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 1, 1 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Sprite:offset")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( -4, -9 ), Vector2( -4, -9 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("Sprite:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 0, 0 ]
+}
+
+[sub_resource type="Animation" id=26]
+resource_name = "wall_jump"
+length = 0.5
+step = 0.15
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.15 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ ExtResource( 14 ), ExtResource( 8 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Sprite:offset")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.15 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( -4, -9 ), Vector2( -4, -10 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Sprite:hframes")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.15 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 1, 7 ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("Sprite:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.15, 0.5 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2 ]
+}
+
 [node name="Player" type="KinematicBody2D"]
 collision_mask = 6
 script = ExtResource( 1 )
@@ -392,6 +523,8 @@ JumpState = SubResource( 18 )
 RecoilState = SubResource( 19 )
 DeadState = SubResource( 20 )
 PlatformState = SubResource( 22 )
+WallState = SubResource( 23 )
+WallJumpState = SubResource( 24 )
 
 [node name="PlatformCheckArea" type="Area2D" parent="."]
 collision_layer = 0
@@ -401,7 +534,7 @@ __meta__ = {
 }
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformCheckArea"]
-position = Vector2( 0, -0.5 )
+position = Vector2( 0, -1 )
 shape = SubResource( 6 )
 
 [node name="CollisionShapeCircle" type="CollisionShape2D" parent="."]
@@ -414,6 +547,9 @@ __meta__ = {
 [node name="CollisionShapeRectangle" type="CollisionShape2D" parent="."]
 position = Vector2( 0, -2.5 )
 shape = SubResource( 21 )
+__meta__ = {
+"_edit_lock_": true
+}
 
 [node name="Sprite" type="Sprite" parent="."]
 self_modulate = Color( 1, 0.290196, 0.356863, 1 )
@@ -434,6 +570,5 @@ anims/hit_ground = SubResource( 15 )
 anims/idle = SubResource( 11 )
 anims/jump = SubResource( 13 )
 anims/run = SubResource( 12 )
-
-[node name="JumpTimer" type="Timer" parent="."]
-process_mode = 0
+anims/wall = SubResource( 25 )
+anims/wall_jump = SubResource( 26 )

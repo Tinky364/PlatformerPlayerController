@@ -6,8 +6,6 @@ namespace PlayerStateMachine
 {
     public class FallState : State<Player.PlayerStates>
     {
-        [Export(PropertyHint.Range, "1,2000,or_greater")]
-        private float _airAccelerationX = 600f;
         [Export(PropertyHint.Range, "0.01,5,0.05,or_greater")]
         private float _afterLeavingGroundJumpAbleDur = 0.1f;
         [Export(PropertyHint.Range, "0.1,20,0.05,or_greater")] 
@@ -15,7 +13,7 @@ namespace PlayerStateMachine
         
         private Player P { get; set; }
 
-        private float _desiredAirSpeedX;
+        private float _desiredSpeedX;
         private bool _isAfterLeavingGroundJumpAble;
 
         public void Initialize(Player player)
@@ -38,10 +36,18 @@ namespace PlayerStateMachine
         {
             P.Velocity = P.MoveAndSlideWithSnap(P.Velocity, P.SnapVector, Vector2.Up);
 
+            P.CastWallRay();
+
             if ((_isAfterLeavingGroundJumpAble || CalculateBeforeHitGroundJumpAble()) &&
                 Input.IsActionJustPressed("jump"))
             {
                 P.Fsm.SetCurrentState(Player.PlayerStates.Jump);
+                return;
+            }
+            
+            if (P.IsWallRayHit && Input.IsActionJustPressed("jump"))
+            {
+                P.Fsm.SetCurrentState(Player.PlayerStates.WallJump);
                 return;
             }
 
@@ -57,9 +63,15 @@ namespace PlayerStateMachine
                 return;
             }
 
-            _desiredAirSpeedX = P.JumpState.JumpSpeedX * P.AxisInputs().x;
+            if (P.IsWallRayHit && P.IsOnWall)
+            {
+                P.Fsm.SetCurrentState(Player.PlayerStates.Wall);
+                return;
+            }
+
+            _desiredSpeedX = (P.JumpState.SpeedX - 10) * P.AxisInputs().x;
             P.Velocity.x = Mathf.MoveToward(
-                P.Velocity.x, _desiredAirSpeedX, _airAccelerationX * delta
+                P.Velocity.x, _desiredSpeedX, P.AirAccelerationX * delta
             );
             if (P.Velocity.y < P.GravitySpeedMax) P.Velocity.y += P.Gravity * delta;
         }

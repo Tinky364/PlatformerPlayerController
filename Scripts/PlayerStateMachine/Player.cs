@@ -1,5 +1,6 @@
 using Godot;
 using AI;
+using Godot.Collections;
 using Manager;
 using NavTool;
 using Other;
@@ -14,6 +15,8 @@ namespace PlayerStateMachine
         public float Gravity { get; private set; } = 1100f;
         [Export(PropertyHint.Range, "100,1000,or_greater,or_lesser")]
         public float GravitySpeedMax { get; private set; } = 225f;
+        [Export(PropertyHint.Range, "1,2000,or_greater")]
+        public float AirAccelerationX { get; private set; } = 300f;
         [Export(PropertyHint.Layers2dPhysics)]
         public uint PlatformLayer { get; private set; } = 4;
         [Export]
@@ -30,20 +33,31 @@ namespace PlayerStateMachine
         public DeadState DeadState { get; private set; }
         [Export]
         public PlatformState PlatformState { get; private set; }
+        [Export]
+        public WallState WallState { get; private set; }
+        [Export]
+        public WallJumpState WallJumpState { get; private set; }
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private int _maxHealth = 6;
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private float _wallRayLength = 2f;
+        
         
         public Sprite Sprite { get; private set; }
         public AnimationPlayer AnimPlayer { get; private set; }
         public Area2D PlatformCheckArea { get; private set; }
 
-        public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform }
+        public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform, Wall, WallJump }
         public StateMachine<PlayerStates> Fsm { get; private set; }
         
         public Vector2 SnapVector => SnapDisabled ? Vector2.Zero : Vector2.Down * 2f;
+        public Vector2 WallDirection { get; private set; }
         public bool SnapDisabled { get; set; }
         public bool IsCollidingWithPlatform { get; private set; }
         public bool FallOffPlatformInput;
+        public bool IsWallRayHit { get; private set; }
+        public new bool IsOnWall =>
+            IsWallRayHit && IsOnWall() && Mathf.Sign(WallDirection.x) == Mathf.Sign(AxisInputs().x);
         private Vector2 _inputAxis;
         private int CoinCount { get; set; } = 0;
         private int _health;
@@ -82,6 +96,8 @@ namespace PlayerStateMachine
             RecoilState.Initialize(this);
             DeadState.Initialize(this);
             PlatformState.Initialize(this);
+            WallState.Initialize(this);
+            WallJumpState.Initialize(this);
             PlatformCheckArea.Connect("body_entered", this, "OnPlatformEntered");
             PlatformCheckArea.Connect("body_exited", this, "OnPlatformExited");
             PlatformCheckArea.Connect("body_exited", MoveState, "OnPlatformExited");
@@ -130,7 +146,38 @@ namespace PlayerStateMachine
                 x = Input.GetActionStrength("move_right") - Input.GetActionStrength("move_left"),
                 y = Input.GetActionStrength("move_down") - Input.GetActionStrength("move_up")
             };
-            return _inputAxis;
+            return _inputAxis = new Vector2(Mathf.Sign(_inputAxis.x), Mathf.Sign(_inputAxis.y));
+        }
+
+        public void CastWallRay()
+        {
+            var wallRay = SpaceState.IntersectRay(
+                GlobalPosition + new Vector2(-ExtentsHalf.x + 2f, -ExtentsHalf.y),
+                GlobalPosition + new Vector2(-ExtentsHalf.x - _wallRayLength, -ExtentsHalf.y),
+                new Array {this}, GroundLayer
+            );
+            if (wallRay.Count > 0)
+            {
+                IsWallRayHit = true;
+                Vector2 hitPos = (Vector2)wallRay["position"];
+                WallDirection = new Vector2(hitPos.x - GlobalPosition.x, 0).Normalized();
+                return;
+            }
+            
+            wallRay = SpaceState.IntersectRay(
+                GlobalPosition + new Vector2(ExtentsHalf.x - 2f, -ExtentsHalf.y),
+                GlobalPosition + new Vector2(ExtentsHalf.x + _wallRayLength, -ExtentsHalf.y),
+                new Array {this}, GroundLayer
+            );
+            if (wallRay.Count > 0)
+            {
+                IsWallRayHit = true;
+                Vector2 hitPos = (Vector2)wallRay["position"];
+                WallDirection = new Vector2(hitPos.x - GlobalPosition.x, 0).Normalized();
+                return;
+            }
+            
+            IsWallRayHit = false;
         }
         
         private void OnPlatformEntered(Node body) => IsCollidingWithPlatform = true;

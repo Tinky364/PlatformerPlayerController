@@ -7,8 +7,10 @@ namespace PlayerStateMachine
     public class PlatformState : State<Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,200,or_greater")]
-        private float _speedInPlatformY = 70f;
-
+        private float _speedInsidePlatformY = 70f;
+        [Export(PropertyHint.Range, "1,2000,or_greater")]
+        private float _accelerationX = 300f;
+        
         private Player P { get; set; }
 
         public void Initialize(Player player)
@@ -36,7 +38,8 @@ namespace PlayerStateMachine
                 return;
             }
             
-            P.Velocity.y = -_speedInPlatformY;
+            P.Velocity.x = Mathf.MoveToward(P.Velocity.x, 0, _accelerationX * delta);
+            P.Velocity.y = -_speedInsidePlatformY;
         }
 
         public override void Process(float delta) { }

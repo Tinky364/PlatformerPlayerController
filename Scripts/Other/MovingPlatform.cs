@@ -39,7 +39,7 @@ namespace Other
         
         private async void Loop(int point, int add)
         {
-            while (true)
+            while (IsInstanceValid(this))
             {
                 if (point + add == -1 || point + add == _line.Points.Length) add *= -1;
                 _navTween.MoveToward(
@@ -48,7 +48,6 @@ namespace Other
                 );
                 await ToSignal(_navTween, "MoveCompleted");
                 await TreeTimer.S.Wait(_idleDur);
-                if (!IsInstanceValid(this)) return;
                 point += add;
             }
         }
