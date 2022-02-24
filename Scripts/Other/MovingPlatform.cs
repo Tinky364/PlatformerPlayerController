@@ -14,7 +14,7 @@ namespace Other
         private Line2D _line;
         private StaticBody2D _body;
         private NavTween _navTween;
-    
+        
         public override void _Ready()
         {
             _body = GetNode<StaticBody2D>("StaticBody2D");

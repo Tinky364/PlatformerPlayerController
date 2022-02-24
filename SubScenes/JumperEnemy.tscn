@@ -24,7 +24,7 @@ _chaseSpeed = 30.0
 resource_local_to_scene = true
 script = ExtResource( 7 )
 _waitBeforeAttackDur = 1.0
-_jumpDur = 0.4
+_jumpDur = 0.48
 _landingMoveDur = 0.2
 _waitAfterAttackDur = 1.0
 _backMoveDistMin = 15.0
@@ -34,9 +34,10 @@ _waitAfterCollisionDur = 2.0
 _collisionBackWidth = 24.0
 _collisionBackDur = 1.0
 
-[sub_resource type="RectangleShape2D" id=21]
+[sub_resource type="SegmentShape2D" id=29]
 resource_local_to_scene = true
-extents = Vector2( 27, 8 )
+a = Vector2( -24, 0 )
+b = Vector2( 24, 0 )
 
 [sub_resource type="SpriteFrames" id=17]
 animations = [ {
@@ -79,7 +80,7 @@ __meta__ = {
 }
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="NavArea2D"]
-shape = SubResource( 21 )
+shape = SubResource( 29 )
 
 [node name="NavAgent2D" type="KinematicBody2D" parent="."]
 collision_layer = 16

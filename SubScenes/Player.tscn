@@ -27,7 +27,7 @@ _beforeHitGroundJumpAbleRayLength = 5.0
 
 [sub_resource type="Resource" id=18]
 script = ExtResource( 4 )
-_heightMin = 10.0
+_heightMin = 8.0
 _heightMax = 24.0
 _widthMax = 42.0
 
@@ -42,12 +42,12 @@ script = ExtResource( 9 )
 
 [sub_resource type="Resource" id=22]
 script = ExtResource( 10 )
-_speedInsidePlatformY = 70.0
+_speedInsidePlatformY = 100.0
 _accelerationX = 300.0
 
 [sub_resource type="Resource" id=23]
 script = ExtResource( 11 )
-_accelerationY = 75.0
+_accelerationY = 60.0
 _speedMaxY = 100.0
 
 [sub_resource type="Resource" id=24]

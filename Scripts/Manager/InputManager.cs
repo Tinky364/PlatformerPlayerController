@@ -9,7 +9,16 @@ namespace Manager
 
         public override void _EnterTree() { SetSingleton(); }
 
-        public override void _Ready() { }
+        public override void _Ready()
+        {
+            Input.Singleton.Connect("joy_connection_changed", this, nameof(OnJoyConnectionChanged));
+        }
+
+        private void OnJoyConnectionChanged(int deviceId, bool connected)
+        {
+            if (connected) GD.Print(Input.GetJoyName(deviceId));
+            else GD.Print("Keyboard");
+        }
 
         public static bool IsJustPressed(string action) =>
             !ActionInputsLocked && Input.IsActionJustPressed(action);

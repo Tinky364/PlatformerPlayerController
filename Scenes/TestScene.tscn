@@ -26,41 +26,12 @@
 [ext_resource path="res://Scripts/UI/PausePanel.cs" type="Script" id=24]
 [ext_resource path="res://Scripts/UI/TestSceneGui.cs" type="Script" id=25]
 
-[sub_resource type="Resource" id=23]
-resource_local_to_scene = true
-script = ExtResource( 20 )
-_secondPosDist = 20.0
-
-[sub_resource type="Resource" id=24]
-resource_local_to_scene = true
-script = ExtResource( 18 )
-StopDist = 30.0
-_chaseSpeed = 30.0
-
-[sub_resource type="Resource" id=25]
-resource_local_to_scene = true
-script = ExtResource( 21 )
-_waitBeforeAttackDur = 1.0
-_jumpDur = 0.5
-_landingMoveDur = 0.2
-_waitAfterAttackDur = 1.0
-_backMoveDistMin = 15.0
-_backMoveDistMax = 30.0
-_landingMoveDist = 5.0
-_waitAfterCollisionDur = 2.0
-_collisionBackWidth = 24.0
-_collisionBackDur = 1.0
-
-[sub_resource type="RectangleShape2D" id=26]
-resource_local_to_scene = true
-extents = Vector2( 32, 8 )
-
-[sub_resource type="Resource" id=27]
+[sub_resource type="Resource" id=31]
 resource_local_to_scene = true
 script = ExtResource( 20 )
 _secondPosDist = 10.0
 
-[sub_resource type="Resource" id=28]
+[sub_resource type="Resource" id=32]
 resource_local_to_scene = true
 script = ExtResource( 19 )
 _waitBeforeRushDur = 1.0
@@ -70,9 +41,40 @@ _collisionBackWidth = 24.0
 _collisionBackDur = 1.0
 _waitAfterCollisionDur = 2.0
 
-[sub_resource type="RectangleShape2D" id=29]
+[sub_resource type="SegmentShape2D" id=33]
 resource_local_to_scene = true
-extents = Vector2( 76, 8 )
+a = Vector2( -64, 0 )
+b = Vector2( 64, 0 )
+
+[sub_resource type="Resource" id=34]
+resource_local_to_scene = true
+script = ExtResource( 20 )
+_secondPosDist = 20.0
+
+[sub_resource type="Resource" id=35]
+resource_local_to_scene = true
+script = ExtResource( 18 )
+StopDist = 30.0
+_chaseSpeed = 30.0
+
+[sub_resource type="Resource" id=36]
+resource_local_to_scene = true
+script = ExtResource( 21 )
+_waitBeforeAttackDur = 1.0
+_jumpDur = 0.48
+_landingMoveDur = 0.2
+_waitAfterAttackDur = 1.0
+_backMoveDistMin = 15.0
+_backMoveDistMax = 30.0
+_landingMoveDist = 5.0
+_waitAfterCollisionDur = 2.0
+_collisionBackWidth = 24.0
+_collisionBackDur = 1.0
+
+[sub_resource type="SegmentShape2D" id=37]
+resource_local_to_scene = true
+a = Vector2( -16, 0 )
+b = Vector2( 48, 0 )
 
 [sub_resource type="Resource" id=30]
 script = ExtResource( 22 )
@@ -135,24 +137,22 @@ points = PoolVector2Array( 0, 0, -48, -40 )
 [node name="Door" parent="World" index="6" instance=ExtResource( 7 )]
 position = Vector2( 136, 88 )
 
-[node name="JumperEnemy" parent="World" index="7" instance=ExtResource( 12 )]
-position = Vector2( 201, 112 )
-_idleState = SubResource( 23 )
-_chaseState = SubResource( 24 )
-_attackState = SubResource( 25 )
-
-[node name="CollisionShape2D" parent="World/JumperEnemy/NavArea2D" index="1"]
-position = Vector2( -9, 0 )
-shape = SubResource( 26 )
-
-[node name="RusherEnemy" parent="World" index="8" instance=ExtResource( 15 )]
-position = Vector2( 25, 168 )
-_idleState = SubResource( 27 )
-_attackState = SubResource( 28 )
+[node name="RusherEnemy" parent="World" index="7" instance=ExtResource( 15 )]
+position = Vector2( 72, 168 )
+_idleState = SubResource( 31 )
+_attackState = SubResource( 32 )
 
 [node name="CollisionShape2D" parent="World/RusherEnemy/NavArea2D" index="1"]
-position = Vector2( 59, 0 )
-shape = SubResource( 29 )
+shape = SubResource( 33 )
+
+[node name="JumperEnemy" parent="World" index="8" instance=ExtResource( 12 )]
+position = Vector2( 176, 112 )
+_idleState = SubResource( 34 )
+_chaseState = SubResource( 35 )
+_attackState = SubResource( 36 )
+
+[node name="CollisionShape2D" parent="World/JumperEnemy/NavArea2D" index="1"]
+shape = SubResource( 37 )
 
 [node name="Player" parent="World" index="9" instance=ExtResource( 17 )]
 position = Vector2( 229, 167 )
@@ -178,6 +178,10 @@ script = ExtResource( 25 )
 [node name="Hud" type="Control" parent="Gui" index="0"]
 anchor_right = 1.0
 anchor_bottom = 1.0
+margin_left = -1.0
+margin_top = 6.0
+margin_right = -1.0
+margin_bottom = 6.0
 script = ExtResource( 23 )
 __meta__ = {
 "_edit_group_": true,
@@ -416,5 +420,5 @@ LoadScenePath = "res://Scenes/StartingScene.tscn"
 [editable path="World/MovingPlatform"]
 [editable path="World/MovingPlatform2"]
 [editable path="World/MovingPlatform3"]
-[editable path="World/JumperEnemy"]
 [editable path="World/RusherEnemy"]
+[editable path="World/JumperEnemy"]

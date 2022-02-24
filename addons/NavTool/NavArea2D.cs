@@ -14,24 +14,14 @@ namespace NavTool
         [Signal]
         public delegate void ScreenExited();
         
-        private VisibilityNotifier2D _visibilityNotifier;
-        private CollisionShape2D _shape;
-       
-        public Rect2 AreaRect => new Rect2(GlobalPosition - AreaExtents, AreaExtents * 2f);
-        public Vector2 AreaExtents { get; private set; }
+        public Rect2 AreaRect { get; private set; }
         public bool IsTargetReachable { get; private set; }
 
         public override void _Ready()
         {
             if (Engine.EditorHint) return;
-            _shape = GetNode<CollisionShape2D>("CollisionShape2D");
-            _visibilityNotifier = GetNode<VisibilityNotifier2D>("VisibilityNotifier2D");
-            
-            if (_shape.Shape is RectangleShape2D shape) AreaExtents = shape.Extents;
-            SetTransformsAccordingToShape();
-            
-            _visibilityNotifier.Connect("screen_exited", this, nameof(OnScreenExit));
-            _visibilityNotifier.Connect("screen_entered", this, nameof(OnScreenEnter));
+            SetAreaRect();
+            SetVisibilityNotification();
         }
 
         public bool IsPositionInArea(Vector2 position)
@@ -57,15 +47,24 @@ namespace NavTool
             }
         }
         
-        private void SetTransformsAccordingToShape()
+        private void SetAreaRect()
         {
-            GlobalPosition = _shape.GlobalPosition;
-            _shape.GlobalPosition = GlobalPosition;
-            _visibilityNotifier.Scale = Vector2.One;
-            _visibilityNotifier.Position = Vector2.Zero;
-            _visibilityNotifier.Rect = new Rect2(AreaRect.Position - GlobalPosition, AreaRect.Size);
+            if (!(GetNode<CollisionShape2D>("CollisionShape2D").Shape is SegmentShape2D shape))
+                return;
+            Vector2 areaExtents = new Vector2((shape.B.x - shape.A.x) / 2f, 4f);
+            AreaRect = new Rect2(ToGlobal(shape.A + new Vector2(0, -4f)), areaExtents * 2f);
         }
-        
+
+        private void SetVisibilityNotification()
+        {
+            VisibilityNotifier2D notifier = GetNode<VisibilityNotifier2D>("VisibilityNotifier2D");
+            notifier.Scale = Vector2.One;
+            notifier.Position = Vector2.Zero;
+            notifier.Rect = new Rect2(ToLocal(AreaRect.Position), AreaRect.Size);
+            notifier.Connect("screen_exited", this, nameof(OnScreenExit));
+            notifier.Connect("screen_entered", this, nameof(OnScreenEnter));
+        }
+
         private void OnScreenEnter() => EmitSignal(nameof(ScreenEntered));
 
         private void OnScreenExit() => EmitSignal(nameof(ScreenExited));
