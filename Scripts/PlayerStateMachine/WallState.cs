@@ -7,7 +7,7 @@ namespace PlayerStateMachine
     public class WallState : State<Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,2000,or_greater")]
-        private float _accelerationY = 100f;
+        private float _accelerationY = 60f;
         [Export(PropertyHint.Range, "100,1000,or_greater,or_lesser")]
         private float _speedMaxY = 100f;
         
@@ -41,6 +41,12 @@ namespace PlayerStateMachine
             if (P.IsWallRayHit && InputManager.IsJustPressed("jump"))
             {
                 P.Fsm.SetCurrentState(Player.PlayerStates.WallJump);
+                return;
+            }
+            
+            if (!P.DashState.DashUnable && InputManager.IsJustPressed("dash"))
+            {
+                P.Fsm.SetCurrentState(Player.PlayerStates.Dash);
                 return;
             }
 

@@ -18,6 +18,7 @@ namespace PlayerStateMachine
 
         public Vector2? HitNormal { get; set; }
         private float _count;
+        private Vector2 _desiredRecoilVelocity;
 
         public void Initialize(Player player)
         {
@@ -32,7 +33,8 @@ namespace PlayerStateMachine
             _count = 0;
             P.SnapDisabled = false;
             P.AnimPlayer.Play("jump");
-            P.Velocity = CalculateRecoilImpulse();
+            _desiredRecoilVelocity = CalculateRecoilImpulse();
+            P.Velocity = _desiredRecoilVelocity;
             P.IsUnhurtable = true;
             await WhileUnhurtable();
             if (P.IsDead) return;
@@ -50,12 +52,13 @@ namespace PlayerStateMachine
                 else P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
                 return;
             }
-
-            P.Velocity.x = Mathf.MoveToward(P.Velocity.x, 0, _recoilDur / delta);
+            _count += delta;
+            
+            P.Velocity.x = Mathf.MoveToward(
+                P.Velocity.x, 0, Mathf.Abs(_desiredRecoilVelocity.x / _recoilDur) * delta
+            );
             if (P.IsOnFloor()) P.Velocity.y = P.Gravity * delta;
             else if (P.Velocity.y < P.GravitySpeedMax) P.Velocity.y += P.Gravity * delta;
-            
-            _count += delta;
         }
 
         public override void Exit()
@@ -85,7 +88,7 @@ namespace PlayerStateMachine
             {
                 if (!IsInstanceValid(P)) return;
                 P.Sprite.SelfModulate = P.Sprite.SelfModulate == Colors.White
-                    ? P.SpriteColor
+                    ? P.NormalSpriteColor
                     : Colors.White;
                 float t = count / _unhurtableDur;
                 t = 1 - Mathf.Pow(1 - t, 5);
@@ -93,7 +96,7 @@ namespace PlayerStateMachine
                 count += waitTime;
                 await TreeTimer.S.Wait(waitTime);
             }
-            P.Sprite.SelfModulate = P.SpriteColor;
+            P.Sprite.SelfModulate = P.NormalSpriteColor;
         }
     }
 }

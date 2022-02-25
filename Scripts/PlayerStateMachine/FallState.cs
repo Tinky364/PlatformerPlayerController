@@ -41,7 +41,14 @@ namespace PlayerStateMachine
             if ((_isAfterLeavingGroundJumpAble || CalculateBeforeHitGroundJumpAble()) &&
                 InputManager.IsJustPressed("jump"))
             {
+                P.DashState.SetDashSettings(true);
                 P.Fsm.SetCurrentState(Player.PlayerStates.Jump);
+                return;
+            }
+            
+            if (!P.DashState.DashUnable && InputManager.IsJustPressed("dash"))
+            {
+                P.Fsm.SetCurrentState(Player.PlayerStates.Dash);
                 return;
             }
             

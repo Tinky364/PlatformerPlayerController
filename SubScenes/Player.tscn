@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=2]
+[gd_scene load_steps=36 format=2]
 
 [ext_resource path="res://Scripts/PlayerStateMachine/Player.cs" type="Script" id=1]
 [ext_resource path="res://Scripts/PlayerStateMachine/FallState.cs" type="Script" id=2]
@@ -14,6 +14,7 @@
 [ext_resource path="res://Scripts/PlayerStateMachine/WallJumpState.cs" type="Script" id=12]
 [ext_resource path="res://Sprites/Player/CharacterWall.png" type="Texture" id=13]
 [ext_resource path="res://Sprites/Player/CharacterWallJump.png" type="Texture" id=14]
+[ext_resource path="res://Scripts/PlayerStateMachine/DashState.cs" type="Script" id=15]
 
 [sub_resource type="Resource" id=16]
 script = ExtResource( 3 )
@@ -34,7 +35,7 @@ _widthMax = 42.0
 [sub_resource type="Resource" id=19]
 script = ExtResource( 7 )
 _impulse = 150.0
-_recoilDur = 0.5
+_recoilDur = 0.25
 _unhurtableDur = 1.0
 
 [sub_resource type="Resource" id=20]
@@ -52,9 +53,15 @@ _speedMaxY = 100.0
 
 [sub_resource type="Resource" id=24]
 script = ExtResource( 12 )
-_heightMin = 10.0
+_heightMin = 20.0
 _heightMax = 20.0
 _widthMax = 40.0
+
+[sub_resource type="Resource" id=27]
+script = ExtResource( 15 )
+_length = 32.0
+_duration = 0.225
+_minSpeedAtTheEnd = 40.0
 
 [sub_resource type="RectangleShape2D" id=6]
 extents = Vector2( 3, 1 )
@@ -514,9 +521,8 @@ tracks/3/keys = {
 collision_mask = 6
 script = ExtResource( 1 )
 Extents = Vector2( 6, 8 )
-Gravity = 900.0
-GravitySpeedMax = 150.0
-SpriteColor = Color( 1, 0.290196, 0.356863, 1 )
+NormalSpriteColor = Color( 1, 0.290196, 0.356863, 1 )
+DashSpriteColor = Color( 1, 0.654902, 0, 1 )
 MoveState = SubResource( 16 )
 FallState = SubResource( 17 )
 JumpState = SubResource( 18 )
@@ -525,6 +531,7 @@ DeadState = SubResource( 20 )
 PlatformState = SubResource( 22 )
 WallState = SubResource( 23 )
 WallJumpState = SubResource( 24 )
+DashState = SubResource( 27 )
 
 [node name="PlatformCheckArea" type="Area2D" parent="."]
 collision_layer = 0

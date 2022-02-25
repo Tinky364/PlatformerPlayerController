@@ -26,6 +26,7 @@ namespace PlayerStateMachine
         public override void Enter()
         {
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
+            P.DashState.SetDashSettings(true);
             P.SnapDisabled = true;
             P.AnimPlayer.GetAnimation("hit_ground").Length = 0.075f;
             P.AnimPlayer.Play("hit_ground");
@@ -50,6 +51,12 @@ namespace PlayerStateMachine
             if (InputManager.IsJustPressed("jump"))
             {
                 P.Fsm.SetCurrentState(Player.PlayerStates.Jump);
+                return;
+            }
+            
+            if (!P.DashState.DashUnable && InputManager.IsJustPressed("dash"))
+            {
+                P.Fsm.SetCurrentState(Player.PlayerStates.Dash);
                 return;
             }
 

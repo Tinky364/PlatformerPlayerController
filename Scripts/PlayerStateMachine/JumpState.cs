@@ -7,7 +7,7 @@ namespace PlayerStateMachine
     public class JumpState : State<Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,100,or_greater")]
-        private float _heightMin = 10f;
+        private float _heightMin = 8f;
         [Export(PropertyHint.Range, "1,200,or_greater")]
         private float _heightMax = 24f;
         [Export(PropertyHint.Range, "0,400,or_greater")]
@@ -60,6 +60,12 @@ namespace PlayerStateMachine
             if (P.IsWallRayHit && P.IsOnWall)
             {
                 P.Fsm.SetCurrentState(Player.PlayerStates.Wall);
+                return;
+            }
+
+            if (!P.DashState.DashUnable && InputManager.IsJustPressed("dash"))
+            {
+                P.Fsm.SetCurrentState(Player.PlayerStates.Dash);
                 return;
             }
             

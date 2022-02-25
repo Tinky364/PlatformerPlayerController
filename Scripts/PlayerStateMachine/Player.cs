@@ -11,16 +11,22 @@ namespace PlayerStateMachine
     {
         [Export]
         public bool DebugEnabled { get; private set; }
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private int MaxHealth { get; set; } = 6;
         [Export(PropertyHint.Range, "10,2000,or_greater")]
-        public float Gravity { get; private set; } = 1100f;
+        public float Gravity { get; private set; } = 900f;
         [Export(PropertyHint.Range, "100,1000,or_greater,or_lesser")]
-        public float GravitySpeedMax { get; private set; } = 225f;
+        public float GravitySpeedMax { get; private set; } = 100f;
         [Export(PropertyHint.Range, "1,2000,or_greater")]
         public float AirAccelerationX { get; private set; } = 300f;
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private float WallRayLength { get; set; } = 2f;
         [Export(PropertyHint.Layers2dPhysics)]
         public uint PlatformLayer { get; private set; } = 4;
         [Export]
-        public Color SpriteColor { get; private set; }
+        public Color NormalSpriteColor { get; private set; }
+        [Export]
+        public Color DashSpriteColor { get; private set; }
         [Export]
         public MoveState MoveState { get; private set; }
         [Export]
@@ -37,17 +43,14 @@ namespace PlayerStateMachine
         public WallState WallState { get; private set; }
         [Export]
         public WallJumpState WallJumpState { get; private set; }
-        [Export(PropertyHint.Range, "0,10,or_greater")]
-        private int _maxHealth = 6;
-        [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _wallRayLength = 2f;
-        
+        [Export]
+        public DashState DashState { get; private set; }
         
         public Sprite Sprite { get; private set; }
         public AnimationPlayer AnimPlayer { get; private set; }
         public Area2D PlatformCheckArea { get; private set; }
 
-        public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform, Wall, WallJump }
+        public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform, Wall, WallJump, Dash }
         public StateMachine<PlayerStates> Fsm { get; private set; }
         
         public Vector2 SnapVector => SnapDisabled ? Vector2.Zero : Vector2.Down * 2f;
@@ -68,8 +71,8 @@ namespace PlayerStateMachine
             {
                 if (value < 0)
                     _health = 0;
-                else if (value > _maxHealth)
-                    _health = _maxHealth;
+                else if (value > MaxHealth)
+                    _health = MaxHealth;
                 else
                     _health = value;
             }
@@ -87,8 +90,8 @@ namespace PlayerStateMachine
             Sprite = GetNode<Sprite>("Sprite");
             AnimPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
             PlatformCheckArea = GetNode<Area2D>("PlatformCheckArea");
-            Health = _maxHealth;
-            Sprite.SelfModulate = SpriteColor;
+            Health = MaxHealth;
+            Sprite.SelfModulate = NormalSpriteColor;
             Fsm = new StateMachine<PlayerStates>();
             MoveState.Initialize(this);
             FallState.Initialize(this);
@@ -98,6 +101,7 @@ namespace PlayerStateMachine
             PlatformState.Initialize(this);
             WallState.Initialize(this);
             WallJumpState.Initialize(this);
+            DashState.Initialize(this);
             PlatformCheckArea.Connect("body_entered", this, "OnPlatformEntered");
             PlatformCheckArea.Connect("body_exited", this, "OnPlatformExited");
             PlatformCheckArea.Connect("body_exited", MoveState, "OnPlatformExited");
@@ -124,7 +128,7 @@ namespace PlayerStateMachine
         {
             if (IsDead || target != this || IsUnhurtable) return;
             Health -= damageValue;
-            Events.S.EmitSignal("PlayerHealthChanged", Health, _maxHealth, attacker);
+            Events.S.EmitSignal("PlayerHealthChanged", Health, MaxHealth, attacker);
             if (Health == 0)
             {
                 IsDead = true;
@@ -153,7 +157,7 @@ namespace PlayerStateMachine
         {
             var wallRay = SpaceState.IntersectRay(
                 GlobalPosition + new Vector2(-ExtentsHalf.x + 2f, -ExtentsHalf.y),
-                GlobalPosition + new Vector2(-ExtentsHalf.x - _wallRayLength, -ExtentsHalf.y),
+                GlobalPosition + new Vector2(-ExtentsHalf.x - WallRayLength, -ExtentsHalf.y),
                 new Array {this}, GroundLayer
             );
             if (wallRay.Count > 0)
@@ -166,7 +170,7 @@ namespace PlayerStateMachine
             
             wallRay = SpaceState.IntersectRay(
                 GlobalPosition + new Vector2(ExtentsHalf.x - 2f, -ExtentsHalf.y),
-                GlobalPosition + new Vector2(ExtentsHalf.x + _wallRayLength, -ExtentsHalf.y),
+                GlobalPosition + new Vector2(ExtentsHalf.x + WallRayLength, -ExtentsHalf.y),
                 new Array {this}, GroundLayer
             );
             if (wallRay.Count > 0)

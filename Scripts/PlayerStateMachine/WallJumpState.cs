@@ -63,6 +63,12 @@ namespace PlayerStateMachine
                 return;
             }
             
+            if (!P.DashState.DashUnable && InputManager.IsJustPressed("dash"))
+            {
+                P.Fsm.SetCurrentState(Player.PlayerStates.Dash);
+                return;
+            }
+            
             if (InputManager.IsPressed("jump") && P.Velocity.y <= 0f)
             {
                 _desiredSpeedX = (SpeedX - 10f) * P.AxisInputs().x;

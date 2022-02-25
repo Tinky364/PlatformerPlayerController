@@ -7,7 +7,7 @@ namespace PlayerStateMachine
     public class PlatformState : State<Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,200,or_greater")]
-        private float _speedInsidePlatformY = 70f;
+        private float _speedInsidePlatformY = 100f;
         [Export(PropertyHint.Range, "1,2000,or_greater")]
         private float _accelerationX = 300f;
         
