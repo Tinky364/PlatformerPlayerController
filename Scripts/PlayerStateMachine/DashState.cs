@@ -6,23 +6,38 @@ namespace PlayerStateMachine
 {
     public class DashState : State<Player.PlayerStates>
     {
+        [Export(PropertyHint.Range, "1,100,or_greater")]
+        private float _airDashLength = 48f;
+        [Export(PropertyHint.Range, "1,100,or_greater")]
+        private float _slideLength = 42f;
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private float _duration = 0.275f;
+        [Export(PropertyHint.Range, "1,200,or_greater")]
+        private float _minSpeedAtTheEnd = 60f;
         [Export]
-        private float _length = 32f;
-        [Export]
-        private float _duration = 0.225f;
-        [Export]
-        private float _minSpeedAtTheEnd = 40f;
+        private Color _dashSpriteColor;
         
         private Player P { get; set; }
 
         public bool DashUnable { get; private set; }
         private Vector2 _direction;
-        private float Acceleration =>
-            2f * (_length - _minSpeedAtTheEnd * _duration) / Mathf.Pow(_duration, 2);
-        private float Speed => _minSpeedAtTheEnd + Acceleration * _duration;
+        private float DashAcceleration =>
+            2f * (_airDashLength - _minSpeedAtTheEnd * _duration) / Mathf.Pow(_duration, 2);
+        private float DashSpeed => _minSpeedAtTheEnd + DashAcceleration * _duration;
+        private float SlideAcceleration =>
+            2f * (_slideLength - _minSpeedAtTheEnd * _duration) / Mathf.Pow(_duration, 2);
+        private float SlideSpeed => _minSpeedAtTheEnd + SlideAcceleration * _duration;
         private float _count;
         private float _desiredSpeed;
 
+        private enum DashType
+        {
+            Slide, GroundUp, GroundDown,
+            GroundCrossUp, AirUp, AirDown,
+            AirCrossUp, AirCrossDown
+        }
+        private DashType _curDashType;
+        
         public void Initialize(Player player)
         {
             Initialize(Player.PlayerStates.Dash);
@@ -37,11 +52,73 @@ namespace PlayerStateMachine
             _count = 0;
             P.SnapDisabled = true;
             P.IsUnhurtable = true;
-            P.AnimPlayer.Play("jump");
             _direction = P.AxisInputs().Clamped(1f);
             if (_direction == Vector2.Zero) _direction = P.Direction;
-            _desiredSpeed = Speed;
-            P.Velocity = _desiredSpeed * _direction;
+           
+            _curDashType = FindDashType(_direction);
+            SetSettingsAccordingToDashType(_curDashType);
+        }
+
+        private DashType FindDashType(Vector2 direction)
+        {
+            if (P.IsOnFloor()) // Dash on the ground
+            {
+                if (direction.y == 1f) return DashType.GroundDown;
+                if (direction.y == -1f) return DashType.GroundUp;
+                if (direction.y >= 0f) return DashType.Slide;
+                if (direction.y < 0f) return DashType.GroundCrossUp;
+            }
+            else // Dash in the air
+            {
+                if (direction.y == -1f) return DashType.AirUp;
+                if (direction.y == 1f) return DashType.AirDown;
+                if (direction.y <= 0f) return DashType.AirCrossUp;
+                if (direction.y > 0f) return DashType.AirCrossDown;
+            }
+            return DashType.GroundDown;
+        }
+
+        private void SetSettingsAccordingToDashType(DashType type)
+        {
+            switch (type)
+            {
+                case DashType.Slide:
+                    _direction = new Vector2(Mathf.Sign(_direction.x), 0);
+                    P.PlayAnim("slide", _duration);
+                    if (P.CollisionShape.Shape is CapsuleShape2D capsule)
+                    {
+                        P.CollisionShape.Position = new Vector2(0, -6);
+                        capsule.Height = 2;
+                    }
+                    _desiredSpeed = SlideSpeed;
+                    P.Velocity = _desiredSpeed * _direction +
+                        Vector2.Down * P.Gravity * P.GetPhysicsProcessDeltaTime();
+                    return;
+                case DashType.GroundUp: 
+                    P.PlayAnim("dash_up_on_ground", _duration);
+                    break;
+                case DashType.GroundDown:
+                    P.PlayAnim("dash_down", _duration);
+                    break;
+                case DashType.GroundCrossUp:
+                    P.PlayAnim("dash_side_on_ground", _duration);
+                    break;
+                case DashType.AirUp: 
+                    P.PlayAnim("dash_up_in_air", _duration);
+                    break;
+                case DashType.AirCrossUp:
+                    P.PlayAnim("dash_side_in_air", _duration);
+                    break;
+                case DashType.AirCrossDown: 
+                    P.PlayAnim("dash_cross_down", _duration);
+                    break;
+                case DashType.AirDown:
+                    P.PlayAnim("dash_down", _duration);
+                    break;
+            }
+            _desiredSpeed = DashSpeed;
+            P.Velocity = _desiredSpeed * _direction +
+                Vector2.Down * P.Gravity * P.GetPhysicsProcessDeltaTime();
         }
 
         public override void PhysicsProcess(float delta)
@@ -50,26 +127,73 @@ namespace PlayerStateMachine
 
             if (_count > _duration)
             {
+                if (P.IsOnFloor())
+                {
+                    P.Fsm.SetCurrentState(Player.PlayerStates.Move);
+                    return;
+                }
                 P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
                 return;
             }
             _count += delta;
 
-            if (P.GetLastSlideCollision() is KinematicCollision2D collision)
+            if (_curDashType == DashType.Slide)
             {
-                if (Mathf.Abs(collision.Normal.y) > 0.5f)
-                    _direction = _direction.Bounce(collision.Normal);
+                if (P.IsOnWall())
+                {
+                    P.Velocity = Vector2.Zero;
+                    P.Fsm.SetCurrentState(Player.PlayerStates.Move);
+                    return;
+                }
             }
-
+            else
+            {
+                if (P.IsOnFloor())
+                {
+                    if (_curDashType == DashType.AirCrossDown)
+                    {
+                        P.Velocity.x = Mathf.Sign(_direction.x) * 30f;
+                        P.Velocity.y = 0f;
+                    }
+                    else P.Velocity = Vector2.Zero;
+                    P.Fsm.SetCurrentState(Player.PlayerStates.Move);
+                    return;
+                }
+                if (P.IsOnWall() || P.IsOnCeiling())
+                {
+                    P.Velocity = Vector2.Zero;
+                    P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
+                    return;
+                }
+            }
+           
             _desiredSpeed = Mathf.MoveToward(
-                _desiredSpeed, _minSpeedAtTheEnd, Acceleration * delta
+                _desiredSpeed, _minSpeedAtTheEnd, DashAcceleration * delta
             );
-            P.Velocity = _desiredSpeed * _direction;
+            switch (_curDashType)
+            {
+                case DashType.Slide when !P.IsOnFloor():
+                    P.Velocity.x = _desiredSpeed * _direction.x;
+                    P.Velocity.y += P.Gravity * delta;
+                    return;
+                case DashType.Slide:
+                    P.Velocity.x = _desiredSpeed * _direction.x;
+                    P.Velocity.y = P.Gravity * delta;
+                    return;
+                default:
+                    P.Velocity = _desiredSpeed * _direction;
+                    return;
+            }
         }
 
         public override void Exit()
         {
             P.IsUnhurtable = false;
+            if (P.CollisionShape.Shape is CapsuleShape2D capsule)
+            {
+                P.CollisionShape.Position = new Vector2(0, -8);
+                capsule.Height = 6;
+            }
         }
 
         public void SetDashSettings(bool reset)
@@ -82,7 +206,7 @@ namespace PlayerStateMachine
             else
             {
                 DashUnable = true;
-                P.Sprite.SelfModulate = P.DashSpriteColor;
+                P.Sprite.SelfModulate = _dashSpriteColor;
             }
         }
         

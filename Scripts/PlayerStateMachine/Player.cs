@@ -1,7 +1,7 @@
 using Godot;
-using AI;
 using Godot.Collections;
 using Manager;
+using AI;
 using NavTool;
 using Other;
 
@@ -16,17 +16,17 @@ namespace PlayerStateMachine
         [Export(PropertyHint.Range, "10,2000,or_greater")]
         public float Gravity { get; private set; } = 900f;
         [Export(PropertyHint.Range, "100,1000,or_greater,or_lesser")]
-        public float GravitySpeedMax { get; private set; } = 100f;
+        public float GravitySpeedMax { get; private set; } = 150f;
         [Export(PropertyHint.Range, "1,2000,or_greater")]
-        public float AirAccelerationX { get; private set; } = 300f;
+        public float AirAccelerationX { get; private set; } = 375f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float WallRayLength { get; set; } = 2f;
+        [Export(PropertyHint.Range, "0,10,or_greater")]
+        private float WallRayOffsetY { get; set; } = 4f;
         [Export(PropertyHint.Layers2dPhysics)]
         public uint PlatformLayer { get; private set; } = 4;
         [Export]
         public Color NormalSpriteColor { get; private set; }
-        [Export]
-        public Color DashSpriteColor { get; private set; }
         [Export]
         public MoveState MoveState { get; private set; }
         [Export]
@@ -34,17 +34,18 @@ namespace PlayerStateMachine
         [Export]
         public JumpState JumpState { get; private set; }
         [Export]
-        public RecoilState RecoilState { get; private set; }
-        [Export]
-        public DeadState DeadState { get; private set; }
-        [Export]
-        public PlatformState PlatformState { get; private set; }
-        [Export]
-        public WallState WallState { get; private set; }
-        [Export]
         public WallJumpState WallJumpState { get; private set; }
         [Export]
         public DashState DashState { get; private set; }
+        [Export]
+        public RecoilState RecoilState { get; private set; }
+        [Export]
+        public WallState WallState { get; private set; }
+        [Export]
+        public PlatformState PlatformState { get; private set; }
+        [Export]
+        public DeadState DeadState { get; private set; }
+       
         
         public Sprite Sprite { get; private set; }
         public AnimationPlayer AnimPlayer { get; private set; }
@@ -52,15 +53,19 @@ namespace PlayerStateMachine
 
         public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform, Wall, WallJump, Dash }
         public StateMachine<PlayerStates> Fsm { get; private set; }
-        
+        public CollisionShape2D CollisionShape { get; private set; }
+
+        public Vector2 PreVelocity { get; set; }
         public Vector2 SnapVector => SnapDisabled ? Vector2.Zero : Vector2.Down * 2f;
         public Vector2 WallDirection { get; private set; }
         public bool SnapDisabled { get; set; }
         public bool IsCollidingWithPlatform { get; private set; }
         public bool FallOffPlatformInput;
+        public bool IsWallJumpAble { get; private set; }
         public bool IsWallRayHit { get; private set; }
-        public new bool IsOnWall =>
+        public bool IsStayOnWall =>
             IsWallRayHit && IsOnWall() && Mathf.Sign(WallDirection.x) == Mathf.Sign(AxisInputs().x);
+        public bool IsDirectionLocked { get; set; }
         private Vector2 _inputAxis;
         private int CoinCount { get; set; } = 0;
         private int _health;
@@ -90,6 +95,7 @@ namespace PlayerStateMachine
             Sprite = GetNode<Sprite>("Sprite");
             AnimPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
             PlatformCheckArea = GetNode<Area2D>("PlatformCheckArea");
+            CollisionShape = GetNode<CollisionShape2D>("CollisionShapeCapsule");
             Health = MaxHealth;
             Sprite.SelfModulate = NormalSpriteColor;
             Fsm = new StateMachine<PlayerStates>();
@@ -121,6 +127,7 @@ namespace PlayerStateMachine
         {
             base._PhysicsProcess(delta);
             Fsm._PhysicsProcess(delta);
+            if (PreVelocity != Velocity) PreVelocity = Velocity;
         }
 
         public void OnDamaged(
@@ -152,39 +159,86 @@ namespace PlayerStateMachine
             };
             return _inputAxis = new Vector2(Mathf.Sign(_inputAxis.x), Mathf.Sign(_inputAxis.y));
         }
+        
+        public void PlayAnim(string name, float? duration = null)
+        {
+            float speed = 1f;
+            if (duration != null) speed = AnimPlayer.GetAnimation(name).Length / duration.Value;
+            AnimPlayer.PlaybackSpeed = speed;
+            AnimPlayer.Play(name);
+        }
 
+        /// <summary>
+        /// Detects wall when both up and down ray hits. It is enough to hit the down ray to execute
+        /// wall jump. 
+        /// </summary>
         public void CastWallRay()
         {
+            // Left down ray
             var wallRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(-ExtentsHalf.x + 2f, -ExtentsHalf.y),
-                GlobalPosition + new Vector2(-ExtentsHalf.x - WallRayLength, -ExtentsHalf.y),
+                GlobalPosition + new Vector2(-ExtentsHalf.x + 2f, -WallRayOffsetY),
+                GlobalPosition + new Vector2(-ExtentsHalf.x - WallRayLength, -WallRayOffsetY),
                 new Array {this}, GroundLayer
             );
             if (wallRay.Count > 0)
             {
-                IsWallRayHit = true;
-                Vector2 hitPos = (Vector2)wallRay["position"];
-                WallDirection = new Vector2(hitPos.x - GlobalPosition.x, 0).Normalized();
+                IsWallJumpAble = true;
+
+                // Left up ray
+                wallRay = SpaceState.IntersectRay(
+                    GlobalPosition + new Vector2(-ExtentsHalf.x + 2f, -Extents.y + WallRayOffsetY),
+                    GlobalPosition + new Vector2(-ExtentsHalf.x - WallRayLength, -Extents.y + WallRayOffsetY),
+                    new Array {this}, GroundLayer
+                );
+                if (wallRay.Count > 0)
+                {
+                    IsWallRayHit = true;
+                    Vector2 hitPos = (Vector2)wallRay["position"];
+                    WallDirection = new Vector2(hitPos.x - GlobalPosition.x, 0f).Normalized();
+                    return;
+                }
+                
+                IsWallRayHit = false;
                 return;
             }
             
+            // Right down ray
             wallRay = SpaceState.IntersectRay(
-                GlobalPosition + new Vector2(ExtentsHalf.x - 2f, -ExtentsHalf.y),
-                GlobalPosition + new Vector2(ExtentsHalf.x + WallRayLength, -ExtentsHalf.y),
+                GlobalPosition + new Vector2(ExtentsHalf.x - 2f, -WallRayOffsetY),
+                GlobalPosition + new Vector2(ExtentsHalf.x + WallRayLength, -WallRayOffsetY),
                 new Array {this}, GroundLayer
             );
             if (wallRay.Count > 0)
             {
-                IsWallRayHit = true;
-                Vector2 hitPos = (Vector2)wallRay["position"];
-                WallDirection = new Vector2(hitPos.x - GlobalPosition.x, 0).Normalized();
+                IsWallJumpAble = true;
+
+                // Right up ray
+                wallRay = SpaceState.IntersectRay(
+                    GlobalPosition + new Vector2(ExtentsHalf.x - 2f, -Extents.y + WallRayOffsetY),
+                    GlobalPosition + new Vector2(ExtentsHalf.x + WallRayLength, -Extents.y + WallRayOffsetY),
+                    new Array {this}, GroundLayer
+                );
+                if (wallRay.Count > 0)
+                {
+                    IsWallRayHit = true;
+                    Vector2 hitPos = (Vector2)wallRay["position"];
+                    WallDirection = new Vector2(hitPos.x - GlobalPosition.x, 0).Normalized();
+                    return;
+                }
+              
+                IsWallRayHit = false;
                 return;
             }
-            
+           
+            IsWallJumpAble = false;
             IsWallRayHit = false;
         }
-        
-        private void OnPlatformEntered(Node body) => IsCollidingWithPlatform = true;
+
+        private void OnPlatformEntered(Node body)
+        {
+            if (Velocity.y >= -90f) return;
+            IsCollidingWithPlatform = true;
+        }
 
         private void OnPlatformExited(Node body) => IsCollidingWithPlatform = false;
 
@@ -197,6 +251,7 @@ namespace PlayerStateMachine
         
         private void DirectionControl()
         {
+            if (IsDirectionLocked) return;
             if (_inputAxis.x > 0) Direction.x = 1;
             else if (_inputAxis.x < 0) Direction.x = -1;
             switch (Direction.x)

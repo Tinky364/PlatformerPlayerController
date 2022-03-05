@@ -105,13 +105,13 @@ __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="Area2D" type="Area2D" parent="NavAgent2D"]
+[node name="InteractionArea" type="Area2D" parent="NavAgent2D"]
 collision_layer = 0
 __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NavAgent2D/Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NavAgent2D/InteractionArea"]
 position = Vector2( 0, -3.5 )
 shape = SubResource( 25 )
 __meta__ = {

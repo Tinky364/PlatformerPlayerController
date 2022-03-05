@@ -10,8 +10,14 @@ namespace PlayerStateMachine
         private float _accelerationY = 60f;
         [Export(PropertyHint.Range, "100,1000,or_greater,or_lesser")]
         private float _speedMaxY = 100f;
+        [Export(PropertyHint.Range, "0,200,or_greater")]
+        private float _slideSpeedYNeg = 5f;
+        [Export(PropertyHint.Range, "0,1,0.05,or_greater")]
+        private float _fallDelayDuration = 0.25f;
         
         private Player P { get; set; }
+
+        private float _fallDelayCount;
 
         public void Initialize(Player player)
         {
@@ -23,11 +29,13 @@ namespace PlayerStateMachine
         public override void Enter()
         {
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
+            _fallDelayCount = 0f;
             P.SnapDisabled = true;
-            P.AnimPlayer.Play("wall");
-            P.Velocity.x = 70 * P.WallDirection.x;
+            P.PlayAnim("wall_landing");
+            P.AnimPlayer.Queue("wall_slide");
+            P.Velocity.x = 70f * P.WallDirection.x;
             if (P.Velocity.y > 0f) P.Velocity.y = 0f;
-            else P.Velocity.y /= 4f;
+            else P.Velocity.y = -_slideSpeedYNeg;
         }
 
         public override void Process(float delta) { }
@@ -38,7 +46,7 @@ namespace PlayerStateMachine
 
             P.CastWallRay();
 
-            if (P.IsWallRayHit && InputManager.IsJustPressed("jump"))
+            if (P.IsWallJumpAble && InputManager.IsJustPressed("jump"))
             {
                 P.Fsm.SetCurrentState(Player.PlayerStates.WallJump);
                 return;
@@ -50,11 +58,17 @@ namespace PlayerStateMachine
                 return;
             }
 
-            if (!P.IsOnWall)
+            if (!P.IsStayOnWall)
             {
-                P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
-                return;
+                P.IsDirectionLocked = true;
+                if (_fallDelayCount >= _fallDelayDuration)
+                {
+                    P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
+                    return;
+                }
+                _fallDelayCount += delta;
             }
+            else _fallDelayCount = 0f;
             
             if (P.IsOnFloor())
             {
@@ -68,6 +82,9 @@ namespace PlayerStateMachine
             if (P.Velocity.y < _speedMaxY) P.Velocity.y += _accelerationY * delta;
         }
 
-        public override void Exit() { }
+        public override void Exit()
+        {
+            P.IsDirectionLocked = false;
+        }
     }
 }

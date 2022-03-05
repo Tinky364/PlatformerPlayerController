@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=2]
 
-[ext_resource path="res://Sprites/Player/CharacterIdle-Sheet.png" type="Texture" id=1]
+[ext_resource path="res://Sprites/Char/CharacterIdle-Sheet.png" type="Texture" id=1]
 [ext_resource path="res://Resources/Font16.tres" type="DynamicFont" id=2]
 [ext_resource path="res://Resources/Font26.tres" type="DynamicFont" id=3]
 [ext_resource path="res://Scripts/UI/ButtonController.cs" type="Script" id=4]

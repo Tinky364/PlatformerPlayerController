@@ -6,8 +6,8 @@ namespace PlayerStateMachine
 {
     public class FallState : State<Player.PlayerStates>
     {
-        [Export(PropertyHint.Range, "0.01,5,0.05,or_greater")]
-        private float _afterLeavingGroundJumpAbleDur = 0.1f;
+        [Export(PropertyHint.Range, "0.01,1,0.005,or_greater")]
+        private float _afterLeavingGroundJumpAbleDur = 0.08f;
         [Export(PropertyHint.Range, "0.1,20,0.05,or_greater")] 
         private float _beforeHitGroundJumpAbleRayLength = 5f;
         
@@ -27,7 +27,7 @@ namespace PlayerStateMachine
         {
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             P.SnapDisabled = true;
-            P.AnimPlayer.Play("fall");
+            P.PlayAnim(Mathf.Abs(P.Velocity.x) > 30f ? "fall_side" : "fall_down");
             if (P.Fsm.PreviousState?.Key == Player.PlayerStates.Move)
                 CalculateAfterLeavingGroundJumpAble();
         }
@@ -52,7 +52,7 @@ namespace PlayerStateMachine
                 return;
             }
             
-            if (P.IsWallRayHit && InputManager.IsJustPressed("jump"))
+            if (P.IsWallJumpAble && InputManager.IsJustPressed("jump"))
             {
                 P.Fsm.SetCurrentState(Player.PlayerStates.WallJump);
                 return;
@@ -70,13 +70,15 @@ namespace PlayerStateMachine
                 return;
             }
 
-            if (P.IsWallRayHit && P.IsOnWall)
+            if (P.IsStayOnWall)
             {
                 P.Fsm.SetCurrentState(Player.PlayerStates.Wall);
                 return;
             }
 
-            _desiredSpeedX = (P.JumpState.SpeedX - 10) * P.AxisInputs().x;
+            P.PlayAnim(Mathf.Abs(P.Velocity.x) > 30f ? "fall_side" : "fall_down");
+
+            _desiredSpeedX = (P.JumpState.SpeedX - 15f) * P.AxisInputs().x;
             P.Velocity.x = Mathf.MoveToward(
                 P.Velocity.x, _desiredSpeedX, P.AirAccelerationX * delta
             );

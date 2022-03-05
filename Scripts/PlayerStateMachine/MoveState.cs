@@ -7,9 +7,11 @@ namespace PlayerStateMachine
     public class MoveState : State<Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,2000,or_greater")]
-        private float _accelerationX = 400f;
+        private float _accelerationX = 375f;
         [Export(PropertyHint.Range, "1,200,or_greater")]
-        private float _speedX = 60f;
+        private float _speedX = 70f;
+        [Export(PropertyHint.Range, "0,10,0.05,or_greater")]
+        private float _runAnimationSpeed = 1.45f;
 
         private Player P { get; set; }
 
@@ -28,20 +30,14 @@ namespace PlayerStateMachine
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             P.DashState.SetDashSettings(true);
             P.SnapDisabled = true;
-            P.AnimPlayer.GetAnimation("hit_ground").Length = 0.075f;
-            P.AnimPlayer.Play("hit_ground");
+            if (P.PreVelocity.y > 50f) P.PlayAnim("landing");
             P.Velocity.y = P.Gravity * P.GetPhysicsProcessDeltaTime();
+            P.Velocity.x /= 2f;
         }
 
         public override void Process(float delta)
         {
-            if (!P.AnimPlayer.CurrentAnimation.Equals("hit_ground"))
-            {
-                P.AnimPlayer.Play(P.Velocity.x == 0 ? "idle" : "run");
-                P.AnimPlayer.PlaybackSpeed = P.AnimPlayer.CurrentAnimation.Equals("run")
-                    ? Mathf.Clamp(Mathf.Abs(P.Velocity.x) / _speedX, 0.5f, 1f)
-                    : 1f;
-            }
+            AnimationControl();
         }
 
         public override void PhysicsProcess(float delta)
@@ -74,9 +70,15 @@ namespace PlayerStateMachine
             P.Velocity.y = P.Gravity * delta;
         }
 
-        public override void Exit()
+        public override void Exit() { }
+        
+        private void AnimationControl()
         {
-            P.AnimPlayer.PlaybackSpeed = 1f;
+            if (P.AnimPlayer.CurrentAnimation.Equals("landing")) return;
+            float animDuration = P.AnimPlayer.CurrentAnimation.Equals("run")
+                ? _speedX / (Mathf.Abs(P.Velocity.x) * _runAnimationSpeed)
+                : 2.4f;
+            P.PlayAnim(Mathf.Abs(P.Velocity.x) <=  10 ? "idle" : "run", animDuration);
         }
 
         private bool FallOffPlatformInput()

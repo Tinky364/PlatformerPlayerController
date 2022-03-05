@@ -10,7 +10,11 @@ namespace Other
         [Export(PropertyHint.Range, "0")]
         private float _offsetAcceleration = 2f;
         [Export]
-        private float _smoothingDur = 0.2f;
+        private bool _smoothing;
+        [Export]
+        private bool _pixelSmoothing;
+        [Export]
+        private float _smoothingDur = 0.15f;
         
         private Player _player;
         private Vector2 _destPos;
@@ -20,25 +24,23 @@ namespace Other
         {
             _player = GetNode<Player>(_playerPath);
             _curPos = _player.GlobalPosition;
+            if (_smoothing && !_pixelSmoothing) SmoothingEnabled = true;
+            else SmoothingEnabled = false;
         }
 
         public override void _PhysicsProcess(float delta)
         {
-            //PixelPerfectSmoothing(delta);
-            GlobalPosition = _player.GlobalPosition;
-            SetCamOffset(delta);
+            if (_pixelSmoothing) PixelPerfectSmoothing(delta);
+            else GlobalPosition = _player.GlobalPosition;
+            //SetCamOffset(delta);
             ForceUpdateScroll();
         }
 
         private void PixelPerfectSmoothing(float delta)
         {
             _destPos = _player.GlobalPosition;
-            _curPos += new Vector2
-            {
-                x =  _destPos.x - _curPos.x,
-                y = _destPos.y - _curPos.y
-            };
-            _curPos /= _smoothingDur * delta;
+            _curPos += new Vector2(
+                _destPos.x - _curPos.x, _destPos.y - _curPos.y) * (1 / _smoothingDur * delta);
             GlobalPosition = _curPos.Round();
         }
 

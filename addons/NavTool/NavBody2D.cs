@@ -11,15 +11,11 @@ namespace NavTool
         public Vector2 Extents { get; private set; }
         [Export(PropertyHint.Layers2dPhysics)]
         public uint GroundLayer { get; set; } = 6;
-        [Export]
-        private bool _isOnBodyCollidingActive;
         [Export(PropertyHint.Range, "0.1,200,or_greater")] 
         private float _groundRayLength = 35f;
         
         [Signal]
         protected delegate void BodyEntered(Node body);
-        [Signal]
-        protected delegate void BodyColliding(Node body);
         [Signal]
         protected delegate void BodyExited(Node body);
 
@@ -37,10 +33,8 @@ namespace NavTool
         public bool IsUnhurtable { get; set; }
         public bool IsDead { get; protected set; }
         public bool IsGroundRayHit { get; private set; }
-        protected PhysicsBody2D CollidingBody { get; private set; }
         protected Physics2DDirectSpaceState SpaceState { get; private set; }
         private Dictionary _groundRay;
-        private bool _isColliding;
 
         public override void _EnterTree()
         {
@@ -53,7 +47,7 @@ namespace NavTool
         public override void _Ready()
         {
             SpaceState = GetWorld2d().DirectSpaceState;
-            _interactionArea = GetNodeOrNull<Area2D>("Area2D");
+            _interactionArea = GetNodeOrNull<Area2D>("InteractionArea");
             _interactionArea?.Connect("body_entered", this, nameof(OnBodyEntered));
             _interactionArea?.Connect("body_exited", this, nameof(OnBodyExited));
             SetNavPos();
@@ -62,7 +56,6 @@ namespace NavTool
         public override void _PhysicsProcess(float delta)
         {
             SetNavPos();
-            OnBodyColliding(CollidingBody);
         }
 
         public Vector2 DirectionTo(Vector2 to) => NavPos.DirectionTo(to);
@@ -88,27 +81,13 @@ namespace NavTool
             }
         }
         
-        private void OnBodyEntered(Node node)
+        protected virtual void OnBodyEntered(Node node)
         {
-            if (!(node is PhysicsBody2D body)) return;
-            _isColliding = true;
-            CollidingBody = body;
             EmitSignal(nameof(BodyEntered), node);
         }
 
-        private void OnBodyColliding(Node body)
+        protected virtual void OnBodyExited(Node node)
         {
-            if (!_isOnBodyCollidingActive) return;
-            if (!_isColliding) return;
-            EmitSignal(nameof(BodyColliding), body);
-        }
-
-        private void OnBodyExited(Node node)
-        {
-            if (!(node is PhysicsBody2D body)) return;
-            if (body != CollidingBody) return;
-            _isColliding = false;
-            CollidingBody = null;
             EmitSignal(nameof(BodyExited), node);
         }
 

@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/CharacterJump-Sheet.png-f23d28545f7e8a3d6610251872d254dd.stex"
+path="res://.import/PlayerDashCrossDown.png-0803df089e3d0db667e3b9cd17255620.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Player/CharacterJump-Sheet.png"
-dest_files=[ "res://.import/CharacterJump-Sheet.png-f23d28545f7e8a3d6610251872d254dd.stex" ]
+source_file="res://Sprites/Player/PlayerDashCrossDown.png"
+dest_files=[ "res://.import/PlayerDashCrossDown.png-0803df089e3d0db667e3b9cd17255620.stex" ]
 
 [params]
 

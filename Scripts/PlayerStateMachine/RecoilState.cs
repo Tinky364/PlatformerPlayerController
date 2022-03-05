@@ -10,9 +10,11 @@ namespace PlayerStateMachine
         [Export(PropertyHint.Range, "0,1000,or_greater")]
         private float _impulse = 150f;
         [Export(PropertyHint.Range, "0,3,or_greater")]
-        private float _recoilDur = 0.5f;
+        private float _recoilDur = 0.25f;
         [Export(PropertyHint.Range, "0,3,or_greater")]
         private float _unhurtableDur = 1f;
+        [Export]
+        private Color _unhurtableSpriteColor;
         
         private Player P { get; set; }
 
@@ -32,7 +34,7 @@ namespace PlayerStateMachine
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             _count = 0;
             P.SnapDisabled = false;
-            P.AnimPlayer.Play("jump");
+            P.PlayAnim("jump_side", 1f);
             _desiredRecoilVelocity = CalculateRecoilImpulse();
             P.Velocity = _desiredRecoilVelocity;
             P.IsUnhurtable = true;
@@ -87,9 +89,9 @@ namespace PlayerStateMachine
             while (count < _unhurtableDur)
             {
                 if (!IsInstanceValid(P)) return;
-                P.Sprite.SelfModulate = P.Sprite.SelfModulate == Colors.White
+                P.Sprite.SelfModulate = P.Sprite.SelfModulate == _unhurtableSpriteColor
                     ? P.NormalSpriteColor
-                    : Colors.White;
+                    : _unhurtableSpriteColor;
                 float t = count / _unhurtableDur;
                 t = 1 - Mathf.Pow(1 - t, 5);
                 float waitTime = Mathf.Lerp(0.01f, 0.2f, t);

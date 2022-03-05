@@ -6,6 +6,9 @@ namespace Other
 {
     public class Door : Node2D
     {
+        [Export]
+        private int _moveDistance;
+        
         private Area2D _triggerArea;
         private StaticBody2D _body;
         private NavTween _navTween;
@@ -38,7 +41,7 @@ namespace Other
         {
             if (!(node is Player)) return;
             if (_navTween.IsPlaying) return;
-            float targetPosY = _isOpen ? 16 : -16;
+            float targetPosY = _isOpen ? -_moveDistance : _moveDistance;
             _isOpen = !_isOpen;
             _navTween.MoveLerp(
                 NavTween.TweenMode.Y, null, _body.GlobalPosition + new Vector2(0, targetPosY), 2f,

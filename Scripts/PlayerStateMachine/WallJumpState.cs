@@ -7,15 +7,15 @@ namespace PlayerStateMachine
     public class WallJumpState : State<Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,100,or_greater")]
-        private float _heightMin = 10f;
+        private float _heightMin = 22f;
         [Export(PropertyHint.Range, "1,200,or_greater")]
-        private float _heightMax = 20f;
+        private float _heightMax = 26f;
         [Export(PropertyHint.Range, "0,400,or_greater")]
-        private float _widthMax = 40f;
+        private float _widthMax = 50f;
         
         private Player P { get; set; }
-        
-        public float SpeedX => _widthMax / (JumpDur + FallDur); // v=w/t
+
+        private float SpeedX => _widthMax / (JumpDur + FallDur); // v=w/t
         private float ImpulseY => Mathf.Sqrt(2f * P.Gravity * _heightMin); // V=-sqrt{2*g*h}
         private float AccelerationY =>
             P.Gravity - Mathf.Pow(ImpulseY, 2) / (2 * _heightMax); // a=g-(v^2/2*h)
@@ -36,8 +36,8 @@ namespace PlayerStateMachine
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             _count = 0;
             P.SnapDisabled = true;
-            P.AnimPlayer.GetAnimation("wall_jump").Length = JumpDur;
-            P.AnimPlayer.Play("wall_jump");
+            P.PlayAnim("wall_jump", JumpDur);
+            P.Direction.x = -P.WallDirection.x;
             P.Velocity.x = SpeedX * -P.WallDirection.x;
             P.Velocity.y = -ImpulseY;
         }
@@ -57,7 +57,7 @@ namespace PlayerStateMachine
             }
             _count += delta;
             
-            if (P.IsWallRayHit && P.IsOnWall)
+            if (P.IsStayOnWall)
             {
                 P.Fsm.SetCurrentState(Player.PlayerStates.Wall);
                 return;

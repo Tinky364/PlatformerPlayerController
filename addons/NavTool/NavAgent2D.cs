@@ -7,19 +7,25 @@ namespace NavTool
         [Export]
         public bool DebugEnabled { get; private set; }
         [Export]
+        private bool _isOnBodyCollidingActive;
+        [Export]
         private NodePath TargetNavBodyPath { get; set; }
 
         [Signal]
         public delegate void ScreenEntered();
         [Signal]
         public delegate void ScreenExited();
+        [Signal]
+        protected delegate void BodyColliding(Node body);
         
         public NavArea2D NavArea { get; private set; }
         public NavBody2D TargetNavBody { get; set; }
         
         public bool SnapDisabled;
+        protected PhysicsBody2D CollidingBody { get; private set; }
         private Vector2 SnapVector => SnapDisabled ? Vector2.Zero : Vector2.Down * 2f;
-        
+        private bool _isColliding;
+
         public override void _Ready()
         {
             base._Ready();
@@ -35,6 +41,7 @@ namespace NavTool
         public override void _PhysicsProcess(float delta)
         {
             base._PhysicsProcess(delta);
+            OnBodyColliding(CollidingBody);
             NavArea?.CheckTargetInArea(TargetNavBody);
         }
 
@@ -72,5 +79,29 @@ namespace NavTool
         protected void OnScreenEnter() => EmitSignal(nameof(ScreenEntered));
         
         protected void OnScreenExit() => EmitSignal(nameof(ScreenExited));
+        
+        protected override void OnBodyEntered(Node node)
+        {
+            if (!(node is PhysicsBody2D body)) return;
+            _isColliding = true;
+            CollidingBody = body;
+            EmitSignal(nameof(BodyEntered), node);
+        }
+
+        protected override void OnBodyExited(Node node)
+        {
+            if (!(node is PhysicsBody2D body)) return;
+            if (body != CollidingBody) return;
+            _isColliding = false;
+            CollidingBody = null;
+            EmitSignal(nameof(BodyExited), node);
+        }
+        
+        protected virtual void OnBodyColliding(Node body)
+        {
+            if (!_isOnBodyCollidingActive) return;
+            if (!_isColliding) return;
+            EmitSignal(nameof(BodyColliding), body);
+        }
     }
 }
