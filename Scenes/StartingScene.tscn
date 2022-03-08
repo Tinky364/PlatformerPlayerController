@@ -1,8 +1,8 @@
 [gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://Sprites/Char/CharacterIdle-Sheet.png" type="Texture" id=1]
-[ext_resource path="res://Resources/Font16.tres" type="DynamicFont" id=2]
-[ext_resource path="res://Resources/Font26.tres" type="DynamicFont" id=3]
+[ext_resource path="res://Resources/Font80.tres" type="DynamicFont" id=2]
+[ext_resource path="res://Resources/Font130.tres" type="DynamicFont" id=3]
 [ext_resource path="res://Scripts/UI/ButtonController.cs" type="Script" id=4]
 [ext_resource path="res://Scenes/SceneTemplate.tscn" type="PackedScene" id=5]
 [ext_resource path="res://Scripts/UI/Gui.cs" type="Script" id=6]
@@ -17,6 +17,9 @@ script = ExtResource( 6 )
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource( 7 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 _guiPath = NodePath("..")
 _firstFocusControlPath = NodePath("ColorRect/MarginContainer/HBoxContainer/VBoxContainer/MenuOptions/Start")
 
@@ -40,17 +43,17 @@ __meta__ = {
 }
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Gui/MainMenuPanel/ColorRect/MarginContainer" index="0"]
-margin_right = 300.0
-margin_bottom = 160.0
+margin_right = 1580.0
+margin_bottom = 880.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer" index="0"]
-margin_right = 148.0
-margin_bottom = 160.0
+margin_right = 788.0
+margin_bottom = 880.0
 size_flags_horizontal = 3
 
 [node name="Title" type="Label" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer" index="0"]
-margin_right = 148.0
-margin_bottom = 21.0
+margin_right = 788.0
+margin_bottom = 126.0
 custom_fonts/font = ExtResource( 3 )
 text = "TITLE"
 align = 1
@@ -58,19 +61,19 @@ valign = 1
 uppercase = true
 
 [node name="MenuOptions" type="VBoxContainer" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer" index="1"]
-margin_left = 28.0
-margin_top = 25.0
-margin_right = 120.0
-margin_bottom = 145.0
+margin_left = 189.0
+margin_top = 130.0
+margin_right = 599.0
+margin_bottom = 804.0
 size_flags_horizontal = 4
 size_flags_vertical = 3
 custom_constants/separation = 10
 alignment = 1
 
 [node name="Start" type="Button" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer/MenuOptions" index="0"]
-margin_top = 9.0
-margin_right = 92.0
-margin_bottom = 36.0
+margin_top = 129.0
+margin_right = 410.0
+margin_bottom = 261.0
 focus_neighbour_top = NodePath("../Exit")
 focus_neighbour_bottom = NodePath("../Options")
 focus_next = NodePath("../Options")
@@ -82,9 +85,9 @@ script = ExtResource( 4 )
 LoadScenePath = "res://Scenes/TestScene.tscn"
 
 [node name="Options" type="Button" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer/MenuOptions" index="1"]
-margin_top = 46.0
-margin_right = 92.0
-margin_bottom = 73.0
+margin_top = 271.0
+margin_right = 410.0
+margin_bottom = 403.0
 focus_neighbour_top = NodePath("../Start")
 focus_neighbour_bottom = NodePath("../Exit")
 focus_next = NodePath("../Exit")
@@ -94,9 +97,9 @@ custom_fonts/font = ExtResource( 3 )
 text = "Options"
 
 [node name="Exit" type="Button" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer/MenuOptions" index="2"]
-margin_top = 83.0
-margin_right = 92.0
-margin_bottom = 110.0
+margin_top = 413.0
+margin_right = 410.0
+margin_bottom = 545.0
 focus_neighbour_top = NodePath("../Options")
 focus_neighbour_bottom = NodePath("../Start")
 focus_next = NodePath("../Start")
@@ -108,25 +111,29 @@ script = ExtResource( 4 )
 ButtonType = 1
 
 [node name="Version" type="Label" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer" index="2"]
-margin_top = 149.0
-margin_right = 148.0
-margin_bottom = 160.0
+margin_top = 808.0
+margin_right = 788.0
+margin_bottom = 880.0
 custom_fonts/font = ExtResource( 2 )
 text = "ver 1.0.0"
 valign = 2
 
 [node name="CenterContainer" type="CenterContainer" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer" index="1"]
-margin_left = 152.0
-margin_right = 300.0
-margin_bottom = 160.0
+margin_left = 792.0
+margin_right = 1580.0
+margin_bottom = 880.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="TextureRect" type="TextureRect" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/CenterContainer" index="0"]
-margin_left = 66.0
-margin_top = 75.0
-margin_right = 82.0
-margin_bottom = 84.0
-rect_pivot_offset = Vector2( 8, 8 )
+margin_left = 234.0
+margin_top = 350.0
+margin_right = 554.0
+margin_bottom = 530.0
+rect_min_size = Vector2( 320, 180 )
+rect_pivot_offset = Vector2( 160, 90 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
 texture = ExtResource( 1 )
+expand = true
 flip_h = true
