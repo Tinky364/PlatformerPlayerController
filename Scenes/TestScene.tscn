@@ -9,7 +9,7 @@
 [ext_resource path="res://SubScenes/Door.tscn" type="PackedScene" id=7]
 [ext_resource path="res://SubScenes/MovingPlatform.tscn" type="PackedScene" id=8]
 [ext_resource path="res://Scenes/SceneTemplate.tscn" type="PackedScene" id=9]
-[ext_resource path="res://Scripts/Other/CamController.cs" type="Script" id=11]
+[ext_resource path="res://Scripts/Other/PixelCamera.cs" type="Script" id=11]
 [ext_resource path="res://SubScenes/JumperEnemy.tscn" type="PackedScene" id=12]
 [ext_resource path="res://Scripts/UI/GameOverPanel.cs" type="Script" id=13]
 [ext_resource path="res://Scripts/UI/ButtonController.cs" type="Script" id=14]
@@ -81,13 +81,6 @@ region = Rect2( 0, 0, 16, 16 )
 [node name="TestScene" instance=ExtResource( 9 )]
 script = ExtResource( 3 )
 
-[node name="World" parent="." index="0"]
-margin_left = 0.0
-margin_top = 0.0
-margin_right = 322.0
-margin_bottom = 182.0
-rect_scale = Vector2( 1, 1 )
-
 [node name="ColorRect" type="ColorRect" parent="World/Viewport" index="0"]
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -118,7 +111,7 @@ _attackState = SubResource( 36 )
 shape = SubResource( 37 )
 
 [node name="Player" parent="World/Viewport" index="3" instance=ExtResource( 17 )]
-position = Vector2( 139, 170 )
+position = Vector2( 140, 170 )
 
 [node name="MovingPlatform2" parent="World/Viewport" index="4" instance=ExtResource( 8 )]
 position = Vector2( 200, 32 )
@@ -155,23 +148,21 @@ __meta__ = {
 [node name="Camera2D" type="Camera2D" parent="World/Viewport" index="8"]
 current = true
 process_mode = 0
-smoothing_speed = 2.5
+drag_margin_left = 0.25
+drag_margin_right = 0.25
+drag_margin_bottom = 0.4
 editor_draw_screen = false
-editor_draw_drag_margin = true
 script = ExtResource( 11 )
 __meta__ = {
 "_editor_description_": ""
 }
 _playerPath = NodePath("../Player")
-_offsetAcceleration = 1.0
-_smoothingDur = 0.25
-_limits = Rect2( 0, 0, 1000, 1000 )
-_screenSize = Vector2( 320, 180 )
+_limitRect = Rect2( 0, 0, 1000, 1000 )
+_offsetV = -1.0
+_smoothFollow = true
 
 [node name="Gui" parent="." index="1"]
 pause_mode = 2
-scale = Vector2( 0.2, 0.2 )
-transform = Transform2D( 0.2, 0, 0, 0.2, 0, 0 )
 script = ExtResource( 25 )
 
 [node name="Hud" type="Control" parent="Gui" index="0"]

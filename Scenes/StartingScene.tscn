@@ -9,8 +9,19 @@
 [ext_resource path="res://Scripts/UI/MainMenuPanel.cs" type="Script" id=7]
 
 [node name="StartingScene" instance=ExtResource( 5 )]
+pause_mode = 2
+
+[node name="World" parent="." index="0"]
+pause_mode = 1
+margin_bottom = 182.0
+
+[node name="Viewport" parent="World" index="0"]
+size = Vector2( 322, 182 )
 
 [node name="Gui" parent="." index="1"]
+pause_mode = 1
+scale = Vector2( 0.2, 0.2 )
+transform = Transform2D( 0.2, 0, 0, 0.2, 0, 0 )
 script = ExtResource( 6 )
 
 [node name="MainMenuPanel" type="Control" parent="Gui" index="0"]
@@ -53,7 +64,7 @@ size_flags_horizontal = 3
 
 [node name="Title" type="Label" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer" index="0"]
 margin_right = 788.0
-margin_bottom = 126.0
+margin_bottom = 129.0
 custom_fonts/font = ExtResource( 3 )
 text = "TITLE"
 align = 1
@@ -61,19 +72,19 @@ valign = 1
 uppercase = true
 
 [node name="MenuOptions" type="VBoxContainer" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer" index="1"]
-margin_left = 189.0
-margin_top = 130.0
-margin_right = 599.0
-margin_bottom = 804.0
+margin_left = 186.0
+margin_top = 133.0
+margin_right = 602.0
+margin_bottom = 797.0
 size_flags_horizontal = 4
 size_flags_vertical = 3
 custom_constants/separation = 10
 alignment = 1
 
 [node name="Start" type="Button" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer/MenuOptions" index="0"]
-margin_top = 129.0
-margin_right = 410.0
-margin_bottom = 261.0
+margin_top = 119.0
+margin_right = 416.0
+margin_bottom = 254.0
 focus_neighbour_top = NodePath("../Exit")
 focus_neighbour_bottom = NodePath("../Options")
 focus_next = NodePath("../Options")
@@ -85,9 +96,9 @@ script = ExtResource( 4 )
 LoadScenePath = "res://Scenes/TestScene.tscn"
 
 [node name="Options" type="Button" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer/MenuOptions" index="1"]
-margin_top = 271.0
-margin_right = 410.0
-margin_bottom = 403.0
+margin_top = 264.0
+margin_right = 416.0
+margin_bottom = 399.0
 focus_neighbour_top = NodePath("../Start")
 focus_neighbour_bottom = NodePath("../Exit")
 focus_next = NodePath("../Exit")
@@ -97,9 +108,9 @@ custom_fonts/font = ExtResource( 3 )
 text = "Options"
 
 [node name="Exit" type="Button" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer/MenuOptions" index="2"]
-margin_top = 413.0
-margin_right = 410.0
-margin_bottom = 545.0
+margin_top = 409.0
+margin_right = 416.0
+margin_bottom = 544.0
 focus_neighbour_top = NodePath("../Options")
 focus_neighbour_bottom = NodePath("../Start")
 focus_next = NodePath("../Start")
@@ -111,7 +122,7 @@ script = ExtResource( 4 )
 ButtonType = 1
 
 [node name="Version" type="Label" parent="Gui/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer" index="2"]
-margin_top = 808.0
+margin_top = 801.0
 margin_right = 788.0
 margin_bottom = 880.0
 custom_fonts/font = ExtResource( 2 )

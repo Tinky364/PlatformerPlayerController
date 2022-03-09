@@ -58,6 +58,7 @@ namespace PlayerStateMachine
         public Vector2 PreVelocity { get; set; }
         public Vector2 SnapVector => SnapDisabled ? Vector2.Zero : Vector2.Down * 2f;
         public Vector2 WallDirection { get; private set; }
+        public Vector2 MoveDirectionAvg { get; private set; }
         public bool SnapDisabled { get; set; }
         public bool IsCollidingWithPlatform { get; private set; }
         public bool FallOffPlatformInput;
@@ -66,6 +67,8 @@ namespace PlayerStateMachine
         public bool IsStayOnWall =>
             IsWallRayHit && IsOnWall() && Mathf.Sign(WallDirection.x) == Mathf.Sign(AxisInputs().x);
         public bool IsDirectionLocked { get; set; }
+        private readonly Vector2[] _dirs = new Vector2[10]; 
+        private Vector2 PrePosition { get; set; }
         private Vector2 _inputAxis;
         private int CoinCount { get; set; } = 0;
         private int _health;
@@ -114,6 +117,8 @@ namespace PlayerStateMachine
             Events.S.Connect("Damaged", this, nameof(OnDamaged));
             Events.S.Connect("CoinCollected", this, nameof(AddCoin));
             Fsm.SetCurrentState(PlayerStates.Fall);
+            
+            CalculateMoveDirectionAverage();
         }
 
         public override void _Process(float delta)
@@ -232,6 +237,32 @@ namespace PlayerStateMachine
            
             IsWallJumpAble = false;
             IsWallRayHit = false;
+        }
+        
+        private async void CalculateMoveDirectionAverage()
+        {
+            int index = 0;
+            while (IsInstanceValid(this))
+            {
+                _dirs.SetValue(PrePosition.DirectionTo(GlobalPosition), index);
+                PrePosition = GlobalPosition;
+                
+                if (index == 9) index = 0;
+                else index++;
+                
+                if (index == 0)
+                {
+                    Vector2 total = Vector2.Zero;
+                    for (int i = 0; i < _dirs.Length; i++)
+                    {
+                        total += _dirs[i];
+                        if (i == _dirs.Length - 1) total += Direction;
+                        MoveDirectionAvg = (total / 10f).Normalized();
+                    }
+                }
+                
+                await TreeTimer.S.Wait(0.1f);
+            }
         }
 
         private void OnPlatformEntered(Node body)
