@@ -31,7 +31,7 @@ namespace PlayerStateMachine
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             _fallDelayCount = 0f;
             P.SnapDisabled = true;
-            P.PlayAnim("wall_landing");
+            P.PlayAnimation("wall_landing");
             P.AnimPlayer.Queue("wall_slide");
             P.Velocity.x = 70f * P.WallDirection.x;
             if (P.Velocity.y > 0f) P.Velocity.y = 0f;

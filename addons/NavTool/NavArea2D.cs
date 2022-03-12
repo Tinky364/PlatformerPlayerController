@@ -5,6 +5,8 @@ namespace NavTool
     [Tool]
     public class NavArea2D : Area2D
     {
+        [Export]
+        private bool _debugEnabled;
         [Signal]
         public delegate void TargetEntered(NavBody2D navBody);
         [Signal]
@@ -80,6 +82,12 @@ namespace NavTool
 
             return "This node has no VisibilityNotifier2D. Consider adding a VisibilityNotifier2D" +
                    " as a child.";
+        }
+
+        public override void _Draw()
+        {
+            if (!_debugEnabled) return;
+            DrawRect(new Rect2(ToLocal(AreaRect.Position), AreaRect.Size), Colors.Red, false);
         }
     }
 }

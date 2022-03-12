@@ -36,7 +36,7 @@ namespace PlayerStateMachine
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             _count = 0;
             P.SnapDisabled = true;
-            P.PlayAnim("wall_jump", JumpDur);
+            P.PlayAnimation("wall_jump", JumpDur);
             P.Direction.x = -P.WallDirection.x;
             P.Velocity.x = SpeedX * -P.WallDirection.x;
             P.Velocity.y = -ImpulseY;

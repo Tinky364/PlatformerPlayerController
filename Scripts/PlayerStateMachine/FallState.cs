@@ -27,7 +27,7 @@ namespace PlayerStateMachine
         {
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             P.SnapDisabled = true;
-            P.PlayAnim(Mathf.Abs(P.Velocity.x) > 30f ? "fall_side" : "fall_down");
+            P.PlayAnimation(Mathf.Abs(P.Velocity.x) > 30f ? "fall_side" : "fall_down");
             if (P.Fsm.PreviousState?.Key == Player.PlayerStates.Move)
                 CalculateAfterLeavingGroundJumpAble();
         }
@@ -76,7 +76,7 @@ namespace PlayerStateMachine
                 return;
             }
 
-            P.PlayAnim(Mathf.Abs(P.Velocity.x) > 30f ? "fall_side" : "fall_down");
+            P.PlayAnimation(Mathf.Abs(P.Velocity.x) > 30f ? "fall_side" : "fall_down");
 
             _desiredSpeedX = (P.JumpState.SpeedX - 15f) * P.AxisInputs().x;
             P.Velocity.x = Mathf.MoveToward(

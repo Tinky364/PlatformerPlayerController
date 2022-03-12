@@ -24,7 +24,7 @@ namespace PlayerStateMachine
         {
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             P.SnapDisabled = true;
-            P.PlayAnim("jump_side", 1f);
+            P.PlayAnimation("jump_side", 1f);
         }
 
         public override void PhysicsProcess(float delta)

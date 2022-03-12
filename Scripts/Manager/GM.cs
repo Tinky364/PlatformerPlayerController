@@ -103,7 +103,7 @@ namespace Manager
             switch (node)
             {
                 case CollisionShape2D collisionShape2D:
-                    collisionShape2D.SetDeferred("disabled", !value);
+                    //collisionShape2D.SetDeferred("disabled", !value);
                     collisionShape2D.Visible = value;
                     break;
                 case CanvasItem canvasItem: canvasItem.Visible = value;

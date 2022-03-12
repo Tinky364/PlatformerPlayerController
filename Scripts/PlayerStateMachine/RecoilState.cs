@@ -34,7 +34,7 @@ namespace PlayerStateMachine
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             _count = 0;
             P.SnapDisabled = false;
-            P.PlayAnim("jump_side", 1f);
+            P.PlayAnimation("jump_side", 1f);
             _desiredRecoilVelocity = CalculateRecoilImpulse();
             P.Velocity = _desiredRecoilVelocity;
             P.IsUnhurtable = true;

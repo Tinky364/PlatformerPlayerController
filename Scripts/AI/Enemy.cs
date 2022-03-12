@@ -15,11 +15,11 @@ namespace AI
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private int _damageValue = 1;
         
-        public NavAgent2D Agent { get; private set; }
-        public AnimatedSprite AnimatedSprite { get; private set; }
-        
         public enum EnemyStates { Idle, Chase, Attack }
         public StateMachine<EnemyStates> Fsm { get; private set; }
+        public NavAgent2D Agent { get; private set; }
+        public AnimationPlayer AnimPlayer { get; private set; }
+        public Sprite Sprite { get; private set; }
         
         public override void _EnterTree()
         {
@@ -31,7 +31,8 @@ namespace AI
         {
             base._Ready();
             Agent = GetNode<NavAgent2D>("NavAgent2D");
-            AnimatedSprite = GetNode<AnimatedSprite>("NavAgent2D/AnimatedSprite");
+            AnimPlayer = GetNode<AnimationPlayer>("NavAgent2D/AnimationPlayer");
+            Sprite = GetNode<Sprite>("NavAgent2D/Sprite");
             Agent.Connect("BodyColliding", this, nameof(OnBodyColliding));
             Agent.Connect("ScreenEntered", this, nameof(OnScreenEnter));
             Agent.Connect("ScreenExited", this, nameof(OnScreenExit));
@@ -55,6 +56,16 @@ namespace AI
             else if (!Agent.SnapDisabled) Agent.Velocity.y = Gravity * delta;
         }
         
+        public void SetTarget(NavBody2D target) => Agent.TargetNavBody = target;
+        
+        public void PlayAnimation(string name, float? duration = null)
+        {
+            float speed = 1f;
+            if (duration != null) speed = AnimPlayer.GetAnimation(name).Length / duration.Value;
+            AnimPlayer.PlaybackSpeed = speed;
+            AnimPlayer.Play(name);
+        }
+        
         protected abstract void StateController();
 
         protected void OnScreenEnter() => GM.SetNodeActive(this, true);
@@ -76,18 +87,12 @@ namespace AI
             switch (Agent.Direction.x)
             {
                 case 1:
-                    AnimatedSprite.FlipH = false;
+                    Sprite.FlipH = false;
                     break;
                 case -1:
-                    AnimatedSprite.FlipH = true;
+                    Sprite.FlipH = true;
                     break;
             }
-        }
-
-        private void SetTarget(NavBody2D target)
-        {
-            if (Agent.TargetNavBody != null) return;
-            Agent.TargetNavBody = target;
         }
     }
 }

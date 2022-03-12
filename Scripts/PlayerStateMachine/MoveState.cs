@@ -30,7 +30,7 @@ namespace PlayerStateMachine
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             P.DashState.SetDashSettings(true);
             P.SnapDisabled = true;
-            if (P.PreVelocity.y > 50f) P.PlayAnim("landing");
+            if (P.PreVelocity.y > 50f) P.PlayAnimation("landing");
             P.Velocity.y = P.Gravity * P.GetPhysicsProcessDeltaTime();
             P.Velocity.x /= 2f;
         }
@@ -78,7 +78,7 @@ namespace PlayerStateMachine
             float animDuration = P.AnimPlayer.CurrentAnimation.Equals("run")
                 ? _speedX / (Mathf.Abs(P.Velocity.x) * _runAnimationSpeed)
                 : 2.4f;
-            P.PlayAnim(Mathf.Abs(P.Velocity.x) <=  10 ? "idle" : "run", animDuration);
+            P.PlayAnimation(Mathf.Abs(P.Velocity.x) <=  10 ? "idle" : "run", animDuration);
         }
 
         private bool FallOffPlatformInput()

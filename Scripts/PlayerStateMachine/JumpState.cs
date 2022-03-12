@@ -36,7 +36,7 @@ namespace PlayerStateMachine
             GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
             _count = 0;
             P.SnapDisabled = true;
-            P.PlayAnim(Mathf.Abs(P.Velocity.x) > 30f ? "jump_side" : "jump_up", JumpDur);
+            P.PlayAnimation(Mathf.Abs(P.Velocity.x) > 30f ? "jump_side" : "jump_up", JumpDur);
             _desiredSpeedX = SpeedX * P.AxisInputs().x;
             P.Velocity.x = _desiredSpeedX;
             P.Velocity.y = -ImpulseY;

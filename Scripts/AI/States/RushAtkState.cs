@@ -5,8 +5,10 @@ using NavTool;
 
 namespace AI.States
 {
-    public class RushAttackState : State<Enemy.EnemyStates>
+    public class RushAtkState : State<Enemy.EnemyStates>
     {
+        [Export]
+        private Enemy.EnemyStates State { get; set; } = Enemy.EnemyStates.Attack;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeRushDur = 1f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
@@ -21,13 +23,12 @@ namespace AI.States
         private float _waitAfterCollisionDur = 2f;
         
         private Enemy E { get; set; }
-
         private CancellationTokenSource _attackCancel;
         private bool _isRushing;
         
         public void Initialize(Enemy enemy)
         {
-            Initialize(Enemy.EnemyStates.Attack);
+            Initialize(State);
             E = enemy;
             E.Fsm.AddState(this);
             Events.S.Connect("Damaged", this, nameof(OnTargetHit));
@@ -37,7 +38,7 @@ namespace AI.States
         {
             GM.Print(E.Agent.DebugEnabled, $"{E.Name}: {Key}");
 
-            E.AnimatedSprite.Play("idle");
+            E.PlayAnimation("idle");
             E.Agent.Velocity.x = 0;
 
             _attackCancel = new CancellationTokenSource();
@@ -68,7 +69,7 @@ namespace AI.States
             }
             // Waits before rushing to the target position.
             await TreeTimer.S.Wait(_waitBeforeRushDur / 2f);
-            E.AnimatedSprite.Play("run");
+            E.PlayAnimation("run");
             // Starts rushing to the target position.
             E.Agent.NavTween.MoveToward(
                 NavTween.TweenMode.X, null, targetPos, _rushSpeed, Tween.TransitionType.Cubic
@@ -79,7 +80,7 @@ namespace AI.States
             // When rushing ends before its duration
             if (cancellationToken.IsCancellationRequested) return;
             _isRushing = false;
-            E.AnimatedSprite.Play("idle");
+            E.PlayAnimation("idle");
             // Waits before changing state.
             await TreeTimer.S.Wait(_waitAfterRushDur);
             E.Fsm.StopCurrentState();

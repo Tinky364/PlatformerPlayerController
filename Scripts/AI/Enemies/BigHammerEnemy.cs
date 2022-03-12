@@ -3,21 +3,21 @@ using AI.States;
 
 namespace AI.Enemies
 {
-    public class JumperEnemy : Enemy
+    public class BigHammerEnemy : Enemy
     {
         [Export]
         private IdleState _idleState = default;
         [Export]
         private ChaseState _chaseState = default;
         [Export]
-        private JumpAtkState _atkState = default;
+        private AnimationState _animationState = default;
 
         public override void _Ready()
         {
             base._Ready();
             _idleState.Initialize(this);
-            _atkState.Initialize(this);
             _chaseState.Initialize(this);
+            _animationState.Initialize(this);
             Fsm.SetCurrentState(EnemyStates.Idle);
         }
 
@@ -31,10 +31,10 @@ namespace AI.Enemies
                 Fsm.SetCurrentState(EnemyStates.Idle);
                 return;
             }
-
+            
             float distToTarget = Agent.DistanceToTarget();
             
-            if (distToTarget < _chaseState.StopDist + _chaseState.StopDistThreshold)
+            if (distToTarget < _chaseState.StopDist + 1f)
             {
                 Fsm.SetCurrentState(EnemyStates.Attack, true);
                 return;

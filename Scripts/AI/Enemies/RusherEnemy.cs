@@ -8,13 +8,13 @@ namespace AI.Enemies
         [Export]
         private IdleState _idleState = default;
         [Export]
-        private RushAttackState _attackState = default;
+        private RushAtkState _atkState = default;
 
         public override void _Ready()
         {
             base._Ready();
             _idleState.Initialize(this);
-            _attackState.Initialize(this);
+            _atkState.Initialize(this);
             Fsm.SetCurrentState(EnemyStates.Idle);
         }
 

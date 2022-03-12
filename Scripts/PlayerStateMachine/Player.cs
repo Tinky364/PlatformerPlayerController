@@ -46,15 +46,12 @@ namespace PlayerStateMachine
         [Export]
         public DeadState DeadState { get; private set; }
        
-        
+        public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform, Wall, WallJump, Dash }
+        public StateMachine<PlayerStates> Fsm { get; private set; }
         public Sprite Sprite { get; private set; }
         public AnimationPlayer AnimPlayer { get; private set; }
         public Area2D PlatformCheckArea { get; private set; }
-
-        public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform, Wall, WallJump, Dash }
-        public StateMachine<PlayerStates> Fsm { get; private set; }
         public CollisionShape2D CollisionShape { get; private set; }
-
         public Vector2 PreVelocity { get; set; }
         public Vector2 SnapVector => SnapDisabled ? Vector2.Zero : Vector2.Down * 2f;
         public Vector2 WallDirection { get; private set; }
@@ -117,7 +114,6 @@ namespace PlayerStateMachine
             Events.S.Connect("Damaged", this, nameof(OnDamaged));
             Events.S.Connect("CoinCollected", this, nameof(AddCoin));
             Fsm.SetCurrentState(PlayerStates.Fall);
-            
             CalculateMoveDirectionAverage();
         }
 
@@ -165,7 +161,7 @@ namespace PlayerStateMachine
             return _inputAxis = new Vector2(Mathf.Sign(_inputAxis.x), Mathf.Sign(_inputAxis.y));
         }
         
-        public void PlayAnim(string name, float? duration = null)
+        public void PlayAnimation(string name, float? duration = null)
         {
             float speed = 1f;
             if (duration != null) speed = AnimPlayer.GetAnimation(name).Length / duration.Value;
@@ -246,10 +242,8 @@ namespace PlayerStateMachine
             {
                 _dirs.SetValue(PrePosition.DirectionTo(GlobalPosition), index);
                 PrePosition = GlobalPosition;
-                
                 if (index == 9) index = 0;
                 else index++;
-                
                 if (index == 0)
                 {
                     Vector2 total = Vector2.Zero;
@@ -260,7 +254,6 @@ namespace PlayerStateMachine
                         MoveDirectionAvg = (total / 10f).Normalized();
                     }
                 }
-                
                 await TreeTimer.S.Wait(0.1f);
             }
         }

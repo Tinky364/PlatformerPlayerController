@@ -1,0 +1,166 @@
+[gd_scene load_steps=18 format=2]
+
+[ext_resource path="res://Scripts/AI/Enemies/BigHammerEnemy.cs" type="Script" id=1]
+[ext_resource path="res://SubScenes/Enemies/EnemyTemplate.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Scripts/AI/States/AnimationState.cs" type="Script" id=3]
+[ext_resource path="res://Scripts/AI/States/ChaseState.cs" type="Script" id=4]
+[ext_resource path="res://Scripts/AI/States/IdleState.cs" type="Script" id=5]
+
+[sub_resource type="Resource" id=9]
+resource_local_to_scene = true
+script = ExtResource( 5 )
+State = 0
+_idleType = 1
+_secondPosDist = 200.0
+_stayDur = 5.0
+
+[sub_resource type="Resource" id=10]
+script = ExtResource( 4 )
+State = 1
+StopDist = 22.0
+StopDistThreshold = 4.0
+_chaseSpeed = 30.0
+
+[sub_resource type="Resource" id=13]
+script = ExtResource( 3 )
+State = 2
+_animationName = "attack"
+_animationSymmetrical = true
+_waitBeforeAnimationDur = 0.2
+_waitAfterAnimationDur = 1.0
+_animationDuration = 0.0
+
+[sub_resource type="SegmentShape2D" id=1]
+resource_local_to_scene = true
+a = Vector2( -32, 0 )
+b = Vector2( 32, 0 )
+
+[sub_resource type="RectangleShape2D" id=4]
+resource_local_to_scene = true
+extents = Vector2( 12, 20 )
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 11, 19 )
+
+[sub_resource type="RectangleShape2D" id=3]
+extents = Vector2( 6, 8 )
+
+[sub_resource type="Animation" id=5]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath("InteractionArea/HammerShape2D:disabled")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ true ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("InteractionArea/HammerShape2D:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 18, -31 ) ]
+}
+
+[sub_resource type="Animation" id=12]
+resource_name = "attack_l"
+length = 0.7
+step = 0.05
+tracks/0/type = "value"
+tracks/0/path = NodePath("InteractionArea/HammerShape2D:disabled")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.65 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ false, true ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("InteractionArea/HammerShape2D:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.45, 0.65, 0.7 ),
+"transitions": PoolRealArray( 2, 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( -18, -31 ), Vector2( -18, -8 ), Vector2( -18, -8 ), Vector2( -18, -31 ) ]
+}
+
+[sub_resource type="Animation" id=6]
+resource_name = "attack_r"
+length = 0.7
+step = 0.05
+tracks/0/type = "value"
+tracks/0/path = NodePath("InteractionArea/HammerShape2D:disabled")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.65 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ false, true ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("InteractionArea/HammerShape2D:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.45, 0.65, 0.7 ),
+"transitions": PoolRealArray( 2, 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 18, -31 ), Vector2( 18, -8 ), Vector2( 18, -8 ), Vector2( 18, -31 ) ]
+}
+
+[sub_resource type="Animation" id=7]
+resource_name = "idle"
+
+[sub_resource type="Animation" id=8]
+resource_name = "run"
+
+[node name="BigHammerEnemy" instance=ExtResource( 2 )]
+script = ExtResource( 1 )
+_idleState = SubResource( 9 )
+_chaseState = SubResource( 10 )
+_animationState = SubResource( 13 )
+
+[node name="CollisionShape2D" parent="NavArea2D" index="1"]
+shape = SubResource( 1 )
+
+[node name="CollisionShape2D" parent="NavAgent2D" index="0"]
+position = Vector2( 0, -20 )
+shape = SubResource( 4 )
+
+[node name="CollisionShape2D" parent="NavAgent2D/InteractionArea" index="0"]
+position = Vector2( 0, -20 )
+shape = SubResource( 2 )
+
+[node name="HammerShape2D" type="CollisionShape2D" parent="NavAgent2D/InteractionArea" index="1"]
+position = Vector2( 18, -31 )
+shape = SubResource( 3 )
+disabled = true
+
+[node name="AnimationPlayer" parent="NavAgent2D" index="3"]
+anims/RESET = SubResource( 5 )
+anims/attack_l = SubResource( 12 )
+anims/attack_r = SubResource( 6 )
+anims/idle = SubResource( 7 )
+anims/run = SubResource( 8 )

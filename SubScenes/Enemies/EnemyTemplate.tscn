@@ -1,0 +1,74 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://addons/NavTool/NavArea2D.cs" type="Script" id=1]
+[ext_resource path="res://addons/NavTool/NavAgent2D.cs" type="Script" id=2]
+
+[sub_resource type="SegmentShape2D" id=1]
+resource_local_to_scene = true
+a = Vector2( -32, 0 )
+b = Vector2( 32, 0 )
+
+[sub_resource type="RectangleShape2D" id=2]
+resource_local_to_scene = true
+extents = Vector2( 12, 20 )
+
+[sub_resource type="RectangleShape2D" id=3]
+resource_local_to_scene = true
+extents = Vector2( 7, 7 )
+
+[node name="EnemyTemplate" type="Node2D"]
+
+[node name="NavArea2D" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 256
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true
+}
+
+[node name="VisibilityNotifier2D" type="VisibilityNotifier2D" parent="NavArea2D"]
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NavArea2D"]
+shape = SubResource( 1 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="NavAgent2D" type="KinematicBody2D" parent="."]
+collision_layer = 16
+collision_mask = 6
+script = ExtResource( 2 )
+Extents = Vector2( 16, 16 )
+_isOnBodyCollidingActive = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NavAgent2D"]
+position = Vector2( 0, -8 )
+shape = SubResource( 2 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="InteractionArea" type="Area2D" parent="NavAgent2D"]
+collision_layer = 0
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NavAgent2D/InteractionArea"]
+position = Vector2( 0, -8 )
+shape = SubResource( 3 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="Sprite" type="Sprite" parent="NavAgent2D"]
+centered = false
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="NavAgent2D"]

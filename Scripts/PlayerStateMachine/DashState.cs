@@ -84,7 +84,7 @@ namespace PlayerStateMachine
             {
                 case DashType.Slide:
                     _direction = new Vector2(Mathf.Sign(_direction.x), 0);
-                    P.PlayAnim("slide", _duration);
+                    P.PlayAnimation("slide", _duration);
                     if (P.CollisionShape.Shape is CapsuleShape2D capsule)
                     {
                         P.CollisionShape.Position = new Vector2(0, -6);
@@ -95,25 +95,25 @@ namespace PlayerStateMachine
                         Vector2.Down * P.Gravity * P.GetPhysicsProcessDeltaTime();
                     return;
                 case DashType.GroundUp: 
-                    P.PlayAnim("dash_up_on_ground", _duration);
+                    P.PlayAnimation("dash_up_on_ground", _duration);
                     break;
                 case DashType.GroundDown:
-                    P.PlayAnim("dash_down", _duration);
+                    P.PlayAnimation("dash_down", _duration);
                     break;
                 case DashType.GroundCrossUp:
-                    P.PlayAnim("dash_side_on_ground", _duration);
+                    P.PlayAnimation("dash_side_on_ground", _duration);
                     break;
                 case DashType.AirUp: 
-                    P.PlayAnim("dash_up_in_air", _duration);
+                    P.PlayAnimation("dash_up_in_air", _duration);
                     break;
                 case DashType.AirCrossUp:
-                    P.PlayAnim("dash_side_in_air", _duration);
+                    P.PlayAnimation("dash_side_in_air", _duration);
                     break;
                 case DashType.AirCrossDown: 
-                    P.PlayAnim("dash_cross_down", _duration);
+                    P.PlayAnimation("dash_cross_down", _duration);
                     break;
                 case DashType.AirDown:
-                    P.PlayAnim("dash_down", _duration);
+                    P.PlayAnimation("dash_down", _duration);
                     break;
             }
             _desiredSpeed = DashSpeed;
@@ -159,7 +159,7 @@ namespace PlayerStateMachine
                     P.Fsm.SetCurrentState(Player.PlayerStates.Move);
                     return;
                 }
-                if (P.IsOnWall() || P.IsOnCeiling())
+                if (P.IsOnCeiling())
                 {
                     P.Velocity = Vector2.Zero;
                     P.Fsm.SetCurrentState(Player.PlayerStates.Fall);

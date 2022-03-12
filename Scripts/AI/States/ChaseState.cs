@@ -5,9 +5,13 @@ namespace AI.States
 {
     public class ChaseState : State<Enemy.EnemyStates>
     {
-        [Export(PropertyHint.Range, "0,100,or_greater")]
+        [Export]
+        private Enemy.EnemyStates State { get; set; } = Enemy.EnemyStates.Chase;
+        [Export(PropertyHint.Range, "0,100,1,or_greater")]
         public float StopDist { get; private set; } = 26f;
-        [Export(PropertyHint.Range, "0,200,or_greater")]
+        [Export(PropertyHint.Range, "1,100,1,or_greater")]
+        public float StopDistThreshold { get; private set; } = 1f;
+        [Export(PropertyHint.Range, "0,200,1,or_greater")]
         private float _chaseSpeed = 30f;
 
         private Enemy E { get; set; }
@@ -16,7 +20,7 @@ namespace AI.States
         
         public void Initialize(Enemy enemy)
         {
-            Initialize(Enemy.EnemyStates.Chase);
+            Initialize(State);
             E = enemy;
             E.Fsm.AddState(this);
         }
@@ -25,7 +29,7 @@ namespace AI.States
         {
             GM.Print(E.Agent.DebugEnabled, $"{E.Name}: {Key}");
             E.Agent.Velocity.x = 0f;
-            E.AnimatedSprite.Play("run");
+            E.PlayAnimation("run");
         }
 
         public override void PhysicsProcess(float delta)

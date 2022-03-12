@@ -5,8 +5,10 @@ using NavTool;
 
 namespace AI.States
 {
-    public class JumpAttackState : State<Enemy.EnemyStates>
+    public class JumpAtkState : State<Enemy.EnemyStates>
     {
+        [Export]
+        private Enemy.EnemyStates State { get; set; } = Enemy.EnemyStates.Attack;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeAttackDur = 1f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
@@ -29,13 +31,12 @@ namespace AI.States
         private float _collisionBackDur = 1f;
         
         private Enemy E { get; set; }
-
         private CancellationTokenSource _cancellationTokenSource;
         private bool _isJumping;
 
         public void Initialize(Enemy enemy)
         {
-            Initialize(Enemy.EnemyStates.Attack);
+            Initialize(State);
             E = enemy;
             E.Fsm.AddState(this);
             Events.S.Connect("Damaged", this, nameof(OnTargetHit));
@@ -45,7 +46,7 @@ namespace AI.States
         {
             GM.Print(E.Agent.DebugEnabled, $"{E.Name}: {Key}");
             
-            E.AnimatedSprite.Play("idle");
+            E.PlayAnimation("idle");
             E.Agent.Velocity.x = 0;
             
             Vector2 dirToTarget = E.Agent.DirectionToTarget();
@@ -72,7 +73,7 @@ namespace AI.States
                 E.MoveSpeed, Tween.TransitionType.Quad
             );
             await ToSignal(E.Agent.NavTween, "MoveCompleted");
-            E.AnimatedSprite.Play("run");
+            E.PlayAnimation("run");
             E.Agent.SnapDisabled = true;
             _isJumping = true;
             E.Agent.Velocity.y = -E.Gravity * _jumpDur / 2f;
@@ -86,7 +87,7 @@ namespace AI.States
                 _landingMoveDur, Tween.TransitionType.Quad, Tween.EaseType.Out
             );
             await ToSignal(E.Agent.NavTween, "MoveCompleted");
-            E.AnimatedSprite.Play("idle");
+            E.PlayAnimation("idle");
             await TreeTimer.S.Wait(_waitAfterAttackDur);
             E.Fsm.StopCurrentState();
         }
