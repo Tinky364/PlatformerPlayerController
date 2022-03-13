@@ -15,8 +15,8 @@ namespace AI.Enemies
         public override void _Ready()
         {
             base._Ready();
-            _idleState.Initialize(this, EnemyStates.Idle);
-            _chaseState.Initialize(this, EnemyStates.Chase);
+            _idleState.Initialize(this, _idleState.State);
+            _chaseState.Initialize(this, _chaseState.State);
             _animationState.Initialize(this, _animationState.State);
             Fsm.SetCurrentState(EnemyStates.Idle);
         }

@@ -5,7 +5,7 @@ using NavTool;
 
 namespace AI.States
 {
-    public class JumpAtkState : State<Enemy, Enemy.EnemyStates>
+    public class JumpAtkState : EnemyState
     {
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeAttackDur = 1f;

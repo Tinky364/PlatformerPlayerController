@@ -3,7 +3,7 @@ using Manager;
 
 namespace AI.States
 {
-    public class IdleState : State<Enemy, Enemy.EnemyStates>
+    public class IdleState : EnemyState
     {
         [Export]
         private IdleType _idleType = IdleType.Stay;
@@ -54,6 +54,7 @@ namespace AI.States
         public override void Process(float delta) { }
 
         public override void Exit() { }
+        
         public override void ExitTree() { }
 
         private void SetMovePosition()

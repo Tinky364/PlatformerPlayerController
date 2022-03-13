@@ -39,6 +39,12 @@ namespace AI
             Fsm = new FiniteStateMachine<Enemy, EnemyStates>();
         }
 
+        public override void _ExitTree()
+        {
+            base._ExitTree();
+            foreach (var pair in Fsm.States) pair.Value.ExitTree();
+        }
+
         public override void _Process(float delta)
         {
             base._Process(delta);

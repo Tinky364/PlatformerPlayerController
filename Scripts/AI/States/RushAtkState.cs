@@ -5,7 +5,7 @@ using NavTool;
 
 namespace AI.States
 {
-    public class RushAtkState : State<Enemy, Enemy.EnemyStates>
+    public class RushAtkState : EnemyState
     {
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeRushDur = 1f;
@@ -50,7 +50,6 @@ namespace AI.States
         public override void PhysicsProcess(float delta) { }
         
         public override void Exit() { }
-        
 
         private async void Attack(CancellationToken cancellationToken)
         {

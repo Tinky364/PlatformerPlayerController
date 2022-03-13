@@ -11,6 +11,7 @@
 [sub_resource type="Resource" id=5]
 resource_local_to_scene = true
 script = ExtResource( 8 )
+State = 0
 _idleType = 0
 _secondPosDist = 40.0
 _stayDur = 2.0
@@ -18,12 +19,14 @@ _stayDur = 2.0
 [sub_resource type="Resource" id=6]
 resource_local_to_scene = true
 script = ExtResource( 6 )
+State = 1
 StopDist = 30.0
 StopDistThreshold = 1.0
 _chaseSpeed = 30.0
 
 [sub_resource type="Resource" id=7]
 script = ExtResource( 7 )
+State = 2
 _waitBeforeAttackDur = 1.0
 _jumpDur = 0.48
 _landingMoveDur = 0.2

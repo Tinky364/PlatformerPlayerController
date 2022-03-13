@@ -3,7 +3,7 @@ using Manager;
 
 namespace AI.States
 {
-    public class ChaseState : State<Enemy, Enemy.EnemyStates>
+    public class ChaseState : EnemyState
     {
         [Export(PropertyHint.Range, "0,100,1,or_greater")]
         public float StopDist { get; private set; } = 26f;
@@ -14,12 +14,6 @@ namespace AI.States
 
         public Vector2 TargetPos { get; set; }
         
-        public override void Initialize(Enemy owner, Enemy.EnemyStates key)
-        {
-            base.Initialize(owner, key);
-            Owner.Fsm.AddState(this);
-        }
-
         public override void Enter()
         {
             GM.Print(Owner.Agent.DebugEnabled, $"{Owner.Name}: {Key}");

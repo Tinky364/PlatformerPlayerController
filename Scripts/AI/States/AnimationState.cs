@@ -3,10 +3,8 @@ using Manager;
 
 namespace AI.States
 {
-    public class AnimationState : State<Enemy, Enemy.EnemyStates>
+    public class AnimationState : EnemyState
     {
-        [Export]
-        public Enemy.EnemyStates State { get; private set; } = Enemy.EnemyStates.Attack;
         [Export]
         private string _animationName = "FILL IT!!!";
         [Export]

@@ -26,6 +26,7 @@
 [sub_resource type="Resource" id=50]
 resource_local_to_scene = true
 script = ExtResource( 20 )
+State = 0
 _idleType = 1
 _secondPosDist = 180.0
 _stayDur = 5.0
@@ -42,6 +43,7 @@ extents = Vector2( 12, 20 )
 [sub_resource type="Resource" id=45]
 resource_local_to_scene = true
 script = ExtResource( 20 )
+State = 0
 _idleType = 1
 _secondPosDist = 10.0
 _stayDur = 10.0
@@ -62,6 +64,7 @@ extents = Vector2( 9, 6 )
 [sub_resource type="Resource" id=39]
 resource_local_to_scene = true
 script = ExtResource( 20 )
+State = 0
 _idleType = 1
 _secondPosDist = 35.0
 _stayDur = 2.0
@@ -69,6 +72,7 @@ _stayDur = 2.0
 [sub_resource type="Resource" id=40]
 resource_local_to_scene = true
 script = ExtResource( 18 )
+State = 1
 StopDist = 30.0
 StopDistThreshold = 1.0
 _chaseSpeed = 30.0

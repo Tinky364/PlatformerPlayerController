@@ -52,7 +52,7 @@ namespace PlayerStateMachine
         public AnimationPlayer AnimPlayer { get; private set; }
         public Area2D PlatformCheckArea { get; private set; }
         public CollisionShape2D CollisionShape { get; private set; }
-        public Vector2 PreVelocity { get; set; }
+        public Vector2 PreVelocity { get; private set; }
         public Vector2 SnapVector => SnapDisabled ? Vector2.Zero : Vector2.Down * 2f;
         public Vector2 WallDirection { get; private set; }
         public Vector2 MoveDirectionAvg { get; private set; }
@@ -92,7 +92,7 @@ namespace PlayerStateMachine
         public override void _ExitTree()
         {
             base._ExitTree();
-            MoveState.ExitTree();
+            foreach (var pair in Fsm.States) pair.Value.ExitTree();
         }
 
         public override void _Ready()

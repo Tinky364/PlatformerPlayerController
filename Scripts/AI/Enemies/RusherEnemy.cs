@@ -13,8 +13,8 @@ namespace AI.Enemies
         public override void _Ready()
         {
             base._Ready();
-            _idleState.Initialize(this, EnemyStates.Idle);
-            _atkState.Initialize(this, EnemyStates.Attack);
+            _idleState.Initialize(this, _idleState.State);
+            _atkState.Initialize(this, _atkState.State);
             Fsm.SetCurrentState(EnemyStates.Idle);
         }
 
@@ -30,13 +30,6 @@ namespace AI.Enemies
             }
 
             Fsm.SetCurrentState(EnemyStates.Attack, true);
-        }
-
-        public override void _ExitTree()
-        {
-            base._ExitTree();
-            _idleState.ExitTree();
-            _atkState.ExitTree();
         }
     }
 }
