@@ -16,7 +16,7 @@ namespace AI
         private int _damageValue = 1;
 
         public enum EnemyStates { Idle, Chase, Attack }
-        public StateMachine<Enemy, EnemyStates> Fsm { get; private set; }
+        public FiniteStateMachine<Enemy, EnemyStates> Fsm { get; private set; }
         public NavAgent2D Agent { get; private set; }
         public AnimationPlayer AnimPlayer { get; private set; }
         public Sprite Sprite { get; private set; }
@@ -36,7 +36,7 @@ namespace AI
             Agent.Connect("BodyColliding", this, nameof(OnBodyColliding));
             Agent.Connect("ScreenEntered", this, nameof(OnScreenEnter));
             Agent.Connect("ScreenExited", this, nameof(OnScreenExit));
-            Fsm = new StateMachine<Enemy, EnemyStates>();
+            Fsm = new FiniteStateMachine<Enemy, EnemyStates>();
         }
 
         public override void _Process(float delta)

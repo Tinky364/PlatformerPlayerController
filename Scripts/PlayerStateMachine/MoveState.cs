@@ -19,7 +19,6 @@ namespace PlayerStateMachine
         public override void Initialize(Player owner, Player.PlayerStates key)
         {
             base.Initialize(owner, key);
-            Owner.Fsm.AddState(this);
             Owner.PlatformCheckArea.Connect("body_exited", this, nameof(OnPlatformExited));
         }
 

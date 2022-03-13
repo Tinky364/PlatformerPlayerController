@@ -3,14 +3,14 @@ using Godot.Collections;
 
 namespace AI
 {
-    public class StateMachine<TOwner, TKey> : Reference
+    public class FiniteStateMachine<TOwner, TKey> : Reference
     {
         public State<TOwner, TKey> PreviousState { get; private set; }
         public State<TOwner, TKey> CurrentState { get; private set; }
         public bool IsStateLocked { get; private set; }
         private readonly Dictionary<TKey, State<TOwner, TKey>> _states;
 
-        public StateMachine()
+        public FiniteStateMachine()
         {
             _states = new Dictionary<TKey, State<TOwner, TKey>>();
             IsStateLocked = false;

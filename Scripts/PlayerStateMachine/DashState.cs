@@ -36,12 +36,6 @@ namespace PlayerStateMachine
         }
         private DashType _curDashType;
         
-        public override void Initialize(Player owner, Player.PlayerStates key)
-        {
-            base.Initialize(owner, key);
-            Owner.Fsm.AddState(this);
-        }
-
         public override void Enter()
         {
             GM.Print(Owner.DebugEnabled, $"{Owner.Name}: {Key}");

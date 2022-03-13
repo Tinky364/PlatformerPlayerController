@@ -34,7 +34,6 @@ namespace AI.States
         public override void Initialize(Enemy owner, Enemy.EnemyStates key)
         {
             base.Initialize(owner, key);
-            Owner.Fsm.AddState(this);
             Events.S.Connect("Damaged", this, nameof(OnTargetHit));
         }
 

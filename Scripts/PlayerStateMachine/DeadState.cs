@@ -5,12 +5,6 @@ namespace PlayerStateMachine
 {
     public class DeadState : State<Player, Player.PlayerStates>
     {
-        public override void Initialize(Player owner, Player.PlayerStates key)
-        {
-            base.Initialize(owner, key);
-            Owner.Fsm.AddState(this);
-        }
-
         public override async void Enter()
         {
             GM.Print(Owner.DebugEnabled, $"{Owner.Name}: {Key}");

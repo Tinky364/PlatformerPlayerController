@@ -20,12 +20,6 @@ namespace PlayerStateMachine
         private float _count;
         private Vector2 _desiredRecoilVelocity;
 
-        public override void Initialize(Player owner, Player.PlayerStates key)
-        {
-            base.Initialize(owner, key);
-            Owner.Fsm.AddState(this);
-        }
-        
         public override async void Enter()
         {
             GM.Print(Owner.DebugEnabled, $"{Owner.Name}: {Key}");

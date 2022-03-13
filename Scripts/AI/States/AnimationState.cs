@@ -6,6 +6,8 @@ namespace AI.States
     public class AnimationState : State<Enemy, Enemy.EnemyStates>
     {
         [Export]
+        public Enemy.EnemyStates State { get; private set; } = Enemy.EnemyStates.Attack;
+        [Export]
         private string _animationName = "FILL IT!!!";
         [Export]
         private bool _animationSymmetrical = false;
@@ -19,12 +21,6 @@ namespace AI.States
         private string _curAnimationName;
         private float _count = 0;
         private bool _animationStarted = false;
-
-        public override void Initialize(Enemy owner, Enemy.EnemyStates key)
-        {
-            base.Initialize(owner, key);
-            Owner.Fsm.AddState(this);
-        }
 
         public override async void Enter()
         {

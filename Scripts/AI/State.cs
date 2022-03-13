@@ -4,7 +4,7 @@ namespace AI
 {
     public abstract class State<TOwner, TKey> : Resource
     {
-        public TOwner Owner { get; private set; }
+        protected TOwner Owner { get; private set; }
         
         public TKey Key { get; private set; }
 
@@ -22,6 +22,9 @@ namespace AI
         {
             Owner = owner;
             Key = key;
+            if (!(owner is Node node)) return;
+            if (node.Get("Fsm") is FiniteStateMachine<TOwner, TKey> fsm) fsm.AddState(this);
+            else GD.PushError("Finite State Machine variable name is not Fsm!");
         }
     }
 }

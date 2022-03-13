@@ -22,12 +22,6 @@ namespace PlayerStateMachine
         private float _desiredSpeedX;
         private float _count;
 
-        public override void Initialize(Player owner, Player.PlayerStates key)
-        {
-            base.Initialize(owner, key);
-            Owner.Fsm.AddState(this);
-        }
-        
         public override void Enter()
         {
             GM.Print(Owner.DebugEnabled, $"{Owner.Name}: {Key}");

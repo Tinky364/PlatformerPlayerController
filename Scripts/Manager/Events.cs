@@ -31,11 +31,11 @@ namespace Manager
 
         private void OnSceneUnloaded()
         {
-            Array connectionList = GetSignalConnectionList(nameof(Damaged));
-            foreach (object connection in connectionList)
-            {
-                GD.Print(connection.ToString());
-            }
+            // Array connectionList = GetSignalConnectionList(nameof(Damaged));
+            // foreach (object connection in connectionList)
+            // {
+            //     GD.Print(connection.ToString());
+            // }
         }
     }
 }

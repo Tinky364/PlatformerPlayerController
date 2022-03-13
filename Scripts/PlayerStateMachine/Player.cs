@@ -47,7 +47,7 @@ namespace PlayerStateMachine
         public DeadState DeadState { get; private set; }
        
         public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform, Wall, WallJump, Dash }
-        public StateMachine<Player, PlayerStates> Fsm { get; private set; }
+        public FiniteStateMachine<Player, PlayerStates> Fsm { get; private set; }
         public Sprite Sprite { get; private set; }
         public AnimationPlayer AnimPlayer { get; private set; }
         public Area2D PlatformCheckArea { get; private set; }
@@ -104,7 +104,7 @@ namespace PlayerStateMachine
             CollisionShape = GetNode<CollisionShape2D>("CollisionShapeCapsule");
             Health = MaxHealth;
             Sprite.SelfModulate = NormalSpriteColor;
-            Fsm = new StateMachine<Player, PlayerStates>();
+            Fsm = new FiniteStateMachine<Player, PlayerStates>();
             MoveState.Initialize(this, PlayerStates.Move);
             FallState.Initialize(this, PlayerStates.Fall);
             JumpState.Initialize(this, PlayerStates.Jump);

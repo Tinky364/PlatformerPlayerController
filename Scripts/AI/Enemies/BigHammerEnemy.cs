@@ -17,7 +17,7 @@ namespace AI.Enemies
             base._Ready();
             _idleState.Initialize(this, EnemyStates.Idle);
             _chaseState.Initialize(this, EnemyStates.Chase);
-            _animationState.Initialize(this, EnemyStates.Attack);
+            _animationState.Initialize(this, _animationState.State);
             Fsm.SetCurrentState(EnemyStates.Idle);
         }
 
