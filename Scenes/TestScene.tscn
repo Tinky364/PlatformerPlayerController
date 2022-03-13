@@ -26,7 +26,6 @@
 [sub_resource type="Resource" id=50]
 resource_local_to_scene = true
 script = ExtResource( 20 )
-State = 0
 _idleType = 1
 _secondPosDist = 180.0
 _stayDur = 5.0
@@ -43,7 +42,6 @@ extents = Vector2( 12, 20 )
 [sub_resource type="Resource" id=45]
 resource_local_to_scene = true
 script = ExtResource( 20 )
-State = 0
 _idleType = 1
 _secondPosDist = 10.0
 _stayDur = 10.0
@@ -64,7 +62,6 @@ extents = Vector2( 9, 6 )
 [sub_resource type="Resource" id=39]
 resource_local_to_scene = true
 script = ExtResource( 20 )
-State = 0
 _idleType = 1
 _secondPosDist = 35.0
 _stayDur = 2.0
@@ -72,7 +69,6 @@ _stayDur = 2.0
 [sub_resource type="Resource" id=40]
 resource_local_to_scene = true
 script = ExtResource( 18 )
-State = 1
 StopDist = 30.0
 StopDistThreshold = 1.0
 _chaseSpeed = 30.0
@@ -97,7 +93,7 @@ region = Rect2( 0, 0, 16, 16 )
 [node name="TestScene" instance=ExtResource( 9 )]
 script = ExtResource( 3 )
 
-[node name="ColorRect" type="ColorRect" parent="World/Viewport" index="0"]
+[node name="ColorRect" type="ColorRect" parent="ViewportContainer/Viewport" index="0"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color( 0.890196, 0.882353, 0.698039, 1 )
@@ -106,65 +102,65 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="BigHammerEnemy" parent="World/Viewport" index="1" instance=ExtResource( 15 )]
+[node name="BigHammerEnemy" parent="World" index="0" instance=ExtResource( 15 )]
 position = Vector2( 68, 170 )
 MoveSpeed = 25.0
 _idleState = SubResource( 50 )
 
-[node name="CollisionShape2D" parent="World/Viewport/BigHammerEnemy/NavArea2D" index="1"]
+[node name="CollisionShape2D" parent="World/BigHammerEnemy/NavArea2D" index="1"]
 shape = SubResource( 51 )
 
-[node name="CollisionShape2D" parent="World/Viewport/BigHammerEnemy/NavAgent2D" index="0"]
+[node name="CollisionShape2D" parent="World/BigHammerEnemy/NavAgent2D" index="0"]
 shape = SubResource( 52 )
 
-[node name="RusherEnemy" parent="World/Viewport" index="2" instance=ExtResource( 10 )]
+[node name="RusherEnemy" parent="World" index="1" instance=ExtResource( 10 )]
 position = Vector2( 124, 42 )
 _idleState = SubResource( 45 )
 
-[node name="CollisionShape2D" parent="World/Viewport/RusherEnemy/NavArea2D" index="1"]
+[node name="CollisionShape2D" parent="World/RusherEnemy/NavArea2D" index="1"]
 shape = SubResource( 47 )
 
-[node name="NavAgent2D" parent="World/Viewport/RusherEnemy" index="1"]
+[node name="NavAgent2D" parent="World/RusherEnemy" index="1"]
 position = Vector2( 3, 0 )
 
-[node name="CollisionShape2D" parent="World/Viewport/RusherEnemy/NavAgent2D" index="0"]
+[node name="CollisionShape2D" parent="World/RusherEnemy/NavAgent2D" index="0"]
 shape = SubResource( 48 )
 
-[node name="CollisionShape2D" parent="World/Viewport/RusherEnemy/NavAgent2D/InteractionArea" index="0"]
+[node name="CollisionShape2D" parent="World/RusherEnemy/NavAgent2D/InteractionArea" index="0"]
 shape = SubResource( 49 )
 
-[node name="JumperEnemy" parent="World/Viewport" index="3" instance=ExtResource( 12 )]
+[node name="JumperEnemy" parent="World" index="2" instance=ExtResource( 12 )]
 position = Vector2( 245, 50 )
 _idleState = SubResource( 39 )
 _chaseState = SubResource( 40 )
 
-[node name="CollisionShape2D" parent="World/Viewport/JumperEnemy/NavArea2D" index="1"]
+[node name="CollisionShape2D" parent="World/JumperEnemy/NavArea2D" index="1"]
 shape = SubResource( 42 )
 
-[node name="NavAgent2D" parent="World/Viewport/JumperEnemy" index="1"]
+[node name="NavAgent2D" parent="World/JumperEnemy" index="1"]
 position = Vector2( -19, 0 )
 
-[node name="CollisionShape2D" parent="World/Viewport/JumperEnemy/NavAgent2D" index="0"]
+[node name="CollisionShape2D" parent="World/JumperEnemy/NavAgent2D" index="0"]
 shape = SubResource( 43 )
 
-[node name="CollisionShape2D" parent="World/Viewport/JumperEnemy/NavAgent2D/InteractionArea" index="0"]
+[node name="CollisionShape2D" parent="World/JumperEnemy/NavAgent2D/InteractionArea" index="0"]
 shape = SubResource( 44 )
 
-[node name="MovingPlatform" parent="World/Viewport" index="4" instance=ExtResource( 8 )]
+[node name="MovingPlatform" parent="World" index="3" instance=ExtResource( 8 )]
 position = Vector2( 200, 32 )
 
-[node name="Line2D" parent="World/Viewport/MovingPlatform" index="0"]
+[node name="Line2D" parent="World/MovingPlatform" index="0"]
 points = PoolVector2Array( 0, 0, 80, 0 )
 
-[node name="Player" parent="World/Viewport" index="5" instance=ExtResource( 17 )]
+[node name="Player" parent="World" index="4" instance=ExtResource( 17 )]
 position = Vector2( 154, 90 )
-MaxHealth = 10
+MaxHealth = 1
 
-[node name="Door" parent="World/Viewport" index="6" instance=ExtResource( 7 )]
+[node name="Door" parent="World" index="5" instance=ExtResource( 7 )]
 position = Vector2( 120, 90 )
 _moveDistance = 32
 
-[node name="PlatformTileMap" type="TileMap" parent="World/Viewport" index="7"]
+[node name="PlatformTileMap" type="TileMap" parent="World" index="6"]
 tile_set = ExtResource( 6 )
 cell_size = Vector2( 8, 8 )
 collision_layer = 4
@@ -175,7 +171,7 @@ __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="GroundTileMap" type="TileMap" parent="World/Viewport" index="8"]
+[node name="GroundTileMap" type="TileMap" parent="World" index="7"]
 tile_set = ExtResource( 6 )
 cell_size = Vector2( 8, 8 )
 collision_layer = 2
@@ -186,7 +182,7 @@ __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="Camera2D" type="Camera2D" parent="World/Viewport" index="9"]
+[node name="Camera2D" type="Camera2D" parent="World" index="8"]
 current = true
 process_mode = 0
 drag_margin_left = 0.25
@@ -202,7 +198,7 @@ _limitRect = Rect2( 0, 0, 1000, 1000 )
 _offsetV = -1.0
 _smoothFollow = true
 
-[node name="Gui" parent="." index="1"]
+[node name="Gui" parent="." index="2"]
 pause_mode = 2
 script = ExtResource( 25 )
 
@@ -453,7 +449,7 @@ text = "Quit"
 script = ExtResource( 14 )
 LoadScenePath = "res://Scenes/StartingScene.tscn"
 
-[editable path="World/Viewport/BigHammerEnemy"]
-[editable path="World/Viewport/RusherEnemy"]
-[editable path="World/Viewport/JumperEnemy"]
-[editable path="World/Viewport/MovingPlatform"]
+[editable path="World/BigHammerEnemy"]
+[editable path="World/RusherEnemy"]
+[editable path="World/JumperEnemy"]
+[editable path="World/MovingPlatform"]

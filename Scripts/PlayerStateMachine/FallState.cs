@@ -4,91 +4,89 @@ using Manager;
 
 namespace PlayerStateMachine
 {
-    public class FallState : State<Player.PlayerStates>
+    public class FallState : State<Player, Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "0.01,1,0.005,or_greater")]
         private float _afterLeavingGroundJumpAbleDur = 0.08f;
         [Export(PropertyHint.Range, "0.1,20,0.05,or_greater")] 
         private float _beforeHitGroundJumpAbleRayLength = 5f;
         
-        private Player P { get; set; }
-
         private float _desiredSpeedX;
         private bool _isAfterLeavingGroundJumpAble;
 
-        public void Initialize(Player player)
+        public override void Initialize(Player owner, Player.PlayerStates key)
         {
-            Initialize(Player.PlayerStates.Fall);
-            P = player;
-            P.Fsm.AddState(this);
+            base.Initialize(owner, key);
+            Owner.Fsm.AddState(this);
         }
         
         public override void Enter()
         {
-            GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
-            P.SnapDisabled = true;
-            P.PlayAnimation(Mathf.Abs(P.Velocity.x) > 30f ? "fall_side" : "fall_down");
-            if (P.Fsm.PreviousState?.Key == Player.PlayerStates.Move)
+            GM.Print(Owner.DebugEnabled, $"{Owner.Name}: {Key}");
+            Owner.SnapDisabled = true;
+            Owner.PlayAnimation(Mathf.Abs(Owner.Velocity.x) > 30f ? "fall_side" : "fall_down");
+            if (Owner.Fsm.PreviousState?.Key == Player.PlayerStates.Move)
                 CalculateAfterLeavingGroundJumpAble();
         }
 
         public override void PhysicsProcess(float delta)
         {
-            P.Velocity = P.MoveAndSlideWithSnap(P.Velocity, P.SnapVector, Vector2.Up);
+            Owner.Velocity = Owner.MoveAndSlideWithSnap(Owner.Velocity, Owner.SnapVector, Vector2.Up);
 
-            P.CastWallRay();
+            Owner.CastWallRay();
 
             if ((_isAfterLeavingGroundJumpAble || CalculateBeforeHitGroundJumpAble()) &&
                 InputManager.IsJustPressed("jump"))
             {
-                P.DashState.SetDashSettings(true);
-                P.Fsm.SetCurrentState(Player.PlayerStates.Jump);
+                Owner.DashState.SetDashSettings(true);
+                Owner.Fsm.SetCurrentState(Player.PlayerStates.Jump);
                 return;
             }
             
-            if (!P.DashState.DashUnable && InputManager.IsJustPressed("dash"))
+            if (!Owner.DashState.DashUnable && InputManager.IsJustPressed("dash"))
             {
-                P.Fsm.SetCurrentState(Player.PlayerStates.Dash);
+                Owner.Fsm.SetCurrentState(Player.PlayerStates.Dash);
                 return;
             }
             
-            if (P.IsWallJumpAble && InputManager.IsJustPressed("jump"))
+            if (Owner.IsWallJumpAble && InputManager.IsJustPressed("jump"))
             {
-                P.Fsm.SetCurrentState(Player.PlayerStates.WallJump);
+                Owner.Fsm.SetCurrentState(Player.PlayerStates.WallJump);
                 return;
             }
 
-            if (P.IsCollidingWithPlatform && !P.FallOffPlatformInput)
+            if (Owner.IsCollidingWithPlatform && !Owner.FallOffPlatformInput)
             {
-                P.Fsm.SetCurrentState(Player.PlayerStates.Platform);
+                Owner.Fsm.SetCurrentState(Player.PlayerStates.Platform);
                 return;
             }
 
-            if (P.IsOnFloor())
+            if (Owner.IsOnFloor())
             {
-                P.Fsm.SetCurrentState(Player.PlayerStates.Move);
+                Owner.Fsm.SetCurrentState(Player.PlayerStates.Move);
                 return;
             }
 
-            if (P.IsStayOnWall)
+            if (Owner.IsStayOnWall)
             {
-                P.Fsm.SetCurrentState(Player.PlayerStates.Wall);
+                Owner.Fsm.SetCurrentState(Player.PlayerStates.Wall);
                 return;
             }
 
-            P.PlayAnimation(Mathf.Abs(P.Velocity.x) > 30f ? "fall_side" : "fall_down");
+            Owner.PlayAnimation(Mathf.Abs(Owner.Velocity.x) > 30f ? "fall_side" : "fall_down");
 
-            _desiredSpeedX = (P.JumpState.SpeedX - 15f) * P.AxisInputs().x;
-            P.Velocity.x = Mathf.MoveToward(
-                P.Velocity.x, _desiredSpeedX, P.AirAccelerationX * delta
+            _desiredSpeedX = (Owner.JumpState.SpeedX - 15f) * Owner.AxisInputs().x;
+            Owner.Velocity.x = Mathf.MoveToward(
+                Owner.Velocity.x, _desiredSpeedX, Owner.AirAccelerationX * delta
             );
-            if (P.Velocity.y < P.GravitySpeedMax) P.Velocity.y += P.Gravity * delta;
+            if (Owner.Velocity.y < Owner.GravitySpeedMax) Owner.Velocity.y += Owner.Gravity * delta;
         }
         
         public override void Process(float delta) { }
 
         public override void Exit() { }
-        
+        public override void ExitTree() { }
+
         private async void CalculateAfterLeavingGroundJumpAble()
         {
             _isAfterLeavingGroundJumpAble = true;
@@ -97,7 +95,7 @@ namespace PlayerStateMachine
         }
 
         private bool CalculateBeforeHitGroundJumpAble() =>
-            P.IsGroundRayHit &&
-            P.NavPos.DistanceTo(P.GlobalPosition) <= _beforeHitGroundJumpAbleRayLength;
+            Owner.IsGroundRayHit &&
+            Owner.NavPos.DistanceTo(Owner.GlobalPosition) <= _beforeHitGroundJumpAbleRayLength;
     }
 }

@@ -10,14 +10,12 @@
 [sub_resource type="Resource" id=2]
 resource_local_to_scene = true
 script = ExtResource( 8 )
-_state = 0
 _idleType = 0
 _secondPosDist = 20.0
 _stayDur = 2.0
 
 [sub_resource type="Resource" id=7]
 script = ExtResource( 6 )
-_state = 1
 _waitBeforeRushDur = 1.0
 _waitAfterRushDur = 1.0
 _rushSpeed = 50.0

@@ -33,9 +33,11 @@ namespace Manager
         {
             SetGameState(GameState.Pause, GameState.Pause);
             PackedScene packedScene = await LoadAsync<PackedScene>(path);
+            Events.S.EmitSignal("SceneUnloaded");
             await UnloadCurrentScene();
             if (packedScene.Instance() is SceneManager scene) SetCurrentScene(scene);
             else GD.PushWarning("New loaded scene is not a SceneManager node!");
+            Events.S.EmitSignal("SceneLoaded");
             SetGameState(GameState.Play, GameState.Play);
         }
 
@@ -44,10 +46,10 @@ namespace Manager
             switch (worldState)
             {
                 case GameState.Play:
-                    CurrentScene.World.PauseMode = PauseModeEnum.Process;
+                    CurrentScene.ViewportContainer.PauseMode = PauseModeEnum.Process;
                     break;
                 case GameState.Pause:
-                    CurrentScene.World.PauseMode = PauseModeEnum.Stop;
+                    CurrentScene.ViewportContainer.PauseMode = PauseModeEnum.Stop;
                     break;
             }
             _worldState = worldState;

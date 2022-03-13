@@ -19,6 +19,7 @@ _stayDur = 2.0
 resource_local_to_scene = true
 script = ExtResource( 6 )
 StopDist = 30.0
+StopDistThreshold = 1.0
 _chaseSpeed = 30.0
 
 [sub_resource type="Resource" id=7]

@@ -120,7 +120,7 @@ namespace Other
                 _newPos.y = _curPos.Round().y;
             }
             
-            if (GM.S.CurrentScene.World.Material is ShaderMaterial shader)
+            if (GM.S.CurrentScene.ViewportContainer.Material is ShaderMaterial shader)
                 shader.SetShaderParam("cam_offset", _subPixel);
             GlobalPosition = _newPos;
         }

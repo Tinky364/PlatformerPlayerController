@@ -15,9 +15,9 @@ namespace AI.Enemies
         public override void _Ready()
         {
             base._Ready();
-            _idleState.Initialize(this);
-            _atkState.Initialize(this);
-            _chaseState.Initialize(this);
+            _idleState.Initialize(this, EnemyStates.Idle);
+            _atkState.Initialize(this, EnemyStates.Attack);
+            _chaseState.Initialize(this, EnemyStates.Chase);
             Fsm.SetCurrentState(EnemyStates.Idle);
         }
 
@@ -48,6 +48,12 @@ namespace AI.Enemies
                 _chaseState.TargetPos = movePos;
                 Fsm.SetCurrentState(EnemyStates.Chase);
             }
+        }
+
+        public override void _ExitTree()
+        {
+            base._ExitTree();
+            _atkState.ExitTree();
         }
     }
 }

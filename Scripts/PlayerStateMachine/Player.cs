@@ -47,7 +47,7 @@ namespace PlayerStateMachine
         public DeadState DeadState { get; private set; }
        
         public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform, Wall, WallJump, Dash }
-        public StateMachine<PlayerStates> Fsm { get; private set; }
+        public StateMachine<Player, PlayerStates> Fsm { get; private set; }
         public Sprite Sprite { get; private set; }
         public AnimationPlayer AnimPlayer { get; private set; }
         public Area2D PlatformCheckArea { get; private set; }
@@ -89,6 +89,12 @@ namespace PlayerStateMachine
             AddToGroup("Player");
         }
 
+        public override void _ExitTree()
+        {
+            base._ExitTree();
+            MoveState.ExitTree();
+        }
+
         public override void _Ready()
         {
             base._Ready();
@@ -98,19 +104,18 @@ namespace PlayerStateMachine
             CollisionShape = GetNode<CollisionShape2D>("CollisionShapeCapsule");
             Health = MaxHealth;
             Sprite.SelfModulate = NormalSpriteColor;
-            Fsm = new StateMachine<PlayerStates>();
-            MoveState.Initialize(this);
-            FallState.Initialize(this);
-            JumpState.Initialize(this);
-            RecoilState.Initialize(this);
-            DeadState.Initialize(this);
-            PlatformState.Initialize(this);
-            WallState.Initialize(this);
-            WallJumpState.Initialize(this);
-            DashState.Initialize(this);
+            Fsm = new StateMachine<Player, PlayerStates>();
+            MoveState.Initialize(this, PlayerStates.Move);
+            FallState.Initialize(this, PlayerStates.Fall);
+            JumpState.Initialize(this, PlayerStates.Jump);
+            RecoilState.Initialize(this, PlayerStates.Recoil);
+            DeadState.Initialize(this, PlayerStates.Dead);
+            PlatformState.Initialize(this, PlayerStates.Platform);
+            WallState.Initialize(this, PlayerStates.Wall);
+            WallJumpState.Initialize(this, PlayerStates.WallJump);
+            DashState.Initialize(this, PlayerStates.Dash);
             PlatformCheckArea.Connect("body_entered", this, "OnPlatformEntered");
             PlatformCheckArea.Connect("body_exited", this, "OnPlatformExited");
-            PlatformCheckArea.Connect("body_exited", MoveState, "OnPlatformExited");
             Events.S.Connect("Damaged", this, nameof(OnDamaged));
             Events.S.Connect("CoinCollected", this, nameof(AddCoin));
             Fsm.SetCurrentState(PlayerStates.Fall);
@@ -120,14 +125,14 @@ namespace PlayerStateMachine
         public override void _Process(float delta)
         {
             base._Process(delta);
-            Fsm._Process(delta);
+            Fsm.Process(delta);
             DirectionControl();
         }
 
         public override void _PhysicsProcess(float delta)
         {
             base._PhysicsProcess(delta);
-            Fsm._PhysicsProcess(delta);
+            Fsm.PhysicsProcess(delta);
             if (PreVelocity != Velocity) PreVelocity = Velocity;
         }
 

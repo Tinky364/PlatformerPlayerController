@@ -1,4 +1,5 @@
 using Godot;
+using Godot.Collections;
 using NavTool;
 using Other;
 
@@ -6,6 +7,10 @@ namespace Manager
 {
     public class Events : Singleton<Events>
     {
+        [Signal]
+        private delegate void SceneUnloaded();
+        [Signal]
+        private delegate void SceneLoaded();
         [Signal]
         private delegate void Damaged(
             NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal);
@@ -21,6 +26,16 @@ namespace Manager
         public override void _EnterTree()
         {
             SetSingleton();
+            Connect(nameof(SceneUnloaded), this, nameof(OnSceneUnloaded));
+        }
+
+        private void OnSceneUnloaded()
+        {
+            Array connectionList = GetSignalConnectionList(nameof(Damaged));
+            foreach (object connection in connectionList)
+            {
+                GD.Print(connection.ToString());
+            }
         }
     }
 }

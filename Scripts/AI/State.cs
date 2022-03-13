@@ -2,9 +2,11 @@ using Godot;
 
 namespace AI
 {
-    public abstract class State<T> : Resource
+    public abstract class State<TOwner, TKey> : Resource
     {
-        public T Key { get; private set; }
+        public TOwner Owner { get; private set; }
+        
+        public TKey Key { get; private set; }
 
         public abstract void Enter();
         
@@ -13,7 +15,13 @@ namespace AI
         public abstract void PhysicsProcess(float delta);
         
         public abstract void Exit();
-        
-        protected void Initialize(T key) => Key = key;
+
+        public abstract void ExitTree();
+
+        public virtual void Initialize(TOwner owner, TKey key)
+        {
+            Owner = owner;
+            Key = key;
+        }
     }
 }

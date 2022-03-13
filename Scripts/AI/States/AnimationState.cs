@@ -3,10 +3,8 @@ using Manager;
 
 namespace AI.States
 {
-    public class AnimationState : State<Enemy.EnemyStates>
+    public class AnimationState : State<Enemy, Enemy.EnemyStates>
     {
-        [Export]
-        private Enemy.EnemyStates State { get; set; }
         [Export]
         private string _animationName = "FILL IT!!!";
         [Export]
@@ -18,32 +16,30 @@ namespace AI.States
         [Export(PropertyHint.Range, "0,20,0.05,or_greater")]
         private float _animationDuration = 0f;
         
-        private Enemy E { get; set; }
         private string _curAnimationName;
         private float _count = 0;
         private bool _animationStarted = false;
 
-        public void Initialize(Enemy enemy)
+        public override void Initialize(Enemy owner, Enemy.EnemyStates key)
         {
-            Initialize(State);
-            E = enemy;
-            E.Fsm.AddState(this);
+            base.Initialize(owner, key);
+            Owner.Fsm.AddState(this);
         }
 
         public override async void Enter()
         {
-            GM.Print(E.Agent.DebugEnabled, $"{E.Name}: {Key}");
+            GM.Print(Owner.Agent.DebugEnabled, $"{Owner.Name}: {Key}");
             
             if (_animationSymmetrical) SetSymmetricalAnimation();
             
-            E.Agent.Velocity.x = 0f;
-            E.Agent.Direction.x = E.Agent.DirectionToTarget().x;
+            Owner.Agent.Velocity.x = 0f;
+            Owner.Agent.Direction.x = Owner.Agent.DirectionToTarget().x;
             
             // Waits before the animation.
             if (_waitBeforeAnimationDur != 0f) await TreeTimer.S.Wait(_waitBeforeAnimationDur);
 
-            if (_animationDuration == 0f) E.PlayAnimation(_curAnimationName);
-            else E.PlayAnimation(_curAnimationName, _animationDuration);
+            if (_animationDuration == 0f) Owner.PlayAnimation(_curAnimationName);
+            else Owner.PlayAnimation(_curAnimationName, _animationDuration);
             _animationStarted = true;
         }
 
@@ -51,10 +47,10 @@ namespace AI.States
 
         public override void PhysicsProcess(float delta)
         {
-            if (_animationStarted && !E.AnimPlayer.CurrentAnimation.Equals(_curAnimationName))
+            if (_animationStarted && !Owner.AnimPlayer.CurrentAnimation.Equals(_curAnimationName))
             {
                 if (_count < _waitAfterAnimationDur) _count += delta; // Waits after the animation.
-                else E.Fsm.StopCurrentState(); // Ends the state.
+                else Owner.Fsm.StopCurrentState(); // Ends the state.
             }
         }
 
@@ -65,9 +61,11 @@ namespace AI.States
             _count = 0f;
         }
 
+        public override void ExitTree() { }
+
         private void SetSymmetricalAnimation()
         {
-            if (E.Agent.Direction.x >= 0f) _curAnimationName = _animationName + "_r";
+            if (Owner.Agent.Direction.x >= 0f) _curAnimationName = _animationName + "_r";
             else _curAnimationName = _animationName + "_l";
         }
     }

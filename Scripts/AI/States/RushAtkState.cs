@@ -5,10 +5,8 @@ using NavTool;
 
 namespace AI.States
 {
-    public class RushAtkState : State<Enemy.EnemyStates>
+    public class RushAtkState : State<Enemy, Enemy.EnemyStates>
     {
-        [Export]
-        private Enemy.EnemyStates State { get; set; } = Enemy.EnemyStates.Attack;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeRushDur = 1f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
@@ -22,24 +20,27 @@ namespace AI.States
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitAfterCollisionDur = 2f;
         
-        private Enemy E { get; set; }
         private CancellationTokenSource _attackCancel;
         private bool _isRushing;
-        
-        public void Initialize(Enemy enemy)
+
+        public override void Initialize(Enemy owner, Enemy.EnemyStates key)
         {
-            Initialize(State);
-            E = enemy;
-            E.Fsm.AddState(this);
+            base.Initialize(owner, key);
+            Owner.Fsm.AddState(this);
             Events.S.Connect("Damaged", this, nameof(OnTargetHit));
         }
 
+        public override void ExitTree()
+        {
+            Events.S.Disconnect("Damaged", this, nameof(OnTargetHit));
+        }
+      
         public override void Enter()
         {
-            GM.Print(E.Agent.DebugEnabled, $"{E.Name}: {Key}");
+            GM.Print(Owner.Agent.DebugEnabled, $"{Owner.Name}: {Key}");
 
-            E.PlayAnimation("idle");
-            E.Agent.Velocity.x = 0;
+            Owner.PlayAnimation("idle");
+            Owner.Agent.Velocity.x = 0;
 
             _attackCancel = new CancellationTokenSource();
             Attack(_attackCancel.Token);
@@ -50,60 +51,61 @@ namespace AI.States
         public override void PhysicsProcess(float delta) { }
         
         public override void Exit() { }
+        
 
         private async void Attack(CancellationToken cancellationToken)
         {
             // Waits before calculating the target position.
             await TreeTimer.S.Wait(_waitBeforeRushDur / 2f);
             // Calculates the target position and sets its own direction.
-            Vector2 targetPos = new Vector2(0, E.Agent.NavPos.y);
-            if (E.Agent.DirectionToTarget().x >= 0)
+            Vector2 targetPos = new Vector2(0, Owner.Agent.NavPos.y);
+            if (Owner.Agent.DirectionToTarget().x >= 0)
             {
-                E.Agent.Direction.x = 1;
-                targetPos.x = E.Agent.NavArea.AreaRect.End.x - 12f;
+                Owner.Agent.Direction.x = 1;
+                targetPos.x = Owner.Agent.NavArea.AreaRect.End.x - 12f;
             }
             else
             {
-                E.Agent.Direction.x = -1;
-                targetPos.x = E.Agent.NavArea.AreaRect.Position.x + 12f;
+                Owner.Agent.Direction.x = -1;
+                targetPos.x = Owner.Agent.NavArea.AreaRect.Position.x + 12f;
             }
             // Waits before rushing to the target position.
             await TreeTimer.S.Wait(_waitBeforeRushDur / 2f);
-            E.PlayAnimation("run");
+            Owner.PlayAnimation("run");
             // Starts rushing to the target position.
-            E.Agent.NavTween.MoveToward(
+            Owner.Agent.NavTween.MoveToward(
                 NavTween.TweenMode.X, null, targetPos, _rushSpeed, Tween.TransitionType.Cubic
             );
             _isRushing = true;
             // Waits until rushing ends.
-            await ToSignal(E.Agent.NavTween, "MoveCompleted");
+            await ToSignal(Owner.Agent.NavTween, "MoveCompleted");
             // When rushing ends before its duration
             if (cancellationToken.IsCancellationRequested) return;
             _isRushing = false;
-            E.PlayAnimation("idle");
+            Owner.PlayAnimation("idle");
             // Waits before changing state.
             await TreeTimer.S.Wait(_waitAfterRushDur);
-            E.Fsm.StopCurrentState();
+            Owner.Fsm.StopCurrentState();
         }
         
         private async void Collision(Vector2 hitNormal)
         {
-            E.Agent.NavTween.MoveLerp(
-                NavTween.TweenMode.X, null, E.Agent.NavPos - hitNormal * _collisionBackWidth,
+            Owner.Agent.NavTween.MoveLerp(
+                NavTween.TweenMode.X, null, Owner.Agent.NavPos - hitNormal * _collisionBackWidth,
                 _collisionBackDur, Tween.TransitionType.Cubic, Tween.EaseType.Out
             );
-            await ToSignal(E.Agent.NavTween, "MoveCompleted");
+            await ToSignal(Owner.Agent.NavTween, "MoveCompleted");
             await TreeTimer.S.Wait(_waitAfterCollisionDur);
-            E.Fsm.StopCurrentState();
+            Owner.Fsm.StopCurrentState();
         }
 
         private void OnTargetHit(NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
         {
-            if (attacker != E.Agent || target != E.Agent.TargetNavBody) return;
-            if (E.Fsm.CurrentState != this || !_isRushing) return;
+            if (attacker != Owner.Agent || target != Owner.Agent.TargetNavBody) return;
+            if (Owner.Fsm.CurrentState != this || !_isRushing) return;
             _isRushing = false;
             _attackCancel?.Cancel();
-            E.Agent.NavTween.StopMove();
+            Owner.Agent.NavTween.StopMove();
             Collision(hitNormal);
         }
     }

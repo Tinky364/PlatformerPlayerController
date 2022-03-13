@@ -3,29 +3,29 @@ using Godot.Collections;
 
 namespace AI
 {
-    public class StateMachine<T> : Reference
+    public class StateMachine<TOwner, TKey> : Reference
     {
-        public State<T> PreviousState { get; private set; }
-        public State<T> CurrentState { get; private set; }
+        public State<TOwner, TKey> PreviousState { get; private set; }
+        public State<TOwner, TKey> CurrentState { get; private set; }
         public bool IsStateLocked { get; private set; }
-        private readonly Dictionary<T, State<T>> _states;
+        private readonly Dictionary<TKey, State<TOwner, TKey>> _states;
 
         public StateMachine()
         {
-            _states = new Dictionary<T, State<T>>();
+            _states = new Dictionary<TKey, State<TOwner, TKey>>();
             IsStateLocked = false;
         }
 
-        public void AddState(State<T> state)
+        public void AddState(State<TOwner, TKey> state)
         {
             if (_states.ContainsKey(state.Key)) return;
             _states.Add(state.Key, state);
         }
 
-        public State<T> GetState(T stateKey) => 
+        public State<TOwner, TKey> GetState(TKey stateKey) => 
             _states.ContainsKey(stateKey) ? _states[stateKey] : null;
         
-        public void SetCurrentState(T stateKey, bool isStateLocked = false)
+        public void SetCurrentState(TKey stateKey, bool isStateLocked = false)
         {
             if (IsStateLocked || !_states.ContainsKey(stateKey)) return;
             if (CurrentState == _states[stateKey]) return;
@@ -43,8 +43,8 @@ namespace AI
             CurrentState = null;
         }
 
-        public void _Process(float delta) => CurrentState?.Process(delta);
+        public void Process(float delta) => CurrentState?.Process(delta);
 
-        public void _PhysicsProcess(float delta) => CurrentState?.PhysicsProcess(delta);
+        public void PhysicsProcess(float delta) => CurrentState?.PhysicsProcess(delta);
     }
 }

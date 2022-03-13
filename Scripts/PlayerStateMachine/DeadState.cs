@@ -3,23 +3,20 @@ using Manager;
 
 namespace PlayerStateMachine
 {
-    public class DeadState : State<Player.PlayerStates>
+    public class DeadState : State<Player, Player.PlayerStates>
     {
-        private Player P { get; set; }
-
-        public void Initialize(Player player)
+        public override void Initialize(Player owner, Player.PlayerStates key)
         {
-            Initialize(Player.PlayerStates.Dead);
-            P = player;
-            P.Fsm.AddState(this);
+            base.Initialize(owner, key);
+            Owner.Fsm.AddState(this);
         }
 
         public override async void Enter()
         {
-            GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
-            P.IsUnhurtable = true;
+            GM.Print(Owner.DebugEnabled, $"{Owner.Name}: {Key}");
+            Owner.IsUnhurtable = true;
             await TreeTimer.S.Wait(2f);
-            GM.SetNodeActive(P, false);
+            GM.SetNodeActive(Owner, false);
         }
        
         public override void Process(float delta) { }
@@ -27,6 +24,7 @@ namespace PlayerStateMachine
         public override void PhysicsProcess(float delta) { }
 
         public override void Exit() { }
+        public override void ExitTree() { }
     }
 }
 

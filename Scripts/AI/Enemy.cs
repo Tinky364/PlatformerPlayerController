@@ -14,9 +14,9 @@ namespace AI
         public float MoveAcceleration { get; private set; } = 100f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private int _damageValue = 1;
-        
+
         public enum EnemyStates { Idle, Chase, Attack }
-        public StateMachine<EnemyStates> Fsm { get; private set; }
+        public StateMachine<Enemy, EnemyStates> Fsm { get; private set; }
         public NavAgent2D Agent { get; private set; }
         public AnimationPlayer AnimPlayer { get; private set; }
         public Sprite Sprite { get; private set; }
@@ -36,21 +36,21 @@ namespace AI
             Agent.Connect("BodyColliding", this, nameof(OnBodyColliding));
             Agent.Connect("ScreenEntered", this, nameof(OnScreenEnter));
             Agent.Connect("ScreenExited", this, nameof(OnScreenExit));
-            Fsm = new StateMachine<EnemyStates>();
+            Fsm = new StateMachine<Enemy, EnemyStates>();
         }
 
         public override void _Process(float delta)
         {
             base._Process(delta);
             StateController();
-            Fsm._Process(delta);
+            Fsm.Process(delta);
             DirectionControl();
         }
         
         public override void _PhysicsProcess(float delta)
         {
             base._PhysicsProcess(delta);
-            Fsm._PhysicsProcess(delta);
+            Fsm.PhysicsProcess(delta);
             Agent.Velocity = Agent.MoveInArea(Agent.Velocity, delta, Vector2.Up);
             if (!Agent.IsOnFloor()) Agent.Velocity.y += Gravity * delta;
             else if (!Agent.SnapDisabled) Agent.Velocity.y = Gravity * delta;

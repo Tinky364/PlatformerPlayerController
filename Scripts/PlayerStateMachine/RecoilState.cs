@@ -5,7 +5,7 @@ using Manager;
 
 namespace PlayerStateMachine
 {
-    public class RecoilState : State<Player.PlayerStates>
+    public class RecoilState : State<Player, Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "0,1000,or_greater")]
         private float _impulse = 150f;
@@ -16,51 +16,48 @@ namespace PlayerStateMachine
         [Export]
         private Color _unhurtableSpriteColor;
         
-        private Player P { get; set; }
-
         public Vector2? HitNormal { get; set; }
         private float _count;
         private Vector2 _desiredRecoilVelocity;
 
-        public void Initialize(Player player)
+        public override void Initialize(Player owner, Player.PlayerStates key)
         {
-            Initialize(Player.PlayerStates.Recoil);
-            P = player;
-            P.Fsm.AddState(this);
+            base.Initialize(owner, key);
+            Owner.Fsm.AddState(this);
         }
         
         public override async void Enter()
         {
-            GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
+            GM.Print(Owner.DebugEnabled, $"{Owner.Name}: {Key}");
             _count = 0;
-            P.SnapDisabled = false;
-            P.PlayAnimation("jump_side", 1f);
+            Owner.SnapDisabled = false;
+            Owner.PlayAnimation("jump_side", 1f);
             _desiredRecoilVelocity = CalculateRecoilImpulse();
-            P.Velocity = _desiredRecoilVelocity;
-            P.IsUnhurtable = true;
+            Owner.Velocity = _desiredRecoilVelocity;
+            Owner.IsUnhurtable = true;
             await WhileUnhurtable();
-            if (P.IsDead) return;
-            P.IsUnhurtable = false;
+            if (Owner.IsDead) return;
+            Owner.IsUnhurtable = false;
         }
 
         public override void PhysicsProcess(float delta)
         {
-            P.Velocity = P.MoveAndSlideWithSnap(P.Velocity, P.SnapVector, Vector2.Up);
+            Owner.Velocity = Owner.MoveAndSlideWithSnap(Owner.Velocity, Owner.SnapVector, Vector2.Up);
 
             if (_count > _recoilDur)
             {
-                if (P.IsDead) P.Fsm.SetCurrentState(Player.PlayerStates.Dead);
-                else if (P.IsOnFloor()) P.Fsm.SetCurrentState(Player.PlayerStates.Move);
-                else P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
+                if (Owner.IsDead) Owner.Fsm.SetCurrentState(Player.PlayerStates.Dead);
+                else if (Owner.IsOnFloor()) Owner.Fsm.SetCurrentState(Player.PlayerStates.Move);
+                else Owner.Fsm.SetCurrentState(Player.PlayerStates.Fall);
                 return;
             }
             _count += delta;
             
-            P.Velocity.x = Mathf.MoveToward(
-                P.Velocity.x, 0, Mathf.Abs(_desiredRecoilVelocity.x / _recoilDur) * delta
+            Owner.Velocity.x = Mathf.MoveToward(
+                Owner.Velocity.x, 0, Mathf.Abs(_desiredRecoilVelocity.x / _recoilDur) * delta
             );
-            if (P.IsOnFloor()) P.Velocity.y = P.Gravity * delta;
-            else if (P.Velocity.y < P.GravitySpeedMax) P.Velocity.y += P.Gravity * delta;
+            if (Owner.IsOnFloor()) Owner.Velocity.y = Owner.Gravity * delta;
+            else if (Owner.Velocity.y < Owner.GravitySpeedMax) Owner.Velocity.y += Owner.Gravity * delta;
         }
 
         public override void Exit()
@@ -68,11 +65,13 @@ namespace PlayerStateMachine
             HitNormal = null;
         }
 
+        public override void ExitTree() { }
+
         public override void Process(float delta) { }
         
         private Vector2 CalculateRecoilImpulse()
         {
-            Vector2 recoilDir = HitNormal ?? -P.Direction;
+            Vector2 recoilDir = HitNormal ?? -Owner.Direction;
             Vector2 recoilVelocity = new Vector2
             {
                 x = Mathf.Clamp(Mathf.Abs(recoilDir.x), 0.7f, 1f) * Mathf.Sign(recoilDir.x),
@@ -88,9 +87,9 @@ namespace PlayerStateMachine
             float count = 0f;
             while (count < _unhurtableDur)
             {
-                if (!IsInstanceValid(P)) return;
-                P.Sprite.SelfModulate = P.Sprite.SelfModulate == _unhurtableSpriteColor
-                    ? P.NormalSpriteColor
+                if (!IsInstanceValid(Owner)) return;
+                Owner.Sprite.SelfModulate = Owner.Sprite.SelfModulate == _unhurtableSpriteColor
+                    ? Owner.NormalSpriteColor
                     : _unhurtableSpriteColor;
                 float t = count / _unhurtableDur;
                 t = 1 - Mathf.Pow(1 - t, 5);
@@ -98,7 +97,7 @@ namespace PlayerStateMachine
                 count += waitTime;
                 await TreeTimer.S.Wait(waitTime);
             }
-            P.Sprite.SelfModulate = P.NormalSpriteColor;
+            Owner.Sprite.SelfModulate = Owner.NormalSpriteColor;
         }
     }
 }

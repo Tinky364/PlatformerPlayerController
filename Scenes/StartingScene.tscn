@@ -11,17 +11,11 @@
 [node name="StartingScene" instance=ExtResource( 5 )]
 pause_mode = 2
 
-[node name="World" parent="." index="0"]
+[node name="World" parent="." index="1"]
 pause_mode = 1
-margin_bottom = 182.0
 
-[node name="Viewport" parent="World" index="0"]
-size = Vector2( 322, 182 )
-
-[node name="Gui" parent="." index="1"]
+[node name="Gui" parent="." index="2"]
 pause_mode = 1
-scale = Vector2( 0.2, 0.2 )
-transform = Transform2D( 0.2, 0, 0, 0.2, 0, 0 )
 script = ExtResource( 6 )
 
 [node name="MainMenuPanel" type="Control" parent="Gui" index="0"]

@@ -4,7 +4,7 @@ using Manager;
 
 namespace PlayerStateMachine
 {
-    public class WallState : State<Player.PlayerStates>
+    public class WallState : State<Player, Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,2000,or_greater")]
         private float _accelerationY = 60f;
@@ -15,76 +15,75 @@ namespace PlayerStateMachine
         [Export(PropertyHint.Range, "0,1,0.05,or_greater")]
         private float _fallDelayDuration = 0.25f;
         
-        private Player P { get; set; }
-
         private float _fallDelayCount;
 
-        public void Initialize(Player player)
+        public override void Initialize(Player owner, Player.PlayerStates key)
         {
-            Initialize(Player.PlayerStates.Wall);
-            P = player;
-            P.Fsm.AddState(this);
+            base.Initialize(owner, key);
+            Owner.Fsm.AddState(this);
         }
         
         public override void Enter()
         {
-            GM.Print(P.DebugEnabled, $"{P.Name}: {Key}");
+            GM.Print(Owner.DebugEnabled, $"{Owner.Name}: {Key}");
             _fallDelayCount = 0f;
-            P.SnapDisabled = true;
-            P.PlayAnimation("wall_landing");
-            P.AnimPlayer.Queue("wall_slide");
-            P.Velocity.x = 70f * P.WallDirection.x;
-            if (P.Velocity.y > 0f) P.Velocity.y = 0f;
-            else P.Velocity.y = -_slideSpeedYNeg;
+            Owner.SnapDisabled = true;
+            Owner.PlayAnimation("wall_landing");
+            Owner.AnimPlayer.Queue("wall_slide");
+            Owner.Velocity.x = 70f * Owner.WallDirection.x;
+            if (Owner.Velocity.y > 0f) Owner.Velocity.y = 0f;
+            else Owner.Velocity.y = -_slideSpeedYNeg;
         }
 
         public override void Process(float delta) { }
 
         public override void PhysicsProcess(float delta)
         {
-            P.Velocity = P.MoveAndSlideWithSnap(P.Velocity, P.WallDirection * 2f, Vector2.Up);
+            Owner.Velocity = Owner.MoveAndSlideWithSnap(Owner.Velocity, Owner.WallDirection * 2f, Vector2.Up);
 
-            P.CastWallRay();
+            Owner.CastWallRay();
 
-            if (P.IsWallJumpAble && InputManager.IsJustPressed("jump"))
+            if (Owner.IsWallJumpAble && InputManager.IsJustPressed("jump"))
             {
-                P.Fsm.SetCurrentState(Player.PlayerStates.WallJump);
+                Owner.Fsm.SetCurrentState(Player.PlayerStates.WallJump);
                 return;
             }
             
-            if (!P.DashState.DashUnable && InputManager.IsJustPressed("dash"))
+            if (!Owner.DashState.DashUnable && InputManager.IsJustPressed("dash"))
             {
-                P.Fsm.SetCurrentState(Player.PlayerStates.Dash);
+                Owner.Fsm.SetCurrentState(Player.PlayerStates.Dash);
                 return;
             }
 
-            if (!P.IsStayOnWall)
+            if (!Owner.IsStayOnWall)
             {
-                P.IsDirectionLocked = true;
+                Owner.IsDirectionLocked = true;
                 if (_fallDelayCount >= _fallDelayDuration)
                 {
-                    P.Fsm.SetCurrentState(Player.PlayerStates.Fall);
+                    Owner.Fsm.SetCurrentState(Player.PlayerStates.Fall);
                     return;
                 }
                 _fallDelayCount += delta;
             }
             else _fallDelayCount = 0f;
             
-            if (P.IsOnFloor())
+            if (Owner.IsOnFloor())
             {
-                P.Fsm.SetCurrentState(Player.PlayerStates.Move);
+                Owner.Fsm.SetCurrentState(Player.PlayerStates.Move);
                 return;
             }
 
-            float xInput = P.AxisInputs().x;
-            if (Mathf.Sign(P.WallDirection.x) == Mathf.Sign(xInput)) P.Velocity.x = 70 * xInput;
-            else P.Velocity.x = 0;
-            if (P.Velocity.y < _speedMaxY) P.Velocity.y += _accelerationY * delta;
+            float xInput = Owner.AxisInputs().x;
+            if (Mathf.Sign(Owner.WallDirection.x) == Mathf.Sign(xInput)) Owner.Velocity.x = 70 * xInput;
+            else Owner.Velocity.x = 0;
+            if (Owner.Velocity.y < _speedMaxY) Owner.Velocity.y += _accelerationY * delta;
         }
 
         public override void Exit()
         {
-            P.IsDirectionLocked = false;
+            Owner.IsDirectionLocked = false;
         }
+
+        public override void ExitTree() { }
     }
 }

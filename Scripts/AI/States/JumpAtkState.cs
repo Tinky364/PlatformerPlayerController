@@ -5,10 +5,8 @@ using NavTool;
 
 namespace AI.States
 {
-    public class JumpAtkState : State<Enemy.EnemyStates>
+    public class JumpAtkState : State<Enemy, Enemy.EnemyStates>
     {
-        [Export]
-        private Enemy.EnemyStates State { get; set; } = Enemy.EnemyStates.Attack;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeAttackDur = 1f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
@@ -30,30 +28,33 @@ namespace AI.States
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _collisionBackDur = 1f;
         
-        private Enemy E { get; set; }
         private CancellationTokenSource _cancellationTokenSource;
         private bool _isJumping;
 
-        public void Initialize(Enemy enemy)
+        public override void Initialize(Enemy owner, Enemy.EnemyStates key)
         {
-            Initialize(State);
-            E = enemy;
-            E.Fsm.AddState(this);
+            base.Initialize(owner, key);
+            Owner.Fsm.AddState(this);
             Events.S.Connect("Damaged", this, nameof(OnTargetHit));
+        }
+
+        public override void ExitTree()
+        {
+            Events.S.Disconnect("Damaged", this, nameof(OnTargetHit));
         }
 
         public override void Enter()
         {
-            GM.Print(E.Agent.DebugEnabled, $"{E.Name}: {Key}");
+            GM.Print(Owner.Agent.DebugEnabled, $"{Owner.Name}: {Key}");
             
-            E.PlayAnimation("idle");
-            E.Agent.Velocity.x = 0;
+            Owner.PlayAnimation("idle");
+            Owner.Agent.Velocity.x = 0;
             
-            Vector2 dirToTarget = E.Agent.DirectionToTarget();
-            E.Agent.Direction.x = dirToTarget.x;
+            Vector2 dirToTarget = Owner.Agent.DirectionToTarget();
+            Owner.Agent.Direction.x = dirToTarget.x;
             
             _cancellationTokenSource = new CancellationTokenSource();
-            Attack(dirToTarget, E.Agent.TargetNavBody.NavPos, _cancellationTokenSource.Token);
+            Attack(dirToTarget, Owner.Agent.TargetNavBody.NavPos, _cancellationTokenSource.Token);
         }
         
         public override void Process(float delta) { }
@@ -61,57 +62,57 @@ namespace AI.States
         public override void PhysicsProcess(float delta) { }
         
         public override void Exit() { }
-        
+
         private async void Attack(Vector2 dirToTarget, Vector2 targetPos, CancellationToken token)
         {
             float backMoveDist = Mathf.Clamp(
-                _backMoveDistMax - E.Agent.DistanceTo(targetPos), _backMoveDistMin, _backMoveDistMax
+                _backMoveDistMax - Owner.Agent.DistanceTo(targetPos), _backMoveDistMin, _backMoveDistMax
             );
             await TreeTimer.S.Wait(_waitBeforeAttackDur);
-            E.Agent.NavTween.MoveToward(
-                NavTween.TweenMode.X, null, E.Agent.NavPos - dirToTarget * backMoveDist,
-                E.MoveSpeed, Tween.TransitionType.Quad
+            Owner.Agent.NavTween.MoveToward(
+                NavTween.TweenMode.X, null, Owner.Agent.NavPos - dirToTarget * backMoveDist,
+                Owner.MoveSpeed, Tween.TransitionType.Quad
             );
-            await ToSignal(E.Agent.NavTween, "MoveCompleted");
-            E.PlayAnimation("run");
-            E.Agent.SnapDisabled = true;
+            await ToSignal(Owner.Agent.NavTween, "MoveCompleted");
+            Owner.PlayAnimation("run");
+            Owner.Agent.SnapDisabled = true;
             _isJumping = true;
-            E.Agent.Velocity.y = -E.Gravity * _jumpDur / 2f;
-            E.Agent.NavTween.MoveLerp(NavTween.TweenMode.X, null, targetPos, _jumpDur);
-            await ToSignal(E.Agent.NavTween, "MoveCompleted");
+            Owner.Agent.Velocity.y = -Owner.Gravity * _jumpDur / 2f;
+            Owner.Agent.NavTween.MoveLerp(NavTween.TweenMode.X, null, targetPos, _jumpDur);
+            await ToSignal(Owner.Agent.NavTween, "MoveCompleted");
             if (token.IsCancellationRequested) return;
-            E.Agent.SnapDisabled = false;
+            Owner.Agent.SnapDisabled = false;
             _isJumping = false;
-            E.Agent.NavTween.MoveLerp(
+            Owner.Agent.NavTween.MoveLerp(
                 NavTween.TweenMode.X, null, targetPos + dirToTarget * _landingMoveDist,
                 _landingMoveDur, Tween.TransitionType.Quad, Tween.EaseType.Out
             );
-            await ToSignal(E.Agent.NavTween, "MoveCompleted");
-            E.PlayAnimation("idle");
+            await ToSignal(Owner.Agent.NavTween, "MoveCompleted");
+            Owner.PlayAnimation("idle");
             await TreeTimer.S.Wait(_waitAfterAttackDur);
-            E.Fsm.StopCurrentState();
+            Owner.Fsm.StopCurrentState();
         }
         
         private async void Collision(Vector2 hitNormal)
         {
-            E.Agent.NavTween.MoveLerp(
-                NavTween.TweenMode.X, null, E.Agent.NavPos - hitNormal * _collisionBackWidth,
+            Owner.Agent.NavTween.MoveLerp(
+                NavTween.TweenMode.X, null, Owner.Agent.NavPos - hitNormal * _collisionBackWidth,
                 _collisionBackDur, Tween.TransitionType.Cubic, Tween.EaseType.Out
             );
-            await ToSignal(E.Agent.NavTween, "MoveCompleted");
+            await ToSignal(Owner.Agent.NavTween, "MoveCompleted");
             await TreeTimer.S.Wait(_waitAfterCollisionDur);
-            E.Fsm.StopCurrentState();
+            Owner.Fsm.StopCurrentState();
         }
 
         private void OnTargetHit(
             NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
         {
-            if (attacker != E.Agent || target != E.Agent.TargetNavBody) return;
-            if (E.Fsm.CurrentState != this || !_isJumping) return;
+            if (attacker != Owner.Agent || target != Owner.Agent.TargetNavBody) return;
+            if (Owner.Fsm.CurrentState != this || !_isJumping) return;
             _isJumping = false;
-            E.Agent.SnapDisabled = false;
+            Owner.Agent.SnapDisabled = false;
             _cancellationTokenSource?.Cancel();
-            E.Agent.NavTween.StopMove();
+            Owner.Agent.NavTween.StopMove();
             Collision(hitNormal);
         }
     }
