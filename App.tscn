@@ -1,0 +1,77 @@
+[gd_scene load_steps=10 format=2]
+
+[ext_resource path="res://src/Game/Service/Load.cs" type="Script" id=1]
+[ext_resource path="res://src/Game/Service/InputInvoker.cs" type="Script" id=2]
+[ext_resource path="res://src/Game/Service/TreeTimer.cs" type="Script" id=3]
+[ext_resource path="res://src/Game/App.cs" type="Script" id=4]
+[ext_resource path="res://src/Game/Service/Debug/DebugDraw.cs" type="Script" id=5]
+[ext_resource path="res://src/Game/Interface/LoadingPanel.cs" type="Script" id=6]
+[ext_resource path="res://src/Game/Service/Debug/DebugOverlay.cs" type="Script" id=7]
+[ext_resource path="res://src/Game/Service/Events.cs" type="Script" id=8]
+[ext_resource path="res://resources/materials/pixel_camera_shader.material" type="Material" id=9]
+
+[node name="App" type="Node"]
+pause_mode = 2
+script = ExtResource( 4 )
+
+[node name="InputInvoker" type="Node" parent="."]
+pause_mode = 2
+script = ExtResource( 2 )
+
+[node name="Load" type="Node" parent="."]
+pause_mode = 2
+script = ExtResource( 1 )
+
+[node name="TreeTimer" type="Node" parent="."]
+pause_mode = 2
+script = ExtResource( 3 )
+
+[node name="Events" type="Node" parent="."]
+pause_mode = 2
+script = ExtResource( 8 )
+
+[node name="DebugOverlay" type="CanvasLayer" parent="."]
+pause_mode = 2
+script = ExtResource( 7 )
+
+[node name="DebugDraw" type="Control" parent="DebugOverlay"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 5 )
+
+[node name="ViewportContainer" type="ViewportContainer" parent="."]
+pause_mode = 2
+material = ExtResource( 9 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = -1278.0
+margin_bottom = -718.0
+rect_scale = Vector2( 5, 5 )
+
+[node name="Viewport" type="Viewport" parent="ViewportContainer"]
+pause_mode = 2
+size = Vector2( 322, 182 )
+handle_input_locally = false
+render_target_update_mode = 3
+
+[node name="InterfaceContainer" type="Control" parent="."]
+pause_mode = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="LoadingPanel" type="Panel" parent="InterfaceContainer"]
+pause_mode = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 6 )
+
+[node name="ProgressBar" type="ProgressBar" parent="InterfaceContainer/LoadingPanel"]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+margin_left = -596.0
+margin_top = -101.0
+margin_right = 596.0
+margin_bottom = -42.0
+max_value = 1.0

@@ -26,9 +26,8 @@ namespace NavTool
         private Vector2 SnapVector => SnapDisabled ? Vector2.Zero : Vector2.Down * 2f;
         private bool _isColliding;
 
-        public override void _Ready()
+        public NavAgent2D Init()
         {
-            base._Ready();
             NavArea = GetNode<NavArea2D>("../NavArea2D");
             if (TargetNavBodyPath != null) TargetNavBody = GetNode<NavBody2D>(TargetNavBodyPath);
             
@@ -36,6 +35,8 @@ namespace NavTool
             NavArea.Connect("ScreenExited", this, nameof(OnScreenExit));
 
             if (!NavArea.IsPositionInArea(GlobalPosition)) GlobalPosition = NavArea.GlobalPosition;
+
+            return this;
         }
 
         public override void _PhysicsProcess(float delta)

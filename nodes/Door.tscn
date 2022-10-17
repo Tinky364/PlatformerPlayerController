@@ -1,0 +1,30 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://src/Game/Level/Door.cs" type="Script" id=1]
+
+[sub_resource type="RectangleShape2D" id=3]
+extents = Vector2( 4, 4 )
+
+[sub_resource type="CapsuleShape2D" id=4]
+radius = 2.0
+height = 28.0
+
+[node name="Door" type="Node2D"]
+script = ExtResource( 1 )
+_moveDistance = -18
+
+[node name="TriggerArea" type="Area2D" parent="."]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TriggerArea"]
+position = Vector2( 20, -4 )
+shape = SubResource( 3 )
+
+[node name="DoorBody" type="StaticBody2D" parent="."]
+collision_layer = 2
+
+[node name="Sprite" type="Sprite" parent="DoorBody"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorBody"]
+position = Vector2( 0, -16 )
+shape = SubResource( 4 )

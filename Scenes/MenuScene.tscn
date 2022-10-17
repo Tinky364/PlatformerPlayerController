@@ -1,0 +1,130 @@
+[gd_scene load_steps=8 format=2]
+
+[ext_resource path="res://scenes/SceneBase.tscn" type="PackedScene" id=1]
+[ext_resource path="res://assets/sprites/char/CharacterIdle-Sheet.png" type="Texture" id=2]
+[ext_resource path="res://src/Game/Interface/MainMenuPanel.cs" type="Script" id=3]
+[ext_resource path="res://src/Game/Interface/ButtonController.cs" type="Script" id=4]
+[ext_resource path="res://resources/fonts/font_130.tres" type="DynamicFont" id=5]
+[ext_resource path="res://resources/fonts/font_80.tres" type="DynamicFont" id=6]
+[ext_resource path="res://src/Game/Scene/MenuScene.cs" type="Script" id=7]
+
+[node name="MenuScene" instance=ExtResource( 1 )]
+script = ExtResource( 7 )
+
+[node name="MainMenuPanel" type="Control" parent="Interface" index="0"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 3 )
+_firstFocusControlPath = NodePath("ColorRect/MarginContainer/HBoxContainer/VBoxContainer/MenuOptions/Start")
+
+[node name="ColorRect" type="ColorRect" parent="Interface/MainMenuPanel" index="0"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color( 0.435294, 0.223529, 0.223529, 1 )
+
+[node name="MarginContainer" type="MarginContainer" parent="Interface/MainMenuPanel/ColorRect" index="0"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 10.0
+margin_top = 10.0
+margin_right = -10.0
+margin_bottom = -10.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Interface/MainMenuPanel/ColorRect/MarginContainer" index="0"]
+margin_right = 1580.0
+margin_bottom = 880.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Interface/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer" index="0"]
+margin_right = 788.0
+margin_bottom = 880.0
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="Interface/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer" index="0"]
+margin_right = 788.0
+margin_bottom = 129.0
+custom_fonts/font = ExtResource( 5 )
+text = "TITLE"
+align = 1
+valign = 1
+uppercase = true
+
+[node name="MenuOptions" type="VBoxContainer" parent="Interface/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer" index="1"]
+margin_left = 186.0
+margin_top = 133.0
+margin_right = 602.0
+margin_bottom = 797.0
+size_flags_horizontal = 4
+size_flags_vertical = 3
+custom_constants/separation = 10
+alignment = 1
+
+[node name="Start" type="Button" parent="Interface/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer/MenuOptions" index="0"]
+margin_top = 119.0
+margin_right = 416.0
+margin_bottom = 254.0
+focus_neighbour_top = NodePath("../Exit")
+focus_neighbour_bottom = NodePath("../Options")
+focus_next = NodePath("../Options")
+focus_previous = NodePath("../Exit")
+custom_colors/font_color_focus = Color( 0.368627, 0.513726, 0.952941, 1 )
+custom_fonts/font = ExtResource( 5 )
+text = "Start"
+script = ExtResource( 4 )
+LoadScenePath = "res://Scenes/BattleScene.tscn"
+
+[node name="Options" type="Button" parent="Interface/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer/MenuOptions" index="1"]
+margin_top = 264.0
+margin_right = 416.0
+margin_bottom = 399.0
+focus_neighbour_top = NodePath("../Start")
+focus_neighbour_bottom = NodePath("../Exit")
+focus_next = NodePath("../Exit")
+focus_previous = NodePath("../Start")
+custom_colors/font_color_focus = Color( 0.368627, 0.513726, 0.952941, 1 )
+custom_fonts/font = ExtResource( 5 )
+text = "Options"
+
+[node name="Exit" type="Button" parent="Interface/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer/MenuOptions" index="2"]
+margin_top = 409.0
+margin_right = 416.0
+margin_bottom = 544.0
+focus_neighbour_top = NodePath("../Options")
+focus_neighbour_bottom = NodePath("../Start")
+focus_next = NodePath("../Start")
+focus_previous = NodePath("../Options")
+custom_colors/font_color_focus = Color( 0.368627, 0.513726, 0.952941, 1 )
+custom_fonts/font = ExtResource( 5 )
+text = "Exit"
+script = ExtResource( 4 )
+ButtonType = 1
+
+[node name="Version" type="Label" parent="Interface/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/VBoxContainer" index="2"]
+margin_top = 801.0
+margin_right = 788.0
+margin_bottom = 880.0
+custom_fonts/font = ExtResource( 6 )
+text = "ver 1.0.0"
+valign = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="Interface/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer" index="1"]
+margin_left = 792.0
+margin_right = 1580.0
+margin_bottom = 880.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="Interface/MainMenuPanel/ColorRect/MarginContainer/HBoxContainer/CenterContainer" index="0"]
+margin_left = 234.0
+margin_top = 350.0
+margin_right = 554.0
+margin_bottom = 530.0
+rect_min_size = Vector2( 320, 180 )
+rect_pivot_offset = Vector2( 160, 90 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = ExtResource( 2 )
+expand = true
+flip_h = true
