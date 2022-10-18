@@ -4,10 +4,10 @@ using Godot;
 using Game.Service;
 using Game.Service.Debug;
 
-namespace Game.Level.PlayerStateMachine
+namespace Game.Level.Players.States
 {
     [Register]
-    public class FallState : State<Player, Player.PlayerStates>
+    public class PlayerStateFall : State<Player, Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "0.01,1,0.005,or_greater")]
         private float _afterLeavingGroundJumpAbleDur = 0.08f;
@@ -35,12 +35,12 @@ namespace Game.Level.PlayerStateMachine
             if ((_isAfterLeavingGroundJumpAble || CalculateBeforeHitGroundJumpAble()) &&
                 InputInvoker.IsPressed("jump"))
             {
-                Owner.DashState.SetDashSettings(true);
+                Owner.PlayerStateDash.SetDashSettings(true);
                 Owner.Fsm.ChangeState(Player.PlayerStates.Jump);
                 return;
             }
             
-            if (!Owner.DashState.DashUnable && InputInvoker.IsPressed("dash"))
+            if (!Owner.PlayerStateDash.DashUnable && InputInvoker.IsPressed("dash"))
             {
                 Owner.Fsm.ChangeState(Player.PlayerStates.Dash);
                 return;
@@ -48,7 +48,7 @@ namespace Game.Level.PlayerStateMachine
             
             if (Owner.IsWallJumpAble && InputInvoker.IsPressed("jump"))
             {
-                Owner.Fsm.ChangeState(Player.PlayerStates.WallJump);
+                Owner.Fsm.ChangeState(Player.PlayerStates.Walljump);
                 return;
             }
 
@@ -72,7 +72,7 @@ namespace Game.Level.PlayerStateMachine
 
             Owner.PlayAnimation(Mathf.Abs(Owner.Velocity.x) > 30f ? "fall_side" : "fall_down");
 
-            _desiredSpeedX = (Owner.JumpState.SpeedX - 15f) * Owner.AxisInputs().x;
+            _desiredSpeedX = (Owner.PlayerStateJump.SpeedX - 15f) * Owner.AxisInputs().x;
             Owner.Velocity.x = Mathf.MoveToward(
                 Owner.Velocity.x, _desiredSpeedX, Owner.AirAccelerationX * delta
             );

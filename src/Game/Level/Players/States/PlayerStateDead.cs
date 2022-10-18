@@ -1,18 +1,16 @@
 using CustomRegister;
 using Game.Fsm;
-using Game.Service;
 using Game.Service.Debug;
 
-namespace Game.Level.PlayerStateMachine
+namespace Game.Level.Players.States
 {
     [Register]
-    public class DeadState : State<Player, Player.PlayerStates>
+    public class PlayerStateDead : State<Player, Player.PlayerStates>
     {
         public override async void Enter()
         {
             Log.Info($"{Owner.Name}: {Key}");
             Owner.IsUnhurtable = true;
-            await TreeTimer.Singleton.Wait(2f);
             App.SetNodeActive(Owner, false);
         }
        

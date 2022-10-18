@@ -7,7 +7,7 @@ using Game.Service.Debug;
 namespace Game.Level.AI.States
 {
     [Register]
-    public class AnimationState : State<Enemy, Enemy.EnemyStates>
+    public class AiStateAnimation : State<Enemy, Enemy.EnemyStates>
     {
         [Export]
         private string _animationName = "FILL IT!!!";

@@ -2,28 +2,25 @@
 
 [ext_resource path="res://src/Game/Level/AI/Enemies/BigHammerEnemy.cs" type="Script" id=1]
 [ext_resource path="res://nodes/enemies/EnemyTemplate.tscn" type="PackedScene" id=2]
-[ext_resource path="res://src/Game/Level/AI/States/AnimationState.cs" type="Script" id=3]
-[ext_resource path="res://src/Game/Level/AI/States/ChaseState.cs" type="Script" id=4]
-[ext_resource path="res://src/Game/Level/AI/States/IdleState.cs" type="Script" id=5]
+[ext_resource path="res://src/Game/Level/AI/States/AiStateAnimation.cs" type="Script" id=3]
+[ext_resource path="res://src/Game/Level/AI/States/AiStateChase.cs" type="Script" id=4]
+[ext_resource path="res://src/Game/Level/AI/States/AiStateIdle.cs" type="Script" id=5]
 
-[sub_resource type="Resource" id=13]
-resource_local_to_scene = true
+[sub_resource type="Resource" id=16]
 script = ExtResource( 5 )
 Key = 0
-_idleType = 1
+_idleType = 0
 _secondPosDist = 200.0
-_stayDur = 5.0
+_stayDur = 4.0
 
-[sub_resource type="Resource" id=14]
-resource_local_to_scene = true
+[sub_resource type="Resource" id=18]
 script = ExtResource( 4 )
 Key = 1
-StopDist = 22.0
+StopDist = 20.0
 StopDistThreshold = 4.0
 _chaseSpeed = 30.0
 
-[sub_resource type="Resource" id=15]
-resource_local_to_scene = true
+[sub_resource type="Resource" id=17]
 script = ExtResource( 3 )
 Key = 2
 _animationName = "attack"
@@ -140,9 +137,9 @@ resource_name = "run"
 
 [node name="BigHammerEnemy" instance=ExtResource( 2 )]
 script = ExtResource( 1 )
-_idleState = SubResource( 13 )
-_chaseState = SubResource( 14 )
-_animationState = SubResource( 15 )
+_aiStateIdle = SubResource( 16 )
+_aiStateChase = SubResource( 18 )
+_aiStateAnimation = SubResource( 17 )
 
 [node name="CollisionShape2D" parent="NavArea2D" index="1"]
 shape = SubResource( 1 )

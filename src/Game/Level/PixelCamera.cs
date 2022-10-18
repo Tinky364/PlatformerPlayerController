@@ -1,6 +1,7 @@
 using System;
+using Game.Level.Players;
 using Godot;
-using Game.Level.PlayerStateMachine;
+using Game.Level.Players.States;
 
 namespace Game.Level
 {

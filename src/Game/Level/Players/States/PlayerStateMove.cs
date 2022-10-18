@@ -4,10 +4,10 @@ using Game.Fsm;
 using Game.Service;
 using Game.Service.Debug;
 
-namespace Game.Level.PlayerStateMachine
+namespace Game.Level.Players.States
 {
     [Register]
-    public class MoveState : State<Player, Player.PlayerStates>
+    public class PlayerStateMove : State<Player, Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,2000,or_greater")]
         private float _accelerationX = 375f;
@@ -33,7 +33,7 @@ namespace Game.Level.PlayerStateMachine
         public override void Enter()
         {
             Log.Info($"{Owner.Name}: {Key}");
-            Owner.DashState.SetDashSettings(true);
+            Owner.PlayerStateDash.SetDashSettings(true);
             Owner.SnapDisabled = true;
             if (Owner.PreVelocity.y > 50f) Owner.PlayAnimation("landing");
             Owner.Velocity.y = Owner.Gravity * Owner.GetPhysicsProcessDeltaTime();
@@ -55,7 +55,7 @@ namespace Game.Level.PlayerStateMachine
                 return;
             }
             
-            if (!Owner.DashState.DashUnable && InputInvoker.IsPressed("dash"))
+            if (!Owner.PlayerStateDash.DashUnable && InputInvoker.IsPressed("dash"))
             {
                 Owner.Fsm.ChangeState(Player.PlayerStates.Dash);
                 return;
@@ -69,8 +69,7 @@ namespace Game.Level.PlayerStateMachine
             
             // While the player is walking on the ground.
             _desiredSpeedX = _speedX * Owner.AxisInputs().x;
-            Owner.Velocity.x = Mathf.MoveToward(
-                Owner.Velocity.x, _desiredSpeedX, _accelerationX * delta);
+            Owner.Velocity.x = Mathf.MoveToward(Owner.Velocity.x, _desiredSpeedX, _accelerationX * delta);
             Owner.Velocity.y = Owner.Gravity * delta;
         }
 

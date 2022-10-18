@@ -1,6 +1,7 @@
+using Game.Level.Players;
 using Godot;
 using NavTool;
-using Game.Level.PlayerStateMachine;
+using Game.Level.Players.States;
 
 namespace Game.Level
 {

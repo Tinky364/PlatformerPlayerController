@@ -1,0 +1,10 @@
+[gd_resource type="Resource" load_steps=2 format=2]
+
+[ext_resource path="res://src/Game/Level/Players/States/PlayerStateWalljump.cs" type="Script" id=1]
+
+[resource]
+script = ExtResource( 1 )
+Key = 7
+_heightMin = 22.0
+_heightMax = 26.0
+_widthMax = 50.0

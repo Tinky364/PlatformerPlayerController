@@ -31,7 +31,6 @@ namespace NavTool
         public uint CurGroundLayer { get; private set; }
         public bool IsInactive => !Visible;
         public bool IsUnhurtable { get; set; }
-        public bool IsDead { get; protected set; }
         public bool IsGroundRayHit { get; private set; }
         protected Physics2DDirectSpaceState SpaceState { get; private set; }
         private Dictionary _groundRay;

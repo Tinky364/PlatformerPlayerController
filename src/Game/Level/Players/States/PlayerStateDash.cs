@@ -3,10 +3,10 @@ using Godot;
 using Game.Fsm;
 using Game.Service.Debug;
 
-namespace Game.Level.PlayerStateMachine
+namespace Game.Level.Players.States
 {
     [Register]
-    public class DashState : State<Player, Player.PlayerStates>
+    public class PlayerStateDash : State<Player, Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,100,or_greater")]
         private float _airDashLength = 48f;
@@ -159,10 +159,8 @@ namespace Game.Level.PlayerStateMachine
                     return;
                 }
             }
-           
-            _desiredSpeed = Mathf.MoveToward(
-                _desiredSpeed, _minSpeedAtTheEnd, DashAcceleration * delta
-            );
+
+            _desiredSpeed = Mathf.MoveToward(_desiredSpeed, _minSpeedAtTheEnd, DashAcceleration * delta);
             switch (_curDashType)
             {
                 case DashType.Slide when !Owner.IsOnFloor():

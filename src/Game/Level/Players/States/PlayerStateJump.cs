@@ -1,23 +1,22 @@
 using CustomRegister;
-using Game.Fsm;
-using Game.Level.AI;
 using Godot;
+using Game.Fsm;
 using Game.Service;
 using Game.Service.Debug;
 
-namespace Game.Level.PlayerStateMachine
+namespace Game.Level.Players.States
 {
     [Register]
-    public class WallJumpState : State<Player, Player.PlayerStates>
+    public class PlayerStateJump : State<Player, Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,100,or_greater")]
-        private float _heightMin = 22f;
+        private float _heightMin = 16f;
         [Export(PropertyHint.Range, "1,200,or_greater")]
-        private float _heightMax = 26f;
+        private float _heightMax = 32f;
         [Export(PropertyHint.Range, "0,400,or_greater")]
-        private float _widthMax = 50f;
-        
-        private float SpeedX => _widthMax / (JumpDur + FallDur); // v=w/t
+        private float _widthMax = 48f;
+
+        public float SpeedX => _widthMax / (JumpDur + FallDur); // v=w/t
         private float ImpulseY => Mathf.Sqrt(2f * Owner.Gravity * _heightMin); // V=-sqrt{2*g*h}
         private float AccelerationY =>
             Owner.Gravity - Mathf.Pow(ImpulseY, 2) / (2 * _heightMax); // a=g-(v^2/2*h)
@@ -31,13 +30,11 @@ namespace Game.Level.PlayerStateMachine
             Log.Info($"{Owner.Name}: {Key}");
             _count = 0;
             Owner.SnapDisabled = true;
-            Owner.PlayAnimation("wall_jump", JumpDur);
-            Owner.Direction.x = -Owner.WallDirection.x;
-            Owner.Velocity.x = SpeedX * -Owner.WallDirection.x;
+            Owner.PlayAnimation(Mathf.Abs(Owner.Velocity.x) > 30f ? "jump_side" : "jump_up", JumpDur);
+            _desiredSpeedX = SpeedX * Owner.AxisInputs().x;
+            Owner.Velocity.x = _desiredSpeedX;
             Owner.Velocity.y = -ImpulseY;
         }
-
-        public override void Process(float delta) { }
 
         public override void PhysicsProcess(float delta)
         {
@@ -57,16 +54,16 @@ namespace Game.Level.PlayerStateMachine
                 Owner.Fsm.ChangeState(Player.PlayerStates.Wall);
                 return;
             }
-            
-            if (!Owner.DashState.DashUnable && InputInvoker.IsPressed("dash"))
+
+            if (!Owner.PlayerStateDash.DashUnable && InputInvoker.IsPressed("dash"))
             {
                 Owner.Fsm.ChangeState(Player.PlayerStates.Dash);
                 return;
             }
             
-            if (InputInvoker.IsPressed("jump") && Owner.Velocity.y <= 0f)
+            if (InputInvoker.IsPressing("jump") && Owner.Velocity.y <= 0f)
             {
-                _desiredSpeedX = (SpeedX - 10f) * Owner.AxisInputs().x;
+                _desiredSpeedX = SpeedX * Owner.AxisInputs().x;
                 Owner.Velocity.x = Mathf.MoveToward(
                     Owner.Velocity.x, _desiredSpeedX, Owner.AirAccelerationX * delta
                 );
@@ -78,6 +75,7 @@ namespace Game.Level.PlayerStateMachine
             Owner.Fsm.ChangeState(Player.PlayerStates.Fall);
         }
 
+        public override void Process(float delta) { }
         public override void Exit() { }
         public override void ExitTree() { }
         public override bool CanChange() { return false; }

@@ -1,7 +1,6 @@
 using Godot;
-using Game.Level.PlayerStateMachine;
-using Game.Service;
-using Game.Service.Debug;
+using Game.Level;
+using Game.Level.Players;
 
 namespace Game.Interface
 {
@@ -17,7 +16,7 @@ namespace Game.Interface
         {
             base.Init();
             App.SetNodeActive(this, false);
-            player.Connect(nameof(Player.Died), this, nameof(OnPlayerDied));
+            player.HealthSystem.Connect(nameof(HealthSystem.Died), this, nameof(OnPlayerDied));
             return this;
         }
 

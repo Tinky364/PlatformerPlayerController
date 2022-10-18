@@ -4,19 +4,17 @@
 [ext_resource path="res://assets/sprites/enemy/Enemy1.png" type="Texture" id=2]
 [ext_resource path="res://src/Game/Level/AI/Enemies/RusherEnemy.cs" type="Script" id=3]
 [ext_resource path="res://nodes/enemies/EnemyTemplate.tscn" type="PackedScene" id=4]
-[ext_resource path="res://src/Game/Level/AI/States/RushAtkState.cs" type="Script" id=6]
-[ext_resource path="res://src/Game/Level/AI/States/IdleState.cs" type="Script" id=8]
+[ext_resource path="res://src/Game/Level/AI/States/AiStateIdle.cs" type="Script" id=5]
+[ext_resource path="res://src/Game/Level/AI/States/AiStateAtkRush.cs" type="Script" id=6]
 
-[sub_resource type="Resource" id=11]
-resource_local_to_scene = true
-script = ExtResource( 8 )
+[sub_resource type="Resource" id=13]
+script = ExtResource( 5 )
 Key = 0
 _idleType = 0
 _secondPosDist = 20.0
 _stayDur = 2.0
 
-[sub_resource type="Resource" id=12]
-resource_local_to_scene = true
+[sub_resource type="Resource" id=14]
 script = ExtResource( 6 )
 Key = 2
 _waitBeforeRushDur = 1.0
@@ -90,8 +88,8 @@ tracks/0/keys = {
 script = ExtResource( 3 )
 MoveSpeed = 20.0
 MoveAcceleration = 200.0
-_idleState = SubResource( 11 )
-_atkState = SubResource( 12 )
+_aiStateIdle = SubResource( 13 )
+_atkState = SubResource( 14 )
 
 [node name="CollisionShape2D" parent="NavArea2D" index="1"]
 shape = SubResource( 4 )

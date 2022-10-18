@@ -1,6 +1,7 @@
 using System.Threading;
+using Game.Level;
+using Game.Level.Players;
 using Godot;
-using Game.Level.PlayerStateMachine;
 using Game.Service;
 using NavTool;
 
@@ -26,8 +27,8 @@ namespace Game.Interface
             _coinCountLabel = GetNode<Label>(_coinCountLabelPath);
             _healthProgress = GetNode<TextureProgress>(_healthProgressPath);
             player.Connect(nameof(Player.CoinCountChanged), this, nameof(OnCoinCountChanged));
-            player.Connect(nameof(Player.HealthChanged), this, nameof(OnHealthChanged));
-            player.Connect(nameof(Player.Died), this, nameof(OnPlayerDied));
+            player.HealthSystem.Connect(nameof(HealthSystem.Changed), this, nameof(OnHealthChanged));
+            player.HealthSystem.Connect(nameof(HealthSystem.Died), this, nameof(OnPlayerDied));
             return this;
         }
 
@@ -43,10 +44,10 @@ namespace Game.Interface
             _coinCountLabel.Text = coinCount.ToString();
         }
 
-        private void OnHealthChanged(int newHealth, int maxHealth, NavBody2D attacker)
+        private void OnHealthChanged(HealthSystem healthSystem)
         {
             if (App.Singleton.InterfaceState == App.GameState.Pause) return;
-            int targetHealth = (int)_healthProgress.MaxValue * newHealth / maxHealth;
+            int targetHealth = (int)((float)_healthProgress.MaxValue * healthSystem.Percent);
             _cancellationSource?.Cancel();
             _cancellationSource = new CancellationTokenSource();
             HealthLerp(targetHealth, _cancellationSource.Token);

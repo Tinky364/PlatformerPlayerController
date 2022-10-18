@@ -1,24 +1,22 @@
 using Game.Fsm;
+using Game.Level.Players.States;
 using Godot;
 using Godot.Collections;
 using NavTool;
 using Game.Service;
+using Game.Service.Debug;
 
-namespace Game.Level.PlayerStateMachine
+namespace Game.Level.Players
 {
     public class Player : NavBody2D
     {
         [Signal] 
         public delegate void CoinCountChanged(int coinCount);
-        [Signal]
-        public delegate void HealthChanged(int newHealth, int maxHealth, NavBody2D attacker);
-        [Signal] 
-        public delegate void Died();
         
         [Export]
         public bool DebugEnabled { get; private set; }
-        [Export(PropertyHint.Range, "0,10,or_greater")]
-        private int MaxHealth { get; set; } = 6;
+        [Export]
+        public HealthSystem HealthSystem { get; private set; }
         [Export(PropertyHint.Range, "10,2000,or_greater")]
         public float Gravity { get; private set; } = 900f;
         [Export(PropertyHint.Range, "100,1000,or_greater,or_lesser")]
@@ -34,25 +32,25 @@ namespace Game.Level.PlayerStateMachine
         [Export]
         public Color NormalSpriteColor { get; private set; }
         [Export]
-        public MoveState MoveState { get; private set; }
+        public PlayerStateMove PlayerStateMove { get; private set; }
         [Export]
-        public FallState FallState { get; private set; }
+        public PlayerStateFall PlayerStateFall { get; private set; }
         [Export]
-        public JumpState JumpState { get; private set; }
+        public PlayerStateJump PlayerStateJump { get; private set; }
         [Export]
-        public WallJumpState WallJumpState { get; private set; }
+        public PlayerStateWalljump PlayerStateWalljump { get; private set; }
         [Export]
-        public DashState DashState { get; private set; }
+        public PlayerStateDash PlayerStateDash { get; private set; }
         [Export]
-        public RecoilState RecoilState { get; private set; }
+        public PlayerStateRecoil PlayerStateRecoil { get; private set; }
         [Export]
-        public WallState WallState { get; private set; }
+        public PlayerStateWall PlayerStateWall { get; private set; }
         [Export]
-        public PlatformState PlatformState { get; private set; }
+        public PlayerStatePlatform PlayerStatePlatform { get; private set; }
         [Export]
-        public DeadState DeadState { get; private set; }
+        public PlayerStateDead PlayerStateDead { get; private set; }
        
-        public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform, Wall, WallJump, Dash }
+        public enum PlayerStates { Move, Fall, Jump, Recoil, Dead, Platform, Wall, Walljump, Dash }
         public FiniteStateMachine<Player, PlayerStates> Fsm { get; private set; }
         public Sprite Sprite { get; private set; }
         public AnimationPlayer AnimPlayer { get; private set; }
@@ -67,27 +65,12 @@ namespace Game.Level.PlayerStateMachine
         public bool FallOffPlatformInput;
         public bool IsWallJumpAble { get; private set; }
         public bool IsWallRayHit { get; private set; }
-        public bool IsStayOnWall =>
-            IsWallRayHit && IsOnWall() && Mathf.Sign(WallDirection.x) == Mathf.Sign(AxisInputs().x);
+        public bool IsStayOnWall => IsWallRayHit && IsOnWall() && Mathf.Sign(WallDirection.x) == Mathf.Sign(AxisInputs().x);
         public bool IsDirectionLocked { get; set; }
         private readonly Vector2[] _dirs = new Vector2[10]; 
         private Vector2 PrePosition { get; set; }
         private Vector2 _inputAxis;
         private int CoinCount { get; set; } = 0;
-        private int _health;
-        private int Health
-        {
-            get => _health;
-            set
-            {
-                if (value < 0)
-                    _health = 0;
-                else if (value > MaxHealth)
-                    _health = MaxHealth;
-                else
-                    _health = value;
-            }
-        }
         
         public Player Init()
         {
@@ -96,18 +79,18 @@ namespace Game.Level.PlayerStateMachine
             AnimPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
             PlatformCheckArea = GetNode<Area2D>("PlatformCheckArea");
             CollisionShape = GetNode<CollisionShape2D>("CollisionShapeCapsule");
-            Health = MaxHealth;
             Sprite.SelfModulate = NormalSpriteColor;
+            HealthSystem.Init();
             Fsm = new FiniteStateMachine<Player, PlayerStates>();
-            MoveState.Init(this);
-            FallState.Init(this);
-            JumpState.Init(this);
-            RecoilState.Init(this);
-            DeadState.Init(this);
-            PlatformState.Init(this);
-            WallState.Init(this);
-            WallJumpState.Init(this);
-            DashState.Init(this);
+            PlayerStateMove.Init(this);
+            PlayerStateFall.Init(this);
+            PlayerStateJump.Init(this);
+            PlayerStateRecoil.Init(this);
+            PlayerStateDead.Init(this);
+            PlayerStatePlatform.Init(this);
+            PlayerStateWall.Init(this);
+            PlayerStateWalljump.Init(this);
+            PlayerStateDash.Init(this);
             PlatformCheckArea.Connect("body_entered", this, "OnPlatformEntered");
             PlatformCheckArea.Connect("body_exited", this, "OnPlatformExited");
             Events.Singleton.Connect(nameof(Events.Damaged), this, nameof(OnDamaged));
@@ -137,26 +120,14 @@ namespace Game.Level.PlayerStateMachine
             if (PreVelocity != Velocity) PreVelocity = Velocity;
         }
 
-        public void OnDamaged(
-            NavBody2D target, int damageValue, NavBody2D attacker, Vector2 hitNormal)
+        public void OnDamaged(NavBody2D target, int damageAmount, NavBody2D attacker, Vector2 hitNormal)
         {
-            if (IsDead || target != this || IsUnhurtable) return;
-            Health -= damageValue;
-            EmitSignal(nameof(HealthChanged), Health, MaxHealth, attacker);
-            if (Health == 0)
-            {
-                IsDead = true;
-                RecoilState.HitNormal = hitNormal;
-                Fsm.ChangeState(PlayerStates.Recoil);
-                EmitSignal(nameof(Died));
-            }
-            else
-            {
-                RecoilState.HitNormal = hitNormal;
-                Fsm.ChangeState(PlayerStates.Recoil);
-            }
+            if (HealthSystem.IsDied || IsUnhurtable || target != this) return;
+            HealthSystem.Damage(damageAmount);
+            PlayerStateRecoil.HitNormal = hitNormal;
+            Fsm.ChangeState(PlayerStates.Recoil);
         }
-        
+
         public Vector2 AxisInputs()
         {
             _inputAxis = new Vector2

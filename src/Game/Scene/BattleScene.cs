@@ -1,10 +1,10 @@
-﻿using Game.Level.AI.Enemies;
+﻿using Godot;
+using Game.Level.AI.Enemies;
 using Game.Interface;
 using Game.Level;
-using Game.Level.PlayerStateMachine;
+using Game.Level.Players;
 using Game.Service;
 using Game.Service.Debug;
-using Godot;
 
 namespace Game.Scene
 {

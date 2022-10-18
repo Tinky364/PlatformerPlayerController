@@ -6,7 +6,7 @@ using Game.Service.Debug;
 namespace Game.Level.AI.States
 {
     [Register]
-    public class IdleState : State<Enemy, Enemy.EnemyStates>
+    public class AiStateIdle : State<Enemy, Enemy.EnemyStates>
     {
         [Export]
         private IdleType _idleType = IdleType.Stay;

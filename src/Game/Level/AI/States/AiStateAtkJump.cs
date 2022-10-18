@@ -9,12 +9,12 @@ using NavTool;
 namespace Game.Level.AI.States
 {
     [Register]
-    public class JumpAtkState : State<Enemy, Enemy.EnemyStates>
+    public class AiStateAtkJump : State<Enemy, Enemy.EnemyStates>
     {
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeAttackDur = 1f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _jumpDur = 0.6f;
+        private float _jumpDur = 0.48f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _landingMoveDur = 0.2f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
@@ -24,7 +24,7 @@ namespace Game.Level.AI.States
         [Export(PropertyHint.Range, "0,100,or_greater")]
         private float _backMoveDistMax = 30f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
-        private float _landingMoveDist = 3f;
+        private float _landingMoveDist = 4f;
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitAfterCollisionDur = 2f;
         [Export(PropertyHint.Range, "0,200,or_greater")]

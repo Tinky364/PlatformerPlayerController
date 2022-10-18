@@ -4,28 +4,25 @@
 [ext_resource path="res://assets/sprites/enemy/Enemy1.png" type="Texture" id=2]
 [ext_resource path="res://src/Game/Level/AI/Enemies/JumperEnemy.cs" type="Script" id=3]
 [ext_resource path="res://nodes/enemies/EnemyTemplate.tscn" type="PackedScene" id=4]
-[ext_resource path="res://src/Game/Level/AI/States/ChaseState.cs" type="Script" id=6]
-[ext_resource path="res://src/Game/Level/AI/States/JumpAtkState.cs" type="Script" id=7]
-[ext_resource path="res://src/Game/Level/AI/States/IdleState.cs" type="Script" id=8]
+[ext_resource path="res://src/Game/Level/AI/States/AiStateIdle.cs" type="Script" id=5]
+[ext_resource path="res://src/Game/Level/AI/States/AiStateChase.cs" type="Script" id=6]
+[ext_resource path="res://src/Game/Level/AI/States/AiStateAtkJump.cs" type="Script" id=7]
 
-[sub_resource type="Resource" id=11]
-resource_local_to_scene = true
-script = ExtResource( 8 )
+[sub_resource type="Resource" id=14]
+script = ExtResource( 5 )
 Key = 0
-_idleType = 0
+_idleType = 1
 _secondPosDist = 40.0
 _stayDur = 2.0
 
-[sub_resource type="Resource" id=12]
-resource_local_to_scene = true
+[sub_resource type="Resource" id=15]
 script = ExtResource( 6 )
 Key = 1
 StopDist = 30.0
-StopDistThreshold = 1.0
+StopDistThreshold = 2.0
 _chaseSpeed = 30.0
 
-[sub_resource type="Resource" id=13]
-resource_local_to_scene = true
+[sub_resource type="Resource" id=16]
 script = ExtResource( 7 )
 Key = 2
 _waitBeforeAttackDur = 1.0
@@ -102,9 +99,9 @@ tracks/0/keys = {
 [node name="JumperEnemy" instance=ExtResource( 4 )]
 script = ExtResource( 3 )
 MoveAcceleration = 160.0
-_idleState = SubResource( 11 )
-_chaseState = SubResource( 12 )
-_atkState = SubResource( 13 )
+_aiStateIdle = SubResource( 14 )
+_aiStateChase = SubResource( 15 )
+_atk = SubResource( 16 )
 
 [node name="CollisionShape2D" parent="NavArea2D" index="1"]
 shape = SubResource( 1 )

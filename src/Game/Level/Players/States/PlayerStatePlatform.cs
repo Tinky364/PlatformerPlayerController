@@ -3,10 +3,10 @@ using Godot;
 using Game.Fsm;
 using Game.Service.Debug;
 
-namespace Game.Level.PlayerStateMachine
+namespace Game.Level.Players.States
 {
     [Register]
-    public class PlatformState : State<Player, Player.PlayerStates>
+    public class PlayerStatePlatform : State<Player, Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,200,or_greater")]
         private float _speedInsidePlatformY = 100f;

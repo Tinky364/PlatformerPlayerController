@@ -1,0 +1,12 @@
+[gd_resource type="Resource" load_steps=2 format=2]
+
+[ext_resource path="res://src/Game/Level/Players/States/PlayerStateDash.cs" type="Script" id=1]
+
+[resource]
+script = ExtResource( 1 )
+Key = 8
+_airDashLength = 48.0
+_slideLength = 42.0
+_duration = 0.275
+_minSpeedAtTheEnd = 60.0
+_dashSpriteColor = Color( 0.654902, 0.964706, 0.968627, 1 )

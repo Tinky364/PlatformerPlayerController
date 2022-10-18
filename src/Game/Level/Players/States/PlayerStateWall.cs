@@ -4,10 +4,10 @@ using Game.Fsm;
 using Game.Service;
 using Game.Service.Debug;
 
-namespace Game.Level.PlayerStateMachine
+namespace Game.Level.Players.States
 {
     [Register]
-    public class WallState : State<Player, Player.PlayerStates>
+    public class PlayerStateWall : State<Player, Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "1,2000,or_greater")]
         private float _accelerationY = 60f;
@@ -40,11 +40,11 @@ namespace Game.Level.PlayerStateMachine
 
             if (Owner.IsWallJumpAble && InputInvoker.IsPressed("jump"))
             {
-                Owner.Fsm.ChangeState(Player.PlayerStates.WallJump);
+                Owner.Fsm.ChangeState(Player.PlayerStates.Walljump);
                 return;
             }
             
-            if (!Owner.DashState.DashUnable && InputInvoker.IsPressed("dash"))
+            if (!Owner.PlayerStateDash.DashUnable && InputInvoker.IsPressed("dash"))
             {
                 Owner.Fsm.ChangeState(Player.PlayerStates.Dash);
                 return;

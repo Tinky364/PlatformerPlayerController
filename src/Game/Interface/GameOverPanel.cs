@@ -1,4 +1,5 @@
-using Game.Level.PlayerStateMachine;
+using Game.Level;
+using Game.Level.Players;
 using Game.Service;
 
 namespace Game.Interface
@@ -8,7 +9,7 @@ namespace Game.Interface
         public GameOverPanel Init(Player player)
         {
             base.Init();
-            player.Connect(nameof(Player.Died), this, nameof(OnPlayerDied));
+            player.HealthSystem.Connect(nameof(HealthSystem.Died), this, nameof(OnPlayerDied));
             App.SetNodeActive(this, false);
             return this;
         }

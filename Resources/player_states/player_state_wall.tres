@@ -1,0 +1,11 @@
+[gd_resource type="Resource" load_steps=2 format=2]
+
+[ext_resource path="res://src/Game/Level/Players/States/PlayerStateWall.cs" type="Script" id=1]
+
+[resource]
+script = ExtResource( 1 )
+Key = 6
+_accelerationY = 60.0
+_speedMaxY = 100.0
+_slideSpeedYNeg = 5.0
+_fallDelayDuration = 0.25

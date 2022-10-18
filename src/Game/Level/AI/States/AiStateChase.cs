@@ -6,7 +6,7 @@ using Game.Service.Debug;
 namespace Game.Level.AI.States
 {
     [Register]
-    public class ChaseState : State<Enemy, Enemy.EnemyStates>
+    public class AiStateChase : State<Enemy, Enemy.EnemyStates>
     {
         [Export(PropertyHint.Range, "0,100,1,or_greater")]
         public float StopDist { get; private set; } = 26f;

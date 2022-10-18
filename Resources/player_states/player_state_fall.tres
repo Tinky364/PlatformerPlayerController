@@ -1,0 +1,9 @@
+[gd_resource type="Resource" load_steps=2 format=2]
+
+[ext_resource path="res://src/Game/Level/Players/States/PlayerStateFall.cs" type="Script" id=1]
+
+[resource]
+script = ExtResource( 1 )
+Key = 1
+_afterLeavingGroundJumpAbleDur = 0.08
+_beforeHitGroundJumpAbleRayLength = 5.0

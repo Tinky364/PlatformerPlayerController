@@ -1,0 +1,11 @@
+[gd_resource type="Resource" load_steps=2 format=2]
+
+[ext_resource path="res://src/Game/Level/Players/States/PlayerStateRecoil.cs" type="Script" id=1]
+
+[resource]
+script = ExtResource( 1 )
+Key = 3
+_impulse = 150.0
+_recoilDur = 0.25
+_unhurtableDur = 1.0
+_unhurtableSpriteColor = Color( 1, 0, 0, 1 )

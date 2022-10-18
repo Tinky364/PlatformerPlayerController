@@ -9,7 +9,7 @@ using NavTool;
 namespace Game.Level.AI.States
 {
     [Register]
-    public class RushAtkState : State<Enemy, Enemy.EnemyStates>
+    public class AiStateAtkRush : State<Enemy, Enemy.EnemyStates>
     {
         [Export(PropertyHint.Range, "0,10,or_greater")]
         private float _waitBeforeRushDur = 1f;

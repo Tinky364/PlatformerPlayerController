@@ -6,18 +6,18 @@ namespace Game.Level.AI.Enemies
     public class BigHammerEnemy : Enemy
     {
         [Export]
-        private IdleState _idleState = default;
+        private AiStateIdle _aiStateIdle = default;
         [Export]
-        private ChaseState _chaseState = default;
+        private AiStateChase _aiStateChase = default;
         [Export]
-        private AnimationState _animationState = default;
+        private AiStateAnimation _aiStateAnimation = default;
 
         public new BigHammerEnemy Init()
         {
             base.Init();
-            _idleState.Init(this);
-            _chaseState.Init(this);
-            _animationState.Init(this);
+            _aiStateIdle.Init(this);
+            _aiStateChase.Init(this);
+            _aiStateAnimation.Init(this);
             Fsm.ChangeState(EnemyStates.Idle);
             return this;
         }
@@ -26,8 +26,7 @@ namespace Game.Level.AI.Enemies
         {
             if (Fsm.IsStateLocked) return;
 
-            if (Agent.TargetNavBody.IsDead || Agent.TargetNavBody.IsInactive ||
-                !Agent.NavArea.IsTargetReachable)
+            if (Agent.TargetNavBody.IsInactive || !Agent.NavArea.IsTargetReachable)
             {
                 Fsm.ChangeState(EnemyStates.Idle);
                 return;
@@ -35,18 +34,17 @@ namespace Game.Level.AI.Enemies
             
             float distToTarget = Agent.DistanceToTarget();
             
-            if (distToTarget < _chaseState.StopDist + 1f)
+            if (distToTarget < _aiStateChase.StopDist + 1f)
             {
                 Fsm.ChangeState(EnemyStates.Attack, true);
                 return;
             }
 
-            if (distToTarget > _chaseState.StopDist)
+            if (distToTarget > _aiStateChase.StopDist)
             {
-                Vector2 movePos =
-                    Agent.TargetNavBody.NavPos - Agent.DirectionToTarget() * _chaseState.StopDist;
+                Vector2 movePos = Agent.TargetNavBody.NavPos - Agent.DirectionToTarget() * _aiStateChase.StopDist;
                 if (!Agent.NavArea.IsPositionInArea(movePos)) return;
-                _chaseState.TargetPos = movePos;
+                _aiStateChase.TargetPos = movePos;
                 Fsm.ChangeState(EnemyStates.Chase);
             }
         }

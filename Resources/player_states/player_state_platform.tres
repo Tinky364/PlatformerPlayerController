@@ -1,0 +1,9 @@
+[gd_resource type="Resource" load_steps=2 format=2]
+
+[ext_resource path="res://src/Game/Level/Players/States/PlayerStatePlatform.cs" type="Script" id=1]
+
+[resource]
+script = ExtResource( 1 )
+Key = 5
+_speedInsidePlatformY = 100.0
+_accelerationX = 300.0

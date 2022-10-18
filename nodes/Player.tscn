@@ -1,20 +1,20 @@
-[gd_scene load_steps=56 format=2]
+[gd_scene load_steps=49 format=2]
 
-[ext_resource path="res://src/Game/Level/PlayerStateMachine/Player.cs" type="Script" id=1]
-[ext_resource path="res://src/Game/Level/PlayerStateMachine/FallState.cs" type="Script" id=2]
-[ext_resource path="res://src/Game/Level/PlayerStateMachine/MoveState.cs" type="Script" id=3]
-[ext_resource path="res://src/Game/Level/PlayerStateMachine/JumpState.cs" type="Script" id=4]
+[ext_resource path="res://src/Game/Level/Players/Player.cs" type="Script" id=1]
+[ext_resource path="res://resources/player_states/player_state_jump.tres" type="Resource" id=2]
+[ext_resource path="res://resources/player_states/player_state_move.tres" type="Resource" id=3]
+[ext_resource path="res://resources/player_states/player_state_fall.tres" type="Resource" id=4]
 [ext_resource path="res://assets/sprites/player/PlayerDashCrossDown.png" type="Texture" id=5]
 [ext_resource path="res://assets/sprites/player/PlayerRun.png" type="Texture" id=6]
-[ext_resource path="res://src/Game/Level/PlayerStateMachine/RecoilState.cs" type="Script" id=7]
+[ext_resource path="res://resources/player_states/player_state_walljump.tres" type="Resource" id=7]
 [ext_resource path="res://assets/sprites/player/Player.png" type="Texture" id=8]
-[ext_resource path="res://src/Game/Level/PlayerStateMachine/DeadState.cs" type="Script" id=9]
-[ext_resource path="res://src/Game/Level/PlayerStateMachine/PlatformState.cs" type="Script" id=10]
-[ext_resource path="res://src/Game/Level/PlayerStateMachine/WallState.cs" type="Script" id=11]
-[ext_resource path="res://src/Game/Level/PlayerStateMachine/WallJumpState.cs" type="Script" id=12]
+[ext_resource path="res://resources/player_states/player_state_dash.tres" type="Resource" id=9]
+[ext_resource path="res://resources/player_states/player_state_recoil.tres" type="Resource" id=10]
+[ext_resource path="res://resources/player_states/player_state_wall.tres" type="Resource" id=11]
+[ext_resource path="res://resources/player_states/player_state_platform.tres" type="Resource" id=12]
 [ext_resource path="res://assets/sprites/player/PlayerJumpSide.png" type="Texture" id=13]
 [ext_resource path="res://assets/sprites/player/PlayerFallSide.png" type="Texture" id=14]
-[ext_resource path="res://src/Game/Level/PlayerStateMachine/DashState.cs" type="Script" id=15]
+[ext_resource path="res://resources/player_states/player_state_dead.tres" type="Resource" id=15]
 [ext_resource path="res://assets/sprites/player/PlayerLanding.png" type="Texture" id=16]
 [ext_resource path="res://assets/sprites/player/PlayerWallSlide.png" type="Texture" id=17]
 [ext_resource path="res://assets/sprites/player/PlayerWallJump.png" type="Texture" id=18]
@@ -24,77 +24,11 @@
 [ext_resource path="res://assets/sprites/player/PlayerDashDown.png" type="Texture" id=22]
 [ext_resource path="res://assets/sprites/player/PlayerFallDown.png" type="Texture" id=23]
 [ext_resource path="res://assets/sprites/player/PlayerJumpUp.png" type="Texture" id=24]
+[ext_resource path="res://src/Game/Level/HealthSystem.cs" type="Script" id=25]
 
 [sub_resource type="Resource" id=57]
-resource_local_to_scene = true
-script = ExtResource( 3 )
-Key = 0
-_accelerationX = 375.0
-_speedX = 70.0
-_runAnimationSpeed = 1.45
-
-[sub_resource type="Resource" id=58]
-resource_local_to_scene = true
-script = ExtResource( 2 )
-Key = 1
-_afterLeavingGroundJumpAbleDur = 0.08
-_beforeHitGroundJumpAbleRayLength = 5.0
-
-[sub_resource type="Resource" id=59]
-resource_local_to_scene = true
-script = ExtResource( 4 )
-Key = 2
-_heightMin = 16.0
-_heightMax = 32.0
-_widthMax = 48.0
-
-[sub_resource type="Resource" id=60]
-resource_local_to_scene = true
-script = ExtResource( 12 )
-Key = 7
-_heightMin = 22.0
-_heightMax = 26.0
-_widthMax = 50.0
-
-[sub_resource type="Resource" id=61]
-resource_local_to_scene = true
-script = ExtResource( 15 )
-Key = 8
-_airDashLength = 48.0
-_slideLength = 42.0
-_duration = 0.275
-_minSpeedAtTheEnd = 60.0
-_dashSpriteColor = Color( 1, 0.654902, 0.341176, 1 )
-
-[sub_resource type="Resource" id=62]
-resource_local_to_scene = true
-script = ExtResource( 7 )
-Key = 3
-_impulse = 150.0
-_recoilDur = 0.25
-_unhurtableDur = 1.0
-_unhurtableSpriteColor = Color( 0.235294, 0.227451, 0.227451, 1 )
-
-[sub_resource type="Resource" id=63]
-resource_local_to_scene = true
-script = ExtResource( 11 )
-Key = 6
-_accelerationY = 60.0
-_speedMaxY = 100.0
-_slideSpeedYNeg = 5.0
-_fallDelayDuration = 0.25
-
-[sub_resource type="Resource" id=64]
-resource_local_to_scene = true
-script = ExtResource( 10 )
-Key = 5
-_speedInsidePlatformY = 100.0
-_accelerationX = 300.0
-
-[sub_resource type="Resource" id=65]
-resource_local_to_scene = true
-script = ExtResource( 9 )
-Key = 4
+script = ExtResource( 25 )
+Max = 3
 
 [sub_resource type="RectangleShape2D" id=6]
 extents = Vector2( 4, 2 )
@@ -837,17 +771,17 @@ tracks/2/keys = {
 collision_mask = 6
 script = ExtResource( 1 )
 Extents = Vector2( 8, 16 )
-MaxHealth = 3
+HealthSystem = SubResource( 57 )
 NormalSpriteColor = Color( 1, 1, 1, 1 )
-MoveState = SubResource( 57 )
-FallState = SubResource( 58 )
-JumpState = SubResource( 59 )
-WallJumpState = SubResource( 60 )
-DashState = SubResource( 61 )
-RecoilState = SubResource( 62 )
-WallState = SubResource( 63 )
-PlatformState = SubResource( 64 )
-DeadState = SubResource( 65 )
+PlayerStateMove = ExtResource( 3 )
+PlayerStateFall = ExtResource( 4 )
+PlayerStateJump = ExtResource( 2 )
+PlayerStateWalljump = ExtResource( 7 )
+PlayerStateDash = ExtResource( 9 )
+PlayerStateRecoil = ExtResource( 10 )
+PlayerStateWall = ExtResource( 11 )
+PlayerStatePlatform = ExtResource( 12 )
+PlayerStateDead = ExtResource( 15 )
 
 [node name="PlatformCheckArea" type="Area2D" parent="."]
 collision_layer = 0

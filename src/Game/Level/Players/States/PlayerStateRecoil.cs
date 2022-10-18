@@ -1,14 +1,14 @@
 using System.Threading.Tasks;
-using CustomRegister;
 using Godot;
+using CustomRegister;
 using Game.Fsm;
 using Game.Service;
 using Game.Service.Debug;
 
-namespace Game.Level.PlayerStateMachine
+namespace Game.Level.Players.States
 {
     [Register]
-    public class RecoilState : State<Player, Player.PlayerStates>
+    public class PlayerStateRecoil : State<Player, Player.PlayerStates>
     {
         [Export(PropertyHint.Range, "0,1000,or_greater")]
         private float _impulse = 150f;
@@ -33,7 +33,7 @@ namespace Game.Level.PlayerStateMachine
             Owner.Velocity = _desiredRecoilVelocity;
             Owner.IsUnhurtable = true;
             await WhileUnhurtable();
-            if (Owner.IsDead) return;
+            if (Owner.HealthSystem.IsDied) return;
             Owner.IsUnhurtable = false;
         }
 
@@ -43,7 +43,7 @@ namespace Game.Level.PlayerStateMachine
 
             if (_count > _recoilDur)
             {
-                if (Owner.IsDead) Owner.Fsm.ChangeState(Player.PlayerStates.Dead);
+                if (Owner.HealthSystem.IsDied) Owner.Fsm.ChangeState(Player.PlayerStates.Dead);
                 else if (Owner.IsOnFloor()) Owner.Fsm.ChangeState(Player.PlayerStates.Move);
                 else Owner.Fsm.ChangeState(Player.PlayerStates.Fall);
                 return;
